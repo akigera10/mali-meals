@@ -1,6 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useCart } from '@/app/context/CartContext'
+import type { CartEntry } from '@/app/context/CartContext'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -24,14 +27,6 @@ type ProteinAddon = {
   name: string
   price: number
   is_sold_out: boolean
-}
-
-type CartEntry = {
-  id: string        // `${dishId}:vegetarian`, `${dishId}:meat`, or `addon:${addonId}`
-  name: string
-  variant: 'vegetarian' | 'meat' | 'addon'
-  unitPrice: number
-  quantity: number
 }
 
 // ─── Badge config ─────────────────────────────────────────────────────────────
@@ -184,9 +179,9 @@ function DishCard({
   const meatPrice = dish.base_price + (dish.meat_upgrade_price ?? 0)
   const meat = meatLabel(dish.meat_upgrade_type)
   const vegKey = `${dish.id}:vegetarian`
-  const meatKey = `${dish.id}:meat`           // for beef-only or chicken-only dishes
-  const beefKey = `${dish.id}:meat:beef`       // for 'both' dishes
-  const chickenKey = `${dish.id}:meat:chicken` // for 'both' dishes
+  const meatKey = `${dish.id}:meat`
+  const beefKey = `${dish.id}:meat:beef`
+  const chickenKey = `${dish.id}:meat:chicken`
   const badges = buildBadges(dish)
 
   const isBoth = dish.meat_upgrade_type === 'both'
@@ -327,19 +322,11 @@ function DishCard({
           {/* Vegetarian row */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-              <span style={{
-                fontFamily: 'var(--font-fraunces), serif',
-                fontSize: 18,
-                color: 'var(--brand-gold)',
-              }}>
+              <span style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: 18, color: 'var(--brand-gold)' }}>
                 {fmt(dish.base_price)}
               </span>
               {hasMeat && (
-                <span style={{
-                  fontFamily: 'var(--font-inter), sans-serif',
-                  fontSize: 12,
-                  color: 'var(--text-tertiary)',
-                }}>
+                <span style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 12, color: 'var(--text-tertiary)' }}>
                   vegetarian
                 </span>
               )}
@@ -355,18 +342,10 @@ function DishCard({
           {hasMeat && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                <span style={{
-                  fontFamily: 'var(--font-fraunces), serif',
-                  fontSize: 18,
-                  color: 'var(--text-primary)',
-                }}>
+                <span style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: 18, color: 'var(--text-primary)' }}>
                   {fmt(meatPrice)}
                 </span>
-                <span style={{
-                  fontFamily: 'var(--font-inter), sans-serif',
-                  fontSize: 12,
-                  color: 'var(--text-tertiary)',
-                }}>
+                <span style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 12, color: 'var(--text-tertiary)' }}>
                   {meatRowLabel()}
                 </span>
               </div>
@@ -457,12 +436,7 @@ function DishCard({
 
       {/* Sold out: show price greyed, no controls */}
       {soldOut && (
-        <p style={{
-          fontFamily: 'var(--font-fraunces), serif',
-          fontSize: 18,
-          color: 'var(--text-tertiary)',
-          margin: '12px 0 0',
-        }}>
+        <p style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: 18, color: 'var(--text-tertiary)', margin: '12px 0 0' }}>
           {fmt(dish.base_price)}
         </p>
       )}
@@ -497,19 +471,10 @@ function AddonCard({
       opacity: soldOut ? 0.5 : 1,
     }}>
       <div>
-        <span style={{
-          fontFamily: 'var(--font-fraunces), serif',
-          fontSize: 16,
-          color: 'var(--text-primary)',
-        }}>
+        <span style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: 16, color: 'var(--text-primary)' }}>
           {addon.name}
         </span>
-        <span style={{
-          fontFamily: 'var(--font-fraunces), serif',
-          fontSize: 15,
-          color: 'var(--brand-gold)',
-          marginLeft: 12,
-        }}>
+        <span style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: 15, color: 'var(--brand-gold)', marginLeft: 12 }}>
           {fmt(addon.price)}
         </span>
       </div>
@@ -566,30 +531,14 @@ export default function MenuClient({
   menuItems: MenuItem[]
   addons: ProteinAddon[]
 }) {
-  const [cart, setCart] = useState<CartEntry[]>([])
+  const { cart, adjust, getQty } = useCart()
+  const router = useRouter()
 
   const mains = menuItems.filter(m => m.category === 'mains')
   const salads = menuItems.filter(m => m.category === 'salads')
 
   const cartTotal = cart.reduce((s, e) => s + e.unitPrice * e.quantity, 0)
   const cartCount = cart.reduce((s, e) => s + e.quantity, 0)
-
-  function getQty(key: string): number {
-    return cart.find(e => e.id === key)?.quantity ?? 0
-  }
-
-  function adjust(entry: Omit<CartEntry, 'quantity'>, delta: number) {
-    setCart(prev => {
-      const existing = prev.find(e => e.id === entry.id)
-      if (!existing) {
-        if (delta <= 0) return prev
-        return [...prev, { ...entry, quantity: 1 }]
-      }
-      const next = existing.quantity + delta
-      if (next <= 0) return prev.filter(e => e.id !== entry.id)
-      return prev.map(e => e.id === entry.id ? { ...e, quantity: next } : e)
-    })
-  }
 
   return (
     <>
@@ -706,23 +655,15 @@ export default function MenuClient({
           }}
         >
           <div>
-            <span style={{
-              fontFamily: 'var(--font-inter), sans-serif',
-              fontSize: 13,
-              color: 'var(--text-secondary)',
-            }}>
+            <span style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 13, color: 'var(--text-secondary)' }}>
               {cartCount} {cartCount === 1 ? 'item' : 'items'}
             </span>
-            <span style={{
-              fontFamily: 'var(--font-fraunces), serif',
-              fontSize: 22,
-              color: 'var(--text-primary)',
-              marginLeft: 12,
-            }}>
+            <span style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: 22, color: 'var(--text-primary)', marginLeft: 12 }}>
               {fmt(cartTotal)}
             </span>
           </div>
           <button
+            onClick={() => router.push('/checkout')}
             style={{
               background: 'var(--brand-gold)',
               color: '#fff',

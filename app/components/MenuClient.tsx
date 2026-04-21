@@ -13,6 +13,9 @@ type MenuItem = {
   meat_upgrade_price: number | null
   meat_upgrade_type: 'beef' | 'chicken' | 'both' | null
   is_sold_out: boolean
+  is_spicy: boolean
+  is_freezer_friendly: boolean
+  allergens: string[]
 }
 
 type ProteinAddon = {
@@ -28,6 +31,50 @@ type CartEntry = {
   variant: 'vegetarian' | 'meat' | 'addon'
   unitPrice: number
   quantity: number
+}
+
+// ─── Badge config ─────────────────────────────────────────────────────────────
+
+const ALLERGEN_SHORT: Record<string, string> = {
+  dairy:   'D',
+  nuts:    'N',
+  soy:     'S',
+  coconut: 'C',
+}
+
+const ALLERGEN_LABEL: Record<string, string> = {
+  dairy:   'Contains dairy',
+  nuts:    'Contains nuts',
+  soy:     'Contains soy',
+  coconut: 'Contains coconut',
+}
+
+type BadgeSpec = {
+  key: string
+  short: string
+  label: string
+  bg: string
+}
+
+function buildBadges(dish: MenuItem): BadgeSpec[] {
+  const badges: BadgeSpec[] = []
+  for (const a of dish.allergens) {
+    if (ALLERGEN_SHORT[a]) {
+      badges.push({
+        key: `allergen-${a}`,
+        short: ALLERGEN_SHORT[a],
+        label: ALLERGEN_LABEL[a] ?? `Contains ${a}`,
+        bg: '#B5533C',
+      })
+    }
+  }
+  if (dish.is_freezer_friendly) {
+    badges.push({ key: 'freezer', short: '❄', label: 'Freezer friendly', bg: '#C8872E' })
+  }
+  if (dish.is_spicy) {
+    badges.push({ key: 'spicy', short: '~', label: 'Mild spice', bg: '#C8872E' })
+  }
+  return badges
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -128,12 +175,19 @@ function DishCard({
   getQty: (key: string) => number
   adjust: (entry: Omit<CartEntry, 'quantity'>, delta: number) => void
 }) {
+  const [activeTooltip, setActiveTooltip] = useState<string | null>(null)
+
   const soldOut = dish.is_sold_out
   const hasMeat = dish.meat_upgrade_price != null && dish.meat_upgrade_type != null
   const meatPrice = dish.base_price + (dish.meat_upgrade_price ?? 0)
   const meat = meatLabel(dish.meat_upgrade_type)
   const vegKey = `${dish.id}:vegetarian`
   const meatKey = `${dish.id}:meat`
+  const badges = buildBadges(dish)
+
+  function toggleTooltip(key: string) {
+    setActiveTooltip(prev => prev === key ? null : key)
+  }
 
   return (
     <article
@@ -177,7 +231,7 @@ function DishCard({
         )}
       </div>
 
-      {/* Description / allergy / spice notes */}
+      {/* Description */}
       {dish.description && (
         <p style={{
           fontFamily: 'var(--font-inter), sans-serif',
@@ -188,6 +242,47 @@ function DishCard({
         }}>
           {dish.description}
         </p>
+      )}
+
+      {/* Allergen / property badges */}
+      {badges.length > 0 && (
+        <div style={{ marginTop: 8 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 5 }}>
+            {badges.map(b => (
+              <button
+                key={b.key}
+                onClick={() => toggleTooltip(b.key)}
+                aria-pressed={activeTooltip === b.key}
+                style={{
+                  background: b.bg,
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: 4,
+                  padding: '3px 7px',
+                  fontFamily: 'var(--font-inter), sans-serif',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  letterSpacing: '0.03em',
+                  lineHeight: 1.6,
+                }}
+              >
+                {b.short}
+              </button>
+            ))}
+          </div>
+          {activeTooltip && (
+            <p style={{
+              fontFamily: 'var(--font-inter), sans-serif',
+              fontSize: 12,
+              color: 'var(--text-tertiary)',
+              margin: '5px 0 0',
+              lineHeight: 1.4,
+            }}>
+              {badges.find(b => b.key === activeTooltip)?.label}
+            </p>
+          )}
+        </div>
       )}
 
       {/* Price rows + quantity controls */}
@@ -436,6 +531,16 @@ export default function MenuClient({
         {/* Mains */}
         <section style={{ marginBottom: 52 }}>
           <SectionHeading>Mains</SectionHeading>
+          <p style={{
+            fontFamily: 'var(--font-inter), sans-serif',
+            fontSize: 13,
+            color: 'var(--text-tertiary)',
+            margin: '-8px 0 20px',
+            fontStyle: 'italic',
+            fontWeight: 400,
+          }}>
+            All mains served with a side salad
+          </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {mains.map(dish => (
               <DishCard key={dish.id} dish={dish} getQty={getQty} adjust={adjust} />

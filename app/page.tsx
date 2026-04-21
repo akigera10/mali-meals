@@ -9,7 +9,7 @@ export default async function HomePage() {
   const [{ data: menuItems }, { data: addons }] = await Promise.all([
     supabase
       .from('menu_items')
-      .select('id, name, description, category, base_price, meat_upgrade_price, meat_upgrade_type, is_sold_out, is_spicy, is_freezer_friendly, allergens')
+      .select('id, name, description, category, base_price, meat_upgrade_price, meat_upgrade_type, is_sold_out, is_spicy, is_freezer_friendly, allergens, is_family_friendly')
       .eq('is_active', true)
       .order('sort_order'),
     supabase

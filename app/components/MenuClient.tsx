@@ -16,6 +16,7 @@ type MenuItem = {
   is_spicy: boolean
   is_freezer_friendly: boolean
   allergens: string[]
+  is_family_friendly: boolean
 }
 
 type ProteinAddon = {
@@ -69,10 +70,10 @@ function buildBadges(dish: MenuItem): BadgeSpec[] {
     }
   }
   if (dish.is_freezer_friendly) {
-    badges.push({ key: 'freezer', short: '❄', label: 'Freezer friendly', bg: '#C8872E' })
+    badges.push({ key: 'freezer', short: '❄', label: 'Freezer-friendly', bg: '#C8872E' })
   }
   if (dish.is_spicy) {
-    badges.push({ key: 'spicy', short: '~', label: 'Mild spice', bg: '#C8872E' })
+    badges.push({ key: 'spicy', short: '🌶', label: 'Mild spice', bg: '#C8872E' })
   }
   return badges
 }
@@ -176,14 +177,28 @@ function DishCard({
   adjust: (entry: Omit<CartEntry, 'quantity'>, delta: number) => void
 }) {
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null)
+  const [showMeatSelector, setShowMeatSelector] = useState(false)
 
   const soldOut = dish.is_sold_out
   const hasMeat = dish.meat_upgrade_price != null && dish.meat_upgrade_type != null
   const meatPrice = dish.base_price + (dish.meat_upgrade_price ?? 0)
   const meat = meatLabel(dish.meat_upgrade_type)
   const vegKey = `${dish.id}:vegetarian`
-  const meatKey = `${dish.id}:meat`
+  const meatKey = `${dish.id}:meat`           // for beef-only or chicken-only dishes
+  const beefKey = `${dish.id}:meat:beef`       // for 'both' dishes
+  const chickenKey = `${dish.id}:meat:chicken` // for 'both' dishes
   const badges = buildBadges(dish)
+
+  const isBoth = dish.meat_upgrade_type === 'both'
+  const beefQty = getQty(beefKey)
+  const chickenQty = getQty(chickenKey)
+
+  function meatRowLabel(): string {
+    if (!isBoth) return `with ${meat}`
+    if (beefQty > 0) return 'with beef'
+    if (chickenQty > 0) return 'with chicken'
+    return 'with beef or chicken'
+  }
 
   function toggleTooltip(key: string) {
     setActiveTooltip(prev => prev === key ? null : key)
@@ -285,6 +300,20 @@ function DishCard({
         </div>
       )}
 
+      {/* Family friendly line */}
+      {dish.is_family_friendly && (
+        <p style={{
+          fontFamily: 'var(--font-inter), sans-serif',
+          fontSize: 13,
+          color: 'var(--text-tertiary)',
+          fontStyle: 'italic',
+          margin: '6px 0 0',
+          lineHeight: 1.4,
+        }}>
+          Great for families
+        </p>
+      )}
+
       {/* Price rows + quantity controls */}
       {!soldOut && (
         <div style={{
@@ -338,14 +367,89 @@ function DishCard({
                   fontSize: 12,
                   color: 'var(--text-tertiary)',
                 }}>
-                  with {meat}
+                  {meatRowLabel()}
                 </span>
               </div>
-              <Qty
-                qty={getQty(meatKey)}
-                onInc={() => adjust({ id: meatKey, name: dish.name, variant: 'meat', unitPrice: meatPrice }, 1)}
-                onDec={() => adjust({ id: meatKey, name: dish.name, variant: 'meat', unitPrice: meatPrice }, -1)}
-              />
+
+              {/* Standard Qty for single-meat dishes */}
+              {!isBoth && (
+                <Qty
+                  qty={getQty(meatKey)}
+                  onInc={() => adjust({ id: meatKey, name: dish.name, variant: 'meat', unitPrice: meatPrice }, 1)}
+                  onDec={() => adjust({ id: meatKey, name: dish.name, variant: 'meat', unitPrice: meatPrice }, -1)}
+                />
+              )}
+
+              {/* Beef/chicken selector for 'both' dishes */}
+              {isBoth && (
+                <>
+                  {beefQty === 0 && chickenQty === 0 && (
+                    !showMeatSelector ? (
+                      <button
+                        onClick={() => setShowMeatSelector(true)}
+                        style={{
+                          background: 'var(--brand-gold)',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: 6,
+                          padding: '7px 18px',
+                          fontFamily: 'var(--font-inter), sans-serif',
+                          fontSize: 13,
+                          fontWeight: 500,
+                          cursor: 'pointer',
+                          letterSpacing: '0.02em',
+                          flexShrink: 0,
+                        }}
+                      >
+                        Add
+                      </button>
+                    ) : (
+                      <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                        {(['beef', 'chicken'] as const).map(choice => (
+                          <button
+                            key={choice}
+                            onClick={() => {
+                              const key = choice === 'beef' ? beefKey : chickenKey
+                              adjust({ id: key, name: `${dish.name} with ${choice}`, variant: 'meat', unitPrice: meatPrice }, 1)
+                              setShowMeatSelector(false)
+                            }}
+                            style={{
+                              border: '1.5px solid var(--border-strong)',
+                              background: 'transparent',
+                              borderRadius: 6,
+                              padding: '5px 12px',
+                              fontFamily: 'var(--font-inter), sans-serif',
+                              fontSize: 12,
+                              fontWeight: 500,
+                              color: 'var(--text-primary)',
+                              cursor: 'pointer',
+                              textTransform: 'capitalize' as const,
+                            }}
+                          >
+                            {choice}
+                          </button>
+                        ))}
+                      </div>
+                    )
+                  )}
+
+                  {beefQty > 0 && (
+                    <Qty
+                      qty={beefQty}
+                      onInc={() => adjust({ id: beefKey, name: `${dish.name} with beef`, variant: 'meat', unitPrice: meatPrice }, 1)}
+                      onDec={() => adjust({ id: beefKey, name: `${dish.name} with beef`, variant: 'meat', unitPrice: meatPrice }, -1)}
+                    />
+                  )}
+
+                  {chickenQty > 0 && (
+                    <Qty
+                      qty={chickenQty}
+                      onInc={() => adjust({ id: chickenKey, name: `${dish.name} with chicken`, variant: 'meat', unitPrice: meatPrice }, 1)}
+                      onDec={() => adjust({ id: chickenKey, name: `${dish.name} with chicken`, variant: 'meat', unitPrice: meatPrice }, -1)}
+                    />
+                  )}
+                </>
+              )}
             </div>
           )}
         </div>

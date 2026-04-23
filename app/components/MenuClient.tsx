@@ -354,8 +354,8 @@ function DishCard({
               {!isBoth && (
                 <Qty
                   qty={getQty(meatKey)}
-                  onInc={() => adjust({ id: meatKey, name: dish.name, variant: 'meat', unitPrice: meatPrice }, 1)}
-                  onDec={() => adjust({ id: meatKey, name: dish.name, variant: 'meat', unitPrice: meatPrice }, -1)}
+                  onInc={() => adjust({ id: meatKey, name: dish.name, variant: 'meat', meatType: dish.meat_upgrade_type, unitPrice: meatPrice }, 1)}
+                  onDec={() => adjust({ id: meatKey, name: dish.name, variant: 'meat', meatType: dish.meat_upgrade_type, unitPrice: meatPrice }, -1)}
                 />
               )}
 
@@ -389,7 +389,7 @@ function DishCard({
                             key={choice}
                             onClick={() => {
                               const key = choice === 'beef' ? beefKey : chickenKey
-                              adjust({ id: key, name: `${dish.name} with ${choice}`, variant: 'meat', unitPrice: meatPrice }, 1)
+                              adjust({ id: key, name: `${dish.name} with ${choice}`, variant: 'meat', meatType: choice, unitPrice: meatPrice }, 1)
                               setShowMeatSelector(false)
                             }}
                             style={{
@@ -415,16 +415,16 @@ function DishCard({
                   {beefQty > 0 && (
                     <Qty
                       qty={beefQty}
-                      onInc={() => adjust({ id: beefKey, name: `${dish.name} with beef`, variant: 'meat', unitPrice: meatPrice }, 1)}
-                      onDec={() => adjust({ id: beefKey, name: `${dish.name} with beef`, variant: 'meat', unitPrice: meatPrice }, -1)}
+                      onInc={() => adjust({ id: beefKey, name: `${dish.name} with beef`, variant: 'meat', meatType: 'beef', unitPrice: meatPrice }, 1)}
+                      onDec={() => adjust({ id: beefKey, name: `${dish.name} with beef`, variant: 'meat', meatType: 'beef', unitPrice: meatPrice }, -1)}
                     />
                   )}
 
                   {chickenQty > 0 && (
                     <Qty
                       qty={chickenQty}
-                      onInc={() => adjust({ id: chickenKey, name: `${dish.name} with chicken`, variant: 'meat', unitPrice: meatPrice }, 1)}
-                      onDec={() => adjust({ id: chickenKey, name: `${dish.name} with chicken`, variant: 'meat', unitPrice: meatPrice }, -1)}
+                      onInc={() => adjust({ id: chickenKey, name: `${dish.name} with chicken`, variant: 'meat', meatType: 'chicken', unitPrice: meatPrice }, 1)}
+                      onDec={() => adjust({ id: chickenKey, name: `${dish.name} with chicken`, variant: 'meat', meatType: 'chicken', unitPrice: meatPrice }, -1)}
                     />
                   )}
                 </>

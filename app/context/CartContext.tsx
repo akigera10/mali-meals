@@ -6,8 +6,24 @@ export type CartEntry = {
   id: string
   name: string
   variant: 'vegetarian' | 'meat' | 'addon'
+  meatType?: 'beef' | 'chicken' | 'both' | null
   unitPrice: number
   quantity: number
+}
+
+export type SavedForm = {
+  firstName: string
+  lastName: string
+  phone: string
+  email: string
+  addrBuilding: string
+  addrStreet: string
+  addrApartment: string
+  addrLandmark: string
+  zone: string
+  deliveryDay: string
+  deliverySlot: string
+  notes: string
 }
 
 type CartContextValue = {
@@ -15,12 +31,15 @@ type CartContextValue = {
   adjust: (entry: Omit<CartEntry, 'quantity'>, delta: number) => void
   getQty: (key: string) => number
   clearCart: () => void
+  savedForm: SavedForm | null
+  saveForm: (form: SavedForm) => void
 }
 
 const CartContext = createContext<CartContextValue | null>(null)
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartEntry[]>([])
+  const [savedForm, setSavedForm] = useState<SavedForm | null>(null)
 
   function getQty(key: string): number {
     return cart.find(e => e.id === key)?.quantity ?? 0
@@ -43,8 +62,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setCart([])
   }
 
+  function saveForm(form: SavedForm) {
+    setSavedForm(form)
+  }
+
   return (
-    <CartContext.Provider value={{ cart, adjust, getQty, clearCart }}>
+    <CartContext.Provider value={{ cart, adjust, getQty, clearCart, savedForm, saveForm }}>
       {children}
     </CartContext.Provider>
   )

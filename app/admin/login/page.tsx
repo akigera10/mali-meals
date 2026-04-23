@@ -47,7 +47,7 @@ export default function AdminLogin() {
           color: 'var(--text-primary)',
           marginBottom: '8px',
         }}>
-          Mali's Meals
+          Mali&apos;s Meals
         </h1>
         <p style={{
           fontSize: '14px',

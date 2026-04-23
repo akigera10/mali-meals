@@ -25,15 +25,15 @@ export default function OrdersClient({ initialOrders }: { initialOrders: Order[]
   const [orders, setOrders] = useState(initialOrders)
 
   async function togglePayment(id: string, current: string) {
-    const next = current === 'paid' ? 'unpaid' : 'paid'
-    setOrders(orders.map(o => o.id === id ? { ...o, payment_status: next } : o))
-    await supabase.from('orders').update({ payment_status: next } as any).eq('id', id)
-  }
+  const next = current === 'paid' ? 'unpaid' : 'paid'
+  setOrders(orders.map(o => o.id === id ? { ...o, payment_status: next } : o))
+  await (supabase.from('orders') as any).update({ payment_status: next }).eq('id', id)
+}
 
-  async function updateStatus(id: string, next: string) {
-    setOrders(orders.map(o => o.id === id ? { ...o, order_status: next } : o))
-    await supabase.from('orders').update({ order_status: next } as any).eq('id', id)
-  }
+async function updateStatus(id: string, next: string) {
+  setOrders(orders.map(o => o.id === id ? { ...o, order_status: next } : o))
+  await (supabase.from('orders') as any).update({ order_status: next }).eq('id', id)
+}
 
   return (
     <div style={{

@@ -467,6 +467,7 @@ export default function CheckoutClient() {
             menu_item_id: menuItemId,
             quantity: entry.quantity,
             variant,
+            meat_type: entry.meatType ?? null,
             unit_price: entry.unitPrice,
           })
           .select('id')

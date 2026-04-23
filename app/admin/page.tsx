@@ -1,5 +1,6 @@
 import { createServerClient } from '@/lib/supabase'
 import OrdersClient from './OrdersClient'
+import AdminNav from './components/AdminNav'
 
 export const revalidate = 0
 
@@ -18,5 +19,10 @@ export default async function AdminPage() {
     )
   }
 
-  return <OrdersClient initialOrders={orders} />
+  return (
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--surface-base)' }}>
+      <AdminNav />
+      <OrdersClient initialOrders={orders} />
+    </div>
+  )
 }

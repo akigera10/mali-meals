@@ -29,6 +29,14 @@ type ProteinAddon = {
   is_sold_out: boolean
 }
 
+type Special = {
+  id: string
+  name: string
+  description: string
+  price: number
+  is_sold_out: boolean
+}
+
 // ─── Badge config ─────────────────────────────────────────────────────────────
 
 const ALLERGEN_SHORT: Record<string, string> = {
@@ -504,6 +512,99 @@ function AddonCard({
   )
 }
 
+// ─── Special card ──────────────────────────────────────────────────────────────
+
+function SpecialCard({
+  special,
+  getQty,
+  adjust,
+}: {
+  special: Special
+  getQty: (key: string) => number
+  adjust: (entry: Omit<CartEntry, 'quantity'>, delta: number) => void
+}) {
+  const key = `special:${special.id}`
+  const soldOut = special.is_sold_out
+
+  return (
+    <article style={{
+      background: 'var(--surface-raised)',
+      border: '1px solid var(--border)',
+      borderRadius: 8,
+      padding: 20,
+      opacity: soldOut ? 0.5 : 1,
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+        <h3 style={{
+          fontFamily: 'var(--font-fraunces), serif',
+          fontSize: 19,
+          fontWeight: 400,
+          color: 'var(--text-primary)',
+          margin: 0,
+          lineHeight: 1.3,
+          flex: 1,
+        }}>
+          {special.name}
+        </h3>
+        {soldOut && (
+          <span style={{
+            fontFamily: 'var(--font-inter), sans-serif',
+            fontSize: 10,
+            fontWeight: 600,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase' as const,
+            color: 'var(--text-tertiary)',
+            background: 'var(--surface-sunken)',
+            borderRadius: 4,
+            padding: '3px 7px',
+            whiteSpace: 'nowrap' as const,
+            flexShrink: 0,
+          }}>
+            Sold out
+          </span>
+        )}
+      </div>
+
+      {special.description && (
+        <p style={{
+          fontFamily: 'var(--font-inter), sans-serif',
+          fontSize: 13,
+          color: 'var(--text-secondary)',
+          margin: '6px 0 0',
+          lineHeight: 1.55,
+        }}>
+          {special.description}
+        </p>
+      )}
+
+      {!soldOut ? (
+        <div style={{
+          marginTop: 14,
+          borderTop: '1px solid var(--border)',
+          paddingTop: 12,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 8,
+        }}>
+          <span style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: 18, color: 'var(--brand-gold)' }}>
+            {fmt(special.price)}
+          </span>
+          <Qty
+            qty={getQty(key)}
+            onInc={() => adjust({ id: key, name: special.name, variant: 'addon', unitPrice: special.price }, 1)}
+            onDec={() => adjust({ id: key, name: special.name, variant: 'addon', unitPrice: special.price }, -1)}
+          />
+        </div>
+      ) : (
+        <p style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: 18, color: 'var(--text-tertiary)', margin: '12px 0 0' }}>
+          {fmt(special.price)}
+        </p>
+      )}
+    </article>
+  )
+}
+
 // ─── Section heading ───────────────────────────────────────────────────────────
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
@@ -527,9 +628,11 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
 export default function MenuClient({
   menuItems,
   addons,
+  specials,
 }: {
   menuItems: MenuItem[]
   addons: ProteinAddon[]
+  specials: Special[]
 }) {
   const { cart, adjust, getQty } = useCart()
   const router = useRouter()
@@ -610,6 +713,18 @@ export default function MenuClient({
             ))}
           </div>
         </section>
+
+        {/* Chef's special */}
+        {specials.length > 0 && (
+          <section style={{ marginBottom: 52 }}>
+            <SectionHeading>Chef&apos;s special</SectionHeading>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {specials.map(special => (
+                <SpecialCard key={special.id} special={special} getQty={getQty} adjust={adjust} />
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Protein add-ons */}
         {addons.length > 0 && (

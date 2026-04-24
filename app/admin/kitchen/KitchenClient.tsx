@@ -49,7 +49,6 @@ type RawItem = {
   order_id: string
   quantity: number
   variant: string
-  meat_type: string | null
   menu_items: { name: string; meat_upgrade_type: string | null } | null
   order_item_addons: {
     quantity: number
@@ -57,11 +56,17 @@ type RawItem = {
   }[]
 }
 
+type RawSpecial = {
+  order_id: string
+  quantity: number
+  specials: { name: string } | null
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function variantLabel(item: RawItem): string {
   if (item.variant === 'vegetarian') return 'Vegetarian'
-  const t = item.meat_type ?? item.menu_items?.meat_upgrade_type
+  const t = item.menu_items?.meat_upgrade_type
   if (t === 'beef') return 'With beef'
   if (t === 'chicken') return 'With chicken'
   return 'With meat'
@@ -107,6 +112,7 @@ export default function KitchenClient() {
   const [loading, setLoading] = useState(true)
   const [orders, setOrders] = useState<RawOrder[]>([])
   const [items, setItems] = useState<RawItem[]>([])
+  const [rawSpecials, setRawSpecials] = useState<RawSpecial[]>([])
   const [dayFilter, setDayFilter] = useState<DayFilter>('all')
 
   const weekBounds = useMemo(
@@ -120,21 +126,13 @@ export default function KitchenClient() {
 
     async function load() {
       const { data: ordersData } = await (supabase.from('orders') as any)
-        .select(`
-          id, delivery_day, subtotal, delivery_fee, total_amount, payment_status,
-          order_items(
-            quantity, variant, meat_type,
-            menu_items(name, meat_upgrade_type),
-            order_item_addons(quantity, protein_addons(name))
-          )
-        `)
+        .select('id, delivery_day, subtotal, delivery_fee, total_amount, payment_status')
         .gte('created_at', weekBounds.start.toISOString())
         .lt('created_at', weekBounds.end.toISOString())
 
       if (!active) return
 
       const rows: any[] = ordersData || []
-
       const fetchedOrders: RawOrder[] = rows.map((o: any) => ({
         id: o.id,
         delivery_day: o.delivery_day,
@@ -144,19 +142,39 @@ export default function KitchenClient() {
         payment_status: o.payment_status,
       }))
 
-      const fetchedItems: RawItem[] = rows.flatMap((o: any) =>
-        (o.order_items || []).map((item: any) => ({
-          order_id: o.id,
+      let fetchedItems: RawItem[] = []
+      let fetchedSpecials: RawSpecial[] = []
+      if (rows.length > 0) {
+        const orderIds = rows.map((o: any) => o.id)
+        const [{ data: itemsData }, { data: specialsData }] = await Promise.all([
+          (supabase.from('order_items') as any)
+            .select(`
+              order_id, quantity, variant,
+              menu_items(name, meat_upgrade_type),
+              order_item_addons(quantity, protein_addons(name))
+            `)
+            .in('order_id', orderIds),
+          (supabase.from('order_specials') as any)
+            .select('order_id, quantity, specials(name)')
+            .in('order_id', orderIds),
+        ])
+        fetchedItems = (itemsData || []).map((item: any) => ({
+          order_id: item.order_id,
           quantity: item.quantity,
           variant: item.variant,
-          meat_type: item.meat_type,
           menu_items: item.menu_items,
           order_item_addons: item.order_item_addons || [],
         }))
-      )
+        fetchedSpecials = (specialsData || []).map((s: any) => ({
+          order_id: s.order_id,
+          quantity: s.quantity,
+          specials: s.specials,
+        }))
+      }
 
       setOrders(fetchedOrders)
       setItems(fetchedItems)
+      setRawSpecials(fetchedSpecials)
       setLoading(false)
     }
 
@@ -179,6 +197,11 @@ export default function KitchenClient() {
   const filteredItems = useMemo(
     () => items.filter(item => filteredOrderIds.has(item.order_id)),
     [items, filteredOrderIds]
+  )
+
+  const filteredSpecials = useMemo(
+    () => rawSpecials.filter(s => filteredOrderIds.has(s.order_id)),
+    [rawSpecials, filteredOrderIds]
   )
 
   // ── Cooking summary ─────────────────────────────────────────────────────────
@@ -205,6 +228,15 @@ export default function KitchenClient() {
     }
     return map
   }, [filteredItems])
+
+  const specialGroups = useMemo(() => {
+    const map: Record<string, number> = {}
+    for (const s of filteredSpecials) {
+      const name = s.specials?.name ?? 'Unknown special'
+      map[name] = (map[name] ?? 0) + s.quantity
+    }
+    return map
+  }, [filteredSpecials])
 
   // ── Popularity ranking (all days, no filter) ────────────────────────────────
 
@@ -315,6 +347,14 @@ export default function KitchenClient() {
                   <SummaryTable rows={Object.entries(dishGroups).sort((a, b) => b[1] - a[1])} />
                 )}
               </div>
+
+              {/* Chef's specials */}
+              {Object.keys(specialGroups).length > 0 && (
+                <div style={{ marginBottom: '20px' }}>
+                  <SubHeading>Chef's special</SubHeading>
+                  <SummaryTable rows={Object.entries(specialGroups).sort((a, b) => b[1] - a[1])} />
+                </div>
+              )}
 
               {/* Protein add-ons */}
               {Object.keys(addonGroups).length > 0 && (

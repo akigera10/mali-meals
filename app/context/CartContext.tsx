@@ -5,7 +5,7 @@ import { createContext, useContext, useState, ReactNode } from 'react'
 export type CartEntry = {
   id: string
   name: string
-  variant: 'vegetarian' | 'meat' | 'addon'
+  variant: 'vegetarian' | 'meat' | 'addon' | 'special'
   meatType?: 'beef' | 'chicken' | 'both' | null
   unitPrice: number
   quantity: number

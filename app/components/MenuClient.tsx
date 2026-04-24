@@ -592,8 +592,8 @@ function SpecialCard({
           </span>
           <Qty
             qty={getQty(key)}
-            onInc={() => adjust({ id: key, name: special.name, variant: 'addon', unitPrice: special.price }, 1)}
-            onDec={() => adjust({ id: key, name: special.name, variant: 'addon', unitPrice: special.price }, -1)}
+            onInc={() => adjust({ id: key, name: special.name, variant: 'special', unitPrice: special.price }, 1)}
+            onDec={() => adjust({ id: key, name: special.name, variant: 'special', unitPrice: special.price }, -1)}
           />
         </div>
       ) : (

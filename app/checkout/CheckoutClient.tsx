@@ -339,7 +339,8 @@ export default function CheckoutClient() {
 
   // ── Derived values ────────────────────────────────────────────────────────
 
-  const dishes = cart.filter(e => e.variant !== 'addon')
+  const dishes = cart.filter(e => e.variant !== 'addon' && e.variant !== 'special')
+  const specials = cart.filter(e => e.variant === 'special')
   const addons = cart.filter(e => e.variant === 'addon')
   const subtotal = cart.reduce((s, e) => s + e.unitPrice * e.quantity, 0)
   const rawFee = ZONE_FEES[form.zone] ?? 0
@@ -448,9 +449,6 @@ export default function CheckoutClient() {
       const orderId = orderData.id
       const ref = orderData.order_ref
 
-      const specials = cart.filter(e => e.variant === 'addon' && e.id.startsWith('special:'))
-      const proteinAddons = cart.filter(e => e.variant === 'addon' && e.id.startsWith('addon:'))
-
       const insertedItemIds: string[] = []
 
       for (const entry of dishes) {
@@ -474,28 +472,24 @@ export default function CheckoutClient() {
       }
 
       for (const entry of specials) {
-        const menuItemId = entry.id.replace('special:', '')
+        const specialId = entry.id.replace('special:', '')
 
-        const { data: itemData, error: itemError } = await supabase
-          .from('order_items')
+        const { error: specialError } = await supabase
+          .from('order_specials')
           .insert({
             order_id: orderId,
-            menu_item_id: menuItemId,
+            special_id: specialId,
             quantity: entry.quantity,
-            variant: 'meat',
             unit_price: entry.unitPrice,
           })
-          .select('id')
-          .single()
 
-        if (itemError) throw itemError
-        insertedItemIds.push(itemData.id)
+        if (specialError) throw specialError
       }
 
-      if (proteinAddons.length > 0 && insertedItemIds.length > 0) {
+      if (addons.length > 0 && insertedItemIds.length > 0) {
         const firstItemId = insertedItemIds[0]
 
-        for (const entry of proteinAddons) {
+        for (const entry of addons) {
           const addonId = entry.id.replace('addon:', '')
 
           const { error: addonError } = await supabase
@@ -993,6 +987,51 @@ export default function CheckoutClient() {
                   </div>
                 </div>
               ))}
+
+              {/* Chef's special */}
+              {specials.length > 0 && (
+                <>
+                  <div style={{
+                    fontFamily: 'var(--font-inter), sans-serif',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase' as const,
+                    color: 'var(--text-tertiary)',
+                    marginBottom: 10,
+                  }}>
+                    Chef&apos;s special
+                  </div>
+                  {specials.map(entry => (
+                    <div key={entry.id} style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      gap: 12,
+                      paddingBottom: 12,
+                      marginBottom: 12,
+                      borderBottom: '1px solid var(--border)',
+                    }}>
+                      <div style={{
+                        fontFamily: 'var(--font-fraunces), serif',
+                        fontSize: 16,
+                        color: 'var(--text-primary)',
+                        flex: 1,
+                      }}>
+                        {entry.name}
+                      </div>
+                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                        <div style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 12, color: 'var(--text-tertiary)' }}>
+                          {entry.quantity} × {fmt(entry.unitPrice)}
+                        </div>
+                        <div style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: 16, color: 'var(--text-primary)', marginTop: 2 }}>
+                          {fmt(entry.unitPrice * entry.quantity)}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
 
               {/* Add-ons */}
               {addons.length > 0 && (

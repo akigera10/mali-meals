@@ -30,7 +30,6 @@ type OrderItem = {
   id: string
   quantity: number
   variant: string
-  meat_type: string | null
   unit_price: number
   menu_items: { name: string; meat_upgrade_type: string | null } | null
   order_item_addons: {
@@ -38,6 +37,13 @@ type OrderItem = {
     unit_price: number
     protein_addons: { name: string } | null
   }[]
+}
+
+type OrderSpecial = {
+  id: string
+  quantity: number
+  unit_price: number
+  specials: { name: string } | null
 }
 
 const STATUS_OPTIONS = ['pending', 'confirmed', 'out_for_delivery', 'delivered']
@@ -58,8 +64,7 @@ function deliveryLabel(order: Order): string {
 
 function variantLabel(item: OrderItem): string {
   if (item.variant === 'vegetarian') return 'Vegetarian'
-  // meat_type is saved for new orders; fall back to meat_upgrade_type for old ones
-  const t = item.meat_type ?? item.menu_items?.meat_upgrade_type
+  const t = item.menu_items?.meat_upgrade_type
   if (t === 'beef') return 'With beef'
   if (t === 'chicken') return 'With chicken'
   return 'With meat'
@@ -68,7 +73,7 @@ function variantLabel(item: OrderItem): string {
 export default function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
   const [orders, setOrders] = useState(initialOrders)
   const [expandedId, setExpandedId] = useState<string | null>(null)
-  const [detailCache, setDetailCache] = useState<Record<string, OrderItem[]>>({})
+  const [detailCache, setDetailCache] = useState<Record<string, { items: OrderItem[]; specials: OrderSpecial[] }>>({})
   const [loadingId, setLoadingId] = useState<string | null>(null)
 
   async function toggleOrder(id: string) {
@@ -79,10 +84,15 @@ export default function OrdersClient({ initialOrders }: { initialOrders: Order[]
     setExpandedId(id)
     if (detailCache[id]) return
     setLoadingId(id)
-    const { data } = await (supabase.from('order_items') as any)
-      .select('id, quantity, variant, meat_type, unit_price, menu_items(name, meat_upgrade_type), order_item_addons(quantity, unit_price, protein_addons(name))')
-      .eq('order_id', id)
-    setDetailCache(c => ({ ...c, [id]: data || [] }))
+    const [{ data: itemsData }, { data: specialsData }] = await Promise.all([
+      (supabase.from('order_items') as any)
+        .select('id, quantity, variant, unit_price, menu_items(name, meat_upgrade_type), order_item_addons(quantity, unit_price, protein_addons(name))')
+        .eq('order_id', id),
+      (supabase.from('order_specials') as any)
+        .select('id, quantity, unit_price, specials(name)')
+        .eq('order_id', id),
+    ])
+    setDetailCache(c => ({ ...c, [id]: { items: itemsData || [], specials: specialsData || [] } }))
     setLoadingId(null)
   }
 
@@ -118,7 +128,9 @@ export default function OrdersClient({ initialOrders }: { initialOrders: Order[]
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {orders.map(order => {
               const isExpanded = expandedId === order.id
-              const items: OrderItem[] = detailCache[order.id] || []
+              const detail = detailCache[order.id]
+              const items: OrderItem[] = detail?.items || []
+              const orderSpecials: OrderSpecial[] = detail?.specials || []
               const isLoading = loadingId === order.id
               const allAddons = items.flatMap(item => item.order_item_addons || [])
 
@@ -288,6 +300,47 @@ export default function OrdersClient({ initialOrders }: { initialOrders: Order[]
                               ))}
                             </div>
                           </div>
+
+                          {/* Chef's special */}
+                          {orderSpecials.length > 0 && (
+                            <div style={{ marginBottom: '16px' }}>
+                              <div style={{
+                                fontSize: '11px',
+                                fontWeight: '600',
+                                color: 'var(--text-tertiary)',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.07em',
+                                marginBottom: '10px',
+                              }}>
+                                Chef's special
+                              </div>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+                                {orderSpecials.map(s => (
+                                  <div key={s.id} style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: '1fr auto auto auto',
+                                    gap: '16px',
+                                    alignItems: 'baseline',
+                                    fontSize: '13px',
+                                  }}>
+                                    <span style={{ color: 'var(--text-primary)' }}>
+                                      {s.specials?.name ?? '—'}
+                                    </span>
+                                    <span style={{ color: 'var(--text-tertiary)' }}>× {s.quantity}</span>
+                                    <span style={{ color: 'var(--text-tertiary)' }}>{fmt(s.unit_price)}</span>
+                                    <span style={{
+                                      fontFamily: 'var(--font-fraunces)',
+                                      fontSize: '14px',
+                                      color: 'var(--text-primary)',
+                                      textAlign: 'right',
+                                    }}>
+                                      {fmt(s.unit_price * s.quantity)}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
 
                           {/* Add-ons */}
                           {allAddons.length > 0 && (

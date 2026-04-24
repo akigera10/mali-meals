@@ -7,7 +7,7 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 type CartEntry = {
   id: string
   name: string
-  variant: 'vegetarian' | 'meat' | 'addon'
+  variant: 'vegetarian' | 'meat' | 'addon' | 'special'
   meatType?: 'beef' | 'chicken' | 'both' | null
   unitPrice: number
   quantity: number
@@ -64,7 +64,8 @@ export async function POST(req: NextRequest) {
       notes,
     } = await req.json()
 
-    const dishes = (items as CartEntry[]).filter(e => e.variant !== 'addon')
+    const dishes = (items as CartEntry[]).filter(e => e.variant !== 'addon' && e.variant !== 'special')
+    const specials = (items as CartEntry[]).filter(e => e.variant === 'special')
     const addons = (items as CartEntry[]).filter(e => e.variant === 'addon')
     const dayLabel = buildDeliveryLabel(delivery_day, delivery_slot)
     const freeDelivery = delivery_fee === 0 && subtotal >= 5000
@@ -79,6 +80,21 @@ export async function POST(req: NextRequest) {
         <td style="padding: 10px 0; border-bottom: 1px solid #EDE8DF; text-align: right; font-family: Georgia, serif; font-size: 15px; color: #1F1B16; white-space: nowrap;">${fmt(e.unitPrice * e.quantity)}</td>
       </tr>
     `).join('')
+
+    const specialRows = specials.length > 0 ? `
+      <tr>
+        <td colspan="3" style="padding: 10px 0 6px; font-family: Arial, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #8B8375;">
+          Chef&apos;s special
+        </td>
+      </tr>
+      ${specials.map(e => `
+        <tr>
+          <td style="padding: 10px 0; border-bottom: 1px solid #EDE8DF; font-family: Georgia, serif; font-size: 15px; color: #1F1B16;">${e.name}</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #EDE8DF; text-align: right; font-family: Arial, sans-serif; font-size: 13px; color: #5C554A; white-space: nowrap;">${e.quantity} × ${fmt(e.unitPrice)}</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #EDE8DF; text-align: right; font-family: Georgia, serif; font-size: 15px; color: #1F1B16; white-space: nowrap;">${fmt(e.unitPrice * e.quantity)}</td>
+        </tr>
+      `).join('')}
+    ` : ''
 
     const addonRows = addons.length > 0 ? `
       <tr>
@@ -141,6 +157,7 @@ export async function POST(req: NextRequest) {
         </thead>
         <tbody>
           ${dishRows}
+          ${specialRows}
           ${addonRows}
         </tbody>
       </table>

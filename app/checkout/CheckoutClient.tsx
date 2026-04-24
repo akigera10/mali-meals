@@ -361,29 +361,23 @@ export default function CheckoutClient() {
   // ── Field helpers ─────────────────────────────────────────────────────────
 
   function setField(key: keyof FormData, value: string) {
-    setForm(prev => {
-      const next = { ...prev, [key]: value }
-      saveForm(next)
-      return next
-    })
+    const next = { ...form, [key]: value }
+    setForm(next)
+    saveForm(next)
     if (errors[key]) setErrors(prev => ({ ...prev, [key]: undefined }))
   }
 
   function setDeliveryOption(key: string) {
-    setForm(prev => {
-      const next = { ...prev, deliveryDay: key, deliverySlot: '' }
-      saveForm(next)
-      return next
-    })
+    const next = { ...form, deliveryDay: key, deliverySlot: '' }
+    setForm(next)
+    saveForm(next)
     setErrors(prev => ({ ...prev, deliveryDay: undefined, deliverySlot: undefined }))
   }
 
   function setDeliverySlot(slot: string) {
-    setForm(prev => {
-      const next = { ...prev, deliverySlot: slot }
-      saveForm(next)
-      return next
-    })
+    const next = { ...form, deliverySlot: slot }
+    setForm(next)
+    saveForm(next)
     if (errors.deliverySlot) setErrors(prev => ({ ...prev, deliverySlot: undefined }))
   }
 
@@ -454,6 +448,9 @@ export default function CheckoutClient() {
       const orderId = orderData.id
       const ref = orderData.order_ref
 
+      const specials = cart.filter(e => e.variant === 'addon' && e.id.startsWith('special:'))
+      const proteinAddons = cart.filter(e => e.variant === 'addon' && e.id.startsWith('addon:'))
+
       const insertedItemIds: string[] = []
 
       for (const entry of dishes) {
@@ -467,7 +464,6 @@ export default function CheckoutClient() {
             menu_item_id: menuItemId,
             quantity: entry.quantity,
             variant,
-            meat_type: entry.meatType ?? null,
             unit_price: entry.unitPrice,
           })
           .select('id')
@@ -477,10 +473,29 @@ export default function CheckoutClient() {
         insertedItemIds.push(itemData.id)
       }
 
-      if (addons.length > 0 && insertedItemIds.length > 0) {
+      for (const entry of specials) {
+        const menuItemId = entry.id.replace('special:', '')
+
+        const { data: itemData, error: itemError } = await supabase
+          .from('order_items')
+          .insert({
+            order_id: orderId,
+            menu_item_id: menuItemId,
+            quantity: entry.quantity,
+            variant: 'meat',
+            unit_price: entry.unitPrice,
+          })
+          .select('id')
+          .single()
+
+        if (itemError) throw itemError
+        insertedItemIds.push(itemData.id)
+      }
+
+      if (proteinAddons.length > 0 && insertedItemIds.length > 0) {
         const firstItemId = insertedItemIds[0]
 
-        for (const entry of addons) {
+        for (const entry of proteinAddons) {
           const addonId = entry.id.replace('addon:', '')
 
           const { error: addonError } = await supabase

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 import { useState } from 'react'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 
 type Order = {
@@ -30,8 +31,9 @@ type OrderItem = {
   id: string
   quantity: number
   variant: string
+  meat_type: string | null
   unit_price: number
-  menu_items: { name: string; meat_upgrade_type: string | null } | null
+  menu_items: { name: string; category: string | null; meat_upgrade_type: string | null } | null
   order_item_addons: {
     quantity: number
     unit_price: number
@@ -45,8 +47,6 @@ type OrderSpecial = {
   unit_price: number
   specials: { name: string } | null
 }
-
-const STATUS_OPTIONS = ['pending', 'confirmed', 'out_for_delivery', 'delivered']
 
 function fmt(n: number) {
   return `Ksh ${n.toLocaleString()}`
@@ -64,14 +64,14 @@ function deliveryLabel(order: Order): string {
 
 function variantLabel(item: OrderItem): string {
   if (item.variant === 'vegetarian') return 'Vegetarian'
-  const t = item.menu_items?.meat_upgrade_type
+  const t = item.meat_type || item.menu_items?.meat_upgrade_type
   if (t === 'beef') return 'With beef'
   if (t === 'chicken') return 'With chicken'
   return 'With meat'
 }
 
 export default function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
-  const [orders, setOrders] = useState(initialOrders)
+  const orders = initialOrders
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [detailCache, setDetailCache] = useState<Record<string, { items: OrderItem[]; specials: OrderSpecial[] }>>({})
   const [loadingId, setLoadingId] = useState<string | null>(null)
@@ -86,7 +86,7 @@ export default function OrdersClient({ initialOrders }: { initialOrders: Order[]
     setLoadingId(id)
     const [{ data: itemsData }, { data: specialsData }] = await Promise.all([
       (supabase.from('order_items') as any)
-        .select('id, quantity, variant, unit_price, menu_items(name, meat_upgrade_type), order_item_addons(quantity, unit_price, protein_addons(name))')
+        .select('id, quantity, variant, meat_type, unit_price, menu_items(name, category, meat_upgrade_type), order_item_addons(quantity, unit_price, protein_addons(name))')
         .eq('order_id', id),
       (supabase.from('order_specials') as any)
         .select('id, quantity, unit_price, specials(name)')
@@ -94,17 +94,6 @@ export default function OrdersClient({ initialOrders }: { initialOrders: Order[]
     ])
     setDetailCache(c => ({ ...c, [id]: { items: itemsData || [], specials: specialsData || [] } }))
     setLoadingId(null)
-  }
-
-  async function togglePayment(id: string, current: string) {
-    const next = current === 'paid' ? 'unpaid' : 'paid'
-    setOrders(orders.map(o => o.id === id ? { ...o, payment_status: next } : o))
-    await (supabase.from('orders') as any).update({ payment_status: next }).eq('id', id)
-  }
-
-  async function updateStatus(id: string, next: string) {
-    setOrders(orders.map(o => o.id === id ? { ...o, order_status: next } : o))
-    await (supabase.from('orders') as any).update({ order_status: next }).eq('id', id)
   }
 
   return (
@@ -132,6 +121,8 @@ export default function OrdersClient({ initialOrders }: { initialOrders: Order[]
               const items: OrderItem[] = detail?.items || []
               const orderSpecials: OrderSpecial[] = detail?.specials || []
               const isLoading = loadingId === order.id
+              const mainItems = items.filter(i => i.menu_items?.category === 'mains')
+              const saladItems = items.filter(i => i.menu_items?.category === 'salads')
               const allAddons = items.flatMap(item => item.order_item_addons || [])
 
               return (
@@ -158,9 +149,19 @@ export default function OrdersClient({ initialOrders }: { initialOrders: Order[]
                     }}
                   >
                     <div>
-                      <div style={{ fontFamily: 'var(--font-fraunces)', fontSize: '16px', color: 'var(--text-primary)' }}>
+                      <Link
+                        href={`/admin/orders/${order.id}`}
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                          fontFamily: 'var(--font-fraunces)',
+                          fontSize: '16px',
+                          color: 'var(--brand-gold)',
+                          textDecoration: 'none',
+                          display: 'inline-block',
+                        }}
+                      >
                         {order.order_ref}
-                      </div>
+                      </Link>
                       <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '2px' }}>
                         {order.customer_name}
                       </div>
@@ -191,51 +192,37 @@ export default function OrdersClient({ initialOrders }: { initialOrders: Order[]
                     </div>
                   </div>
 
-                  {/* ── Actions row (stops click propagation) ── */}
-                  <div
-                    onClick={e => e.stopPropagation()}
-                    style={{
-                      display: 'flex',
-                      gap: '10px',
-                      alignItems: 'center',
-                      padding: '8px 20px 14px',
-                      borderTop: '1px solid var(--border)',
-                    }}
-                  >
-                    <button
-                      onClick={() => togglePayment(order.id, order.payment_status)}
-                      style={{
-                        padding: '5px 12px',
-                        borderRadius: '4px',
-                        border: 'none',
-                        cursor: 'pointer',
-                        fontSize: '12px',
-                        fontFamily: 'var(--font-inter)',
-                        backgroundColor: order.payment_status === 'paid' ? '#3F5A3C' : 'var(--surface-sunken)',
-                        color: order.payment_status === 'paid' ? '#fff' : 'var(--text-secondary)',
-                      }}
-                    >
-                      {order.payment_status === 'paid' ? '✓ Paid' : 'Mark as paid'}
-                    </button>
+                  {/* ── Status badges row ── */}
+                  <div style={{
+                    display: 'flex',
+                    gap: '8px',
+                    alignItems: 'center',
+                    padding: '8px 20px 14px',
+                    borderTop: '1px solid var(--border)',
+                  }}>
+                    <span style={{
+                      padding: '3px 10px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontFamily: 'var(--font-inter)',
+                      fontWeight: '500',
+                      backgroundColor: order.payment_status === 'paid' ? 'var(--accent-forest)' : 'var(--surface-sunken)',
+                      color: order.payment_status === 'paid' ? '#fff' : 'var(--text-secondary)',
+                    }}>
+                      {order.payment_status === 'paid' ? '✓ Paid' : 'Unpaid'}
+                    </span>
 
-                    <select
-                      value={order.order_status}
-                      onChange={e => updateStatus(order.id, e.target.value)}
-                      style={{
-                        padding: '5px 10px',
-                        borderRadius: '4px',
-                        border: '1px solid var(--border-strong)',
-                        backgroundColor: 'var(--surface-raised)',
-                        color: 'var(--text-primary)',
-                        fontSize: '12px',
-                        fontFamily: 'var(--font-inter)',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      {STATUS_OPTIONS.map(s => (
-                        <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>
-                      ))}
-                    </select>
+                    <span style={{
+                      padding: '3px 10px',
+                      borderRadius: '4px',
+                      fontSize: '12px',
+                      fontFamily: 'var(--font-inter)',
+                      fontWeight: '500',
+                      backgroundColor: 'var(--surface-sunken)',
+                      color: 'var(--text-secondary)',
+                    }}>
+                      {order.order_status.replace(/_/g, ' ')}
+                    </span>
 
                     <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginLeft: 'auto' }}>
                       {new Date(order.created_at).toLocaleDateString('en-GB', {
@@ -259,47 +246,83 @@ export default function OrdersClient({ initialOrders }: { initialOrders: Order[]
                         <p style={{ fontSize: '13px', color: 'var(--text-tertiary)', margin: 0 }}>Loading…</p>
                       ) : (
                         <>
-                          {/* Items */}
-                          <div style={{ marginBottom: '16px' }}>
-                            <div style={{
-                              fontSize: '11px',
-                              fontWeight: '600',
-                              color: 'var(--text-tertiary)',
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.07em',
-                              marginBottom: '10px',
-                            }}>
-                              Items
-                            </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
-                              {items.map(item => (
-                                <div key={item.id} style={{
-                                  display: 'grid',
-                                  gridTemplateColumns: '1fr auto auto auto',
-                                  gap: '16px',
-                                  alignItems: 'baseline',
-                                  fontSize: '13px',
-                                }}>
-                                  <span style={{ color: 'var(--text-primary)' }}>
-                                    {item.menu_items?.name ?? '—'}
-                                    <span style={{ color: 'var(--text-tertiary)', marginLeft: '8px', fontSize: '12px' }}>
-                                      {variantLabel(item)}
-                                    </span>
-                                  </span>
-                                  <span style={{ color: 'var(--text-tertiary)' }}>× {item.quantity}</span>
-                                  <span style={{ color: 'var(--text-tertiary)' }}>{fmt(item.unit_price)}</span>
-                                  <span style={{
-                                    fontFamily: 'var(--font-fraunces)',
-                                    fontSize: '14px',
-                                    color: 'var(--text-primary)',
-                                    textAlign: 'right',
+                          {/* Mains */}
+                          {mainItems.length > 0 && (
+                            <div style={{ marginBottom: '16px' }}>
+                              <div style={{
+                                fontSize: '11px',
+                                fontWeight: '600',
+                                color: 'var(--text-tertiary)',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.07em',
+                                marginBottom: '10px',
+                              }}>
+                                Mains
+                              </div>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+                                {mainItems.map(item => (
+                                  <div key={item.id} style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: '1fr auto auto auto',
+                                    gap: '16px',
+                                    alignItems: 'baseline',
+                                    fontSize: '13px',
                                   }}>
-                                    {fmt(item.unit_price * item.quantity)}
-                                  </span>
-                                </div>
-                              ))}
+                                    <span style={{ color: 'var(--text-primary)' }}>
+                                      {item.menu_items?.name ?? '—'}
+                                      <span style={{ color: 'var(--text-tertiary)', marginLeft: '8px', fontSize: '12px' }}>
+                                        {variantLabel(item)}
+                                      </span>
+                                    </span>
+                                    <span style={{ color: 'var(--text-tertiary)' }}>× {item.quantity}</span>
+                                    <span style={{ color: 'var(--text-tertiary)' }}>{fmt(item.unit_price)}</span>
+                                    <span style={{ fontFamily: 'var(--font-fraunces)', fontSize: '14px', color: 'var(--text-primary)', textAlign: 'right' }}>
+                                      {fmt(item.unit_price * item.quantity)}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
                             </div>
-                          </div>
+                          )}
+
+                          {/* Salads */}
+                          {saladItems.length > 0 && (
+                            <div style={{ marginBottom: '16px' }}>
+                              <div style={{
+                                fontSize: '11px',
+                                fontWeight: '600',
+                                color: 'var(--text-tertiary)',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.07em',
+                                marginBottom: '10px',
+                              }}>
+                                Salads
+                              </div>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+                                {saladItems.map(item => (
+                                  <div key={item.id} style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: '1fr auto auto auto',
+                                    gap: '16px',
+                                    alignItems: 'baseline',
+                                    fontSize: '13px',
+                                  }}>
+                                    <span style={{ color: 'var(--text-primary)' }}>
+                                      {item.menu_items?.name ?? '—'}
+                                      <span style={{ color: 'var(--text-tertiary)', marginLeft: '8px', fontSize: '12px' }}>
+                                        {variantLabel(item)}
+                                      </span>
+                                    </span>
+                                    <span style={{ color: 'var(--text-tertiary)' }}>× {item.quantity}</span>
+                                    <span style={{ color: 'var(--text-tertiary)' }}>{fmt(item.unit_price)}</span>
+                                    <span style={{ fontFamily: 'var(--font-fraunces)', fontSize: '14px', color: 'var(--text-primary)', textAlign: 'right' }}>
+                                      {fmt(item.unit_price * item.quantity)}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
 
                           {/* Chef's special */}
                           {orderSpecials.length > 0 && (

@@ -9,6 +9,7 @@ export default function AdminNav() {
     { href: '/admin', label: 'Orders' },
     { href: '/admin/menu', label: 'Menu' },
     { href: '/admin/kitchen', label: 'Kitchen' },
+    { href: '/admin/payments', label: 'Payments' },
   ]
 
   return (

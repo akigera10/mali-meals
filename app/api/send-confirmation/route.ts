@@ -9,6 +9,7 @@ type CartEntry = {
   name: string
   variant: 'vegetarian' | 'meat' | 'addon' | 'special'
   meatType?: 'beef' | 'chicken' | 'both' | null
+  category?: 'mains' | 'salads' | null
   unitPrice: number
   quantity: number
 }
@@ -64,22 +65,43 @@ export async function POST(req: NextRequest) {
       notes,
     } = await req.json()
 
-    const dishes = (items as CartEntry[]).filter(e => e.variant !== 'addon' && e.variant !== 'special')
+    const mains = (items as CartEntry[]).filter(e => e.category === 'mains')
+    const salads = (items as CartEntry[]).filter(e => e.category === 'salads')
     const specials = (items as CartEntry[]).filter(e => e.variant === 'special')
     const addons = (items as CartEntry[]).filter(e => e.variant === 'addon')
     const dayLabel = buildDeliveryLabel(delivery_day, delivery_slot)
     const freeDelivery = delivery_fee === 0 && subtotal >= 5000
 
-    const dishRows = dishes.map(e => `
+    function dishRows(entries: CartEntry[]) {
+      return entries.map(e => `
+        <tr>
+          <td style="padding: 10px 0; border-bottom: 1px solid #EDE8DF;">
+            <span style="font-family: Georgia, serif; font-size: 15px; color: #1F1B16;">${e.name}</span>
+            <br><span style="font-family: Arial, sans-serif; font-size: 12px; color: #8B8375;">${variantLabel(e)}</span>
+          </td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #EDE8DF; text-align: right; font-family: Arial, sans-serif; font-size: 13px; color: #5C554A; white-space: nowrap;">${e.quantity} × ${fmt(e.unitPrice)}</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #EDE8DF; text-align: right; font-family: Georgia, serif; font-size: 15px; color: #1F1B16; white-space: nowrap;">${fmt(e.unitPrice * e.quantity)}</td>
+        </tr>
+      `).join('')
+    }
+
+    const mainRows = mains.length > 0 ? `
       <tr>
-        <td style="padding: 10px 0; border-bottom: 1px solid #EDE8DF;">
-          <span style="font-family: Georgia, serif; font-size: 15px; color: #1F1B16;">${e.name}</span>
-          <br><span style="font-family: Arial, sans-serif; font-size: 12px; color: #8B8375;">${variantLabel(e)}</span>
+        <td colspan="3" style="padding: 10px 0 6px; font-family: Arial, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #8B8375;">
+          Mains
         </td>
-        <td style="padding: 10px 0; border-bottom: 1px solid #EDE8DF; text-align: right; font-family: Arial, sans-serif; font-size: 13px; color: #5C554A; white-space: nowrap;">${e.quantity} × ${fmt(e.unitPrice)}</td>
-        <td style="padding: 10px 0; border-bottom: 1px solid #EDE8DF; text-align: right; font-family: Georgia, serif; font-size: 15px; color: #1F1B16; white-space: nowrap;">${fmt(e.unitPrice * e.quantity)}</td>
       </tr>
-    `).join('')
+      ${dishRows(mains)}
+    ` : ''
+
+    const saladRows = salads.length > 0 ? `
+      <tr>
+        <td colspan="3" style="padding: 10px 0 6px; font-family: Arial, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #8B8375;">
+          Salads
+        </td>
+      </tr>
+      ${dishRows(salads)}
+    ` : ''
 
     const specialRows = specials.length > 0 ? `
       <tr>
@@ -156,7 +178,8 @@ export async function POST(req: NextRequest) {
           </tr>
         </thead>
         <tbody>
-          ${dishRows}
+          ${mainRows}
+          ${saladRows}
           ${specialRows}
           ${addonRows}
         </tbody>

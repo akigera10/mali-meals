@@ -339,7 +339,8 @@ export default function CheckoutClient() {
 
   // ── Derived values ────────────────────────────────────────────────────────
 
-  const dishes = cart.filter(e => e.variant !== 'addon' && e.variant !== 'special')
+  const mains = cart.filter(e => e.category === 'mains')
+  const salads = cart.filter(e => e.category === 'salads')
   const specials = cart.filter(e => e.variant === 'special')
   const addons = cart.filter(e => e.variant === 'addon')
   const subtotal = cart.reduce((s, e) => s + e.unitPrice * e.quantity, 0)
@@ -432,6 +433,7 @@ export default function CheckoutClient() {
         subtotal,
         delivery_fee: deliveryFee,
         total_amount: total,
+        order_status: 'new',
       }
 
       const { data: orderData, error: orderError } = await supabase
@@ -451,7 +453,7 @@ export default function CheckoutClient() {
 
       const insertedItemIds: string[] = []
 
-      for (const entry of dishes) {
+      for (const entry of [...mains, ...salads]) {
         const menuItemId = entry.id.split(':')[0]
         const variant = entry.variant === 'meat' ? 'meat' : 'vegetarian'
 
@@ -462,6 +464,7 @@ export default function CheckoutClient() {
             menu_item_id: menuItemId,
             quantity: entry.quantity,
             variant,
+            meat_type: entry.meatType || null,
             unit_price: entry.unitPrice,
           })
           .select('id')
@@ -939,54 +942,95 @@ export default function CheckoutClient() {
               padding: 20,
             }}>
 
-              {/* Dishes */}
-              {dishes.map(entry => (
-                <div key={entry.id} style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-start',
-                  gap: 12,
-                  paddingBottom: 12,
-                  marginBottom: 12,
-                  borderBottom: '1px solid var(--border)',
-                }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{
-                      fontFamily: 'var(--font-fraunces), serif',
-                      fontSize: 16,
-                      color: 'var(--text-primary)',
-                      lineHeight: 1.3,
-                    }}>
-                      {entry.name}
-                    </div>
-                    <div style={{
-                      fontFamily: 'var(--font-inter), sans-serif',
-                      fontSize: 12,
-                      color: 'var(--text-tertiary)',
-                      marginTop: 2,
-                    }}>
-                      {variantLabel(entry)}
-                    </div>
+              {/* Mains */}
+              {mains.length > 0 && (
+                <>
+                  <div style={{
+                    fontFamily: 'var(--font-inter), sans-serif',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase' as const,
+                    color: 'var(--text-tertiary)',
+                    marginBottom: 10,
+                  }}>
+                    Mains
                   </div>
-                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <div style={{
-                      fontFamily: 'var(--font-inter), sans-serif',
-                      fontSize: 12,
-                      color: 'var(--text-tertiary)',
+                  {mains.map(entry => (
+                    <div key={entry.id} style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      gap: 12,
+                      paddingBottom: 12,
+                      marginBottom: 12,
+                      borderBottom: '1px solid var(--border)',
                     }}>
-                      {entry.quantity} × {fmt(entry.unitPrice)}
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: 16, color: 'var(--text-primary)', lineHeight: 1.3 }}>
+                          {entry.name}
+                        </div>
+                        <div style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>
+                          {variantLabel(entry)}
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                        <div style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 12, color: 'var(--text-tertiary)' }}>
+                          {entry.quantity} × {fmt(entry.unitPrice)}
+                        </div>
+                        <div style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: 16, color: 'var(--text-primary)', marginTop: 2 }}>
+                          {fmt(entry.unitPrice * entry.quantity)}
+                        </div>
+                      </div>
                     </div>
-                    <div style={{
-                      fontFamily: 'var(--font-fraunces), serif',
-                      fontSize: 16,
-                      color: 'var(--text-primary)',
-                      marginTop: 2,
-                    }}>
-                      {fmt(entry.unitPrice * entry.quantity)}
-                    </div>
+                  ))}
+                </>
+              )}
+
+              {/* Salads */}
+              {salads.length > 0 && (
+                <>
+                  <div style={{
+                    fontFamily: 'var(--font-inter), sans-serif',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase' as const,
+                    color: 'var(--text-tertiary)',
+                    marginBottom: 10,
+                  }}>
+                    Salads
                   </div>
-                </div>
-              ))}
+                  {salads.map(entry => (
+                    <div key={entry.id} style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      gap: 12,
+                      paddingBottom: 12,
+                      marginBottom: 12,
+                      borderBottom: '1px solid var(--border)',
+                    }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: 16, color: 'var(--text-primary)', lineHeight: 1.3 }}>
+                          {entry.name}
+                        </div>
+                        <div style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>
+                          {variantLabel(entry)}
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                        <div style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 12, color: 'var(--text-tertiary)' }}>
+                          {entry.quantity} × {fmt(entry.unitPrice)}
+                        </div>
+                        <div style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: 16, color: 'var(--text-primary)', marginTop: 2 }}>
+                          {fmt(entry.unitPrice * entry.quantity)}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
 
               {/* Chef's special */}
               {specials.length > 0 && (

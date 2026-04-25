@@ -1,8 +1,25 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
+
+// ── Week bounds (for "Delivered this week" card) ──────────────────────────────
+
+function getWeekBounds(now: Date): { start: Date; end: Date } {
+  const day = now.getDay()
+  const hour = now.getHours()
+  let daysSince = (day - 5 + 7) % 7
+  if (day === 5 && hour < 14) daysSince = 7
+  const start = new Date(now)
+  start.setDate(now.getDate() - daysSince)
+  start.setHours(14, 0, 0, 0)
+  start.setMilliseconds(0)
+  const end = new Date(start)
+  end.setDate(start.getDate() + 7)
+  return { start, end }
+}
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 type Order = {
   id: string
@@ -27,26 +44,7 @@ type Order = {
   created_at: string
 }
 
-type OrderItem = {
-  id: string
-  quantity: number
-  variant: string
-  meat_type: string | null
-  unit_price: number
-  menu_items: { name: string; category: string | null; meat_upgrade_type: string | null } | null
-  order_item_addons: {
-    quantity: number
-    unit_price: number
-    protein_addons: { name: string } | null
-  }[]
-}
-
-type OrderSpecial = {
-  id: string
-  quantity: number
-  unit_price: number
-  specials: { name: string } | null
-}
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function fmt(n: number) {
   return `Ksh ${n.toLocaleString()}`
@@ -62,414 +60,267 @@ function deliveryLabel(order: Order): string {
   return day
 }
 
-function variantLabel(item: OrderItem): string {
-  if (item.variant === 'vegetarian') return 'Vegetarian'
-  const t = item.meat_type || item.menu_items?.meat_upgrade_type
-  if (t === 'beef') return 'With beef'
-  if (t === 'chicken') return 'With chicken'
-  return 'With meat'
+function totalKsh(arr: Order[]) {
+  return arr.reduce((s, o) => s + o.total_amount, 0)
 }
+
+// ── Status card sub-component ─────────────────────────────────────────────────
+
+function StatusCard({
+  label,
+  count,
+  total,
+  active,
+  onClick,
+}: {
+  label: string
+  count: number
+  total: number | null
+  active: boolean
+  onClick: () => void
+}) {
+  return (
+    <div
+      role="button"
+      onClick={onClick}
+      style={{
+        backgroundColor: active ? 'var(--brand-gold-soft)' : 'var(--surface-raised)',
+        border: `2px solid ${active ? 'var(--brand-gold)' : 'var(--border)'}`,
+        borderRadius: '8px',
+        padding: '16px 18px',
+        cursor: 'pointer',
+        userSelect: 'none',
+      }}
+    >
+      <div style={{
+        fontSize: '11px',
+        fontWeight: '600',
+        color: 'var(--text-tertiary)',
+        textTransform: 'uppercase',
+        letterSpacing: '0.07em',
+        marginBottom: '8px',
+      }}>
+        {label}
+      </div>
+      <div style={{
+        fontFamily: 'var(--font-fraunces)',
+        fontSize: '28px',
+        color: 'var(--brand-gold)',
+        lineHeight: 1,
+        marginBottom: total !== null ? '4px' : '0',
+      }}>
+        {count}
+      </div>
+      {total !== null && (
+        <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+          {fmt(total)}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
 
 export default function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
   const orders = initialOrders
-  const [expandedId, setExpandedId] = useState<string | null>(null)
-  const [detailCache, setDetailCache] = useState<Record<string, { items: OrderItem[]; specials: OrderSpecial[] }>>({})
-  const [loadingId, setLoadingId] = useState<string | null>(null)
+  const [activeFilter, setActiveFilter] = useState<string | null>(null)
 
-  async function toggleOrder(id: string) {
-    if (expandedId === id) {
-      setExpandedId(null)
-      return
-    }
-    setExpandedId(id)
-    if (detailCache[id]) return
-    setLoadingId(id)
-    const [{ data: itemsData }, { data: specialsData }] = await Promise.all([
-      (supabase.from('order_items') as any)
-        .select('id, quantity, variant, meat_type, unit_price, menu_items(name, category, meat_upgrade_type), order_item_addons(quantity, unit_price, protein_addons(name))')
-        .eq('order_id', id),
-      (supabase.from('order_specials') as any)
-        .select('id, quantity, unit_price, specials(name)')
-        .eq('order_id', id),
-    ])
-    setDetailCache(c => ({ ...c, [id]: { items: itemsData || [], specials: specialsData || [] } }))
-    setLoadingId(null)
+  const weekBounds = useState(() => getWeekBounds(new Date()))[0]
+
+  // ── Card stats ──────────────────────────────────────────────────────────────
+
+  const newOrders = useMemo(() => orders.filter(o => o.order_status === 'new'), [orders])
+  const confirmedOrders = useMemo(() => orders.filter(o => o.order_status === 'confirmed'), [orders])
+  const dispatchedOrders = useMemo(() => orders.filter(o => o.order_status === 'dispatched'), [orders])
+  const deliveredThisWeek = useMemo(() =>
+    orders.filter(o =>
+      o.order_status === 'delivered' &&
+      new Date(o.created_at) >= weekBounds.start &&
+      new Date(o.created_at) < weekBounds.end
+    ),
+    [orders, weekBounds]
+  )
+
+  // ── Filtered list ───────────────────────────────────────────────────────────
+
+  const visibleOrders = useMemo(() => {
+    if (!activeFilter) return orders
+    if (activeFilter === 'delivered') return deliveredThisWeek
+    if (activeFilter === 'new') return newOrders
+    if (activeFilter === 'confirmed') return confirmedOrders
+    if (activeFilter === 'dispatched') return dispatchedOrders
+    return orders
+  }, [activeFilter, orders, newOrders, confirmedOrders, dispatchedOrders, deliveredThisWeek])
+
+  function handleCardClick(status: string) {
+    setActiveFilter(f => f === status ? null : status)
   }
 
+  // ── Render ──────────────────────────────────────────────────────────────────
+
   return (
-    <div style={{ fontFamily: 'var(--font-inter)' }}>
-      <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 20px' }}>
-        <h1 style={{
-          fontFamily: 'var(--font-fraunces)',
-          fontSize: '28px',
-          color: 'var(--text-primary)',
-          marginBottom: '4px',
-        }}>
-          Orders
-        </h1>
-        <p style={{ fontSize: '14px', color: 'var(--text-tertiary)', marginBottom: '32px' }}>
-          {orders.length} total · click a row to expand
-        </p>
+    <>
+      <style dangerouslySetInnerHTML={{ __html: `
+        #status-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 32px; }
+        @media (max-width: 600px) { #status-cards { grid-template-columns: repeat(2, 1fr); } }
+      ` }} />
 
-        {orders.length === 0 ? (
-          <p style={{ color: 'var(--text-secondary)', fontSize: '15px' }}>No orders yet.</p>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {orders.map(order => {
-              const isExpanded = expandedId === order.id
-              const detail = detailCache[order.id]
-              const items: OrderItem[] = detail?.items || []
-              const orderSpecials: OrderSpecial[] = detail?.specials || []
-              const isLoading = loadingId === order.id
-              const mainItems = items.filter(i => i.menu_items?.category === 'mains')
-              const saladItems = items.filter(i => i.menu_items?.category === 'salads')
-              const allAddons = items.flatMap(item => item.order_item_addons || [])
+      <div style={{ fontFamily: 'var(--font-inter)' }}>
+        <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 20px' }}>
+          <h1 style={{
+            fontFamily: 'var(--font-fraunces)',
+            fontSize: '28px',
+            color: 'var(--text-primary)',
+            marginBottom: '4px',
+          }}>
+            Orders
+          </h1>
+          <p style={{ fontSize: '14px', color: 'var(--text-tertiary)', marginBottom: '24px' }}>
+            {orders.length} total
+          </p>
 
-              return (
+          {/* ── Status cards ── */}
+          <div id="status-cards">
+            <StatusCard
+              label="New orders"
+              count={newOrders.length}
+              total={totalKsh(newOrders)}
+              active={activeFilter === 'new'}
+              onClick={() => handleCardClick('new')}
+            />
+            <StatusCard
+              label="Confirmed"
+              count={confirmedOrders.length}
+              total={totalKsh(confirmedOrders)}
+              active={activeFilter === 'confirmed'}
+              onClick={() => handleCardClick('confirmed')}
+            />
+            <StatusCard
+              label="Out for delivery"
+              count={dispatchedOrders.length}
+              total={null}
+              active={activeFilter === 'dispatched'}
+              onClick={() => handleCardClick('dispatched')}
+            />
+            <StatusCard
+              label="Delivered this week"
+              count={deliveredThisWeek.length}
+              total={totalKsh(deliveredThisWeek)}
+              active={activeFilter === 'delivered'}
+              onClick={() => handleCardClick('delivered')}
+            />
+          </div>
+
+          {/* ── Filter label ── */}
+          {activeFilter && (
+            <p style={{ fontSize: '13px', color: 'var(--text-tertiary)', marginBottom: '16px', marginTop: '-16px' }}>
+              Showing {visibleOrders.length} {activeFilter === 'delivered' ? 'delivered this week' : activeFilter} order{visibleOrders.length !== 1 ? 's' : ''} ·{' '}
+              <span
+                role="button"
+                onClick={() => setActiveFilter(null)}
+                style={{ color: 'var(--brand-gold)', cursor: 'pointer', textDecoration: 'underline' }}
+              >
+                show all
+              </span>
+            </p>
+          )}
+
+          {/* ── Orders list ── */}
+          {visibleOrders.length === 0 ? (
+            <p style={{ color: 'var(--text-secondary)', fontSize: '15px' }}>
+              {activeFilter ? 'No orders in this status.' : 'No orders yet.'}
+            </p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {visibleOrders.map(order => (
                 <div
                   key={order.id}
                   style={{
                     backgroundColor: 'var(--surface-raised)',
                     border: '1px solid var(--border)',
                     borderRadius: '8px',
-                    overflow: 'hidden',
+                    padding: '14px 20px',
+                    display: 'grid',
+                    gridTemplateColumns: '2fr 2fr 1fr',
+                    gap: '12px',
+                    alignItems: 'center',
                   }}
                 >
-                  {/* ── Clickable summary header ── */}
-                  <div
-                    role="button"
-                    onClick={() => toggleOrder(order.id)}
-                    style={{
-                      padding: '16px 20px 14px',
-                      cursor: 'pointer',
-                      display: 'grid',
-                      gridTemplateColumns: '1fr 1fr 1fr',
-                      gap: '12px',
-                      alignItems: 'start',
-                    }}
-                  >
-                    <div>
-                      <Link
-                        href={`/admin/orders/${order.id}`}
-                        onClick={e => e.stopPropagation()}
-                        style={{
-                          fontFamily: 'var(--font-fraunces)',
-                          fontSize: '16px',
-                          color: 'var(--brand-gold)',
-                          textDecoration: 'none',
-                          display: 'inline-block',
-                        }}
-                      >
-                        {order.order_ref}
-                      </Link>
-                      <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                        {order.customer_name}
-                      </div>
-                      <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', marginTop: '2px' }}>
-                        {order.customer_phone}
-                      </div>
+                  {/* Col 1: ref, name, phone */}
+                  <div>
+                    <Link
+                      href={`/admin/orders/${order.id}`}
+                      style={{
+                        fontFamily: 'var(--font-fraunces)',
+                        fontSize: '15px',
+                        color: 'var(--brand-gold)',
+                        textDecoration: 'none',
+                        display: 'inline-block',
+                        marginBottom: '2px',
+                      }}
+                    >
+                      {order.order_ref}
+                    </Link>
+                    <div style={{ fontSize: '13px', color: 'var(--text-primary)' }}>
+                      {order.customer_name}
                     </div>
-
-                    <div>
-                      <div style={{ fontSize: '14px', color: 'var(--text-primary)' }}>
-                        {deliveryLabel(order)}
-                      </div>
-                      <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', marginTop: '2px' }}>
-                        Zone {order.delivery_zone}
-                      </div>
-                    </div>
-
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontFamily: 'var(--font-fraunces)', fontSize: '16px', color: 'var(--text-primary)' }}>
-                        {fmt(order.total_amount)}
-                      </div>
-                      <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '2px' }}>
-                        subtotal {order.subtotal.toLocaleString()} + delivery {order.delivery_fee.toLocaleString()}
-                      </div>
-                      <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginTop: '6px' }}>
-                        {isExpanded ? '▲' : '▼'}
-                      </div>
+                    <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
+                      {order.customer_phone}
                     </div>
                   </div>
 
-                  {/* ── Status badges row ── */}
-                  <div style={{
-                    display: 'flex',
-                    gap: '8px',
-                    alignItems: 'center',
-                    padding: '8px 20px 14px',
-                    borderTop: '1px solid var(--border)',
-                  }}>
-                    <span style={{
-                      padding: '3px 10px',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      fontFamily: 'var(--font-inter)',
-                      fontWeight: '500',
-                      backgroundColor: order.payment_status === 'paid' ? 'var(--accent-forest)' : 'var(--surface-sunken)',
-                      color: order.payment_status === 'paid' ? '#fff' : 'var(--text-secondary)',
-                    }}>
-                      {order.payment_status === 'paid' ? '✓ Paid' : 'Unpaid'}
-                    </span>
+                  {/* Col 2: delivery + badges */}
+                  <div>
+                    <div style={{ fontSize: '13px', color: 'var(--text-primary)', marginBottom: '6px' }}>
+                      {deliveryLabel(order)} · Zone {order.delivery_zone}
+                    </div>
+                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                      <span style={{
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                        fontSize: '11px',
+                        fontWeight: '500',
+                        backgroundColor: order.payment_status === 'paid' ? 'var(--accent-forest)' : 'var(--surface-sunken)',
+                        color: order.payment_status === 'paid' ? '#fff' : 'var(--text-secondary)',
+                      }}>
+                        {order.payment_status === 'paid' ? '✓ Paid' : 'Unpaid'}
+                      </span>
+                      <span style={{
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                        fontSize: '11px',
+                        fontWeight: '500',
+                        backgroundColor: 'var(--surface-sunken)',
+                        color: 'var(--text-secondary)',
+                      }}>
+                        {order.order_status}
+                      </span>
+                    </div>
+                  </div>
 
-                    <span style={{
-                      padding: '3px 10px',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      fontFamily: 'var(--font-inter)',
-                      fontWeight: '500',
-                      backgroundColor: 'var(--surface-sunken)',
-                      color: 'var(--text-secondary)',
+                  {/* Col 3: amount + date */}
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{
+                      fontFamily: 'var(--font-fraunces)',
+                      fontSize: '15px',
+                      color: 'var(--text-primary)',
+                      marginBottom: '4px',
                     }}>
-                      {order.order_status.replace(/_/g, ' ')}
-                    </span>
-
-                    <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginLeft: 'auto' }}>
+                      {fmt(order.total_amount)}
+                    </div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
                       {new Date(order.created_at).toLocaleDateString('en-GB', {
                         day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
                       })}
-                    </span>
-                  </div>
-
-                  {/* ── Expandable detail panel ── */}
-                  <div style={{
-                    overflow: 'hidden',
-                    maxHeight: isExpanded ? '800px' : '0',
-                    transition: 'max-height 0.25s ease-in-out',
-                  }}>
-                    <div style={{
-                      borderTop: '1px solid var(--border)',
-                      backgroundColor: 'var(--surface-sunken)',
-                      padding: '20px',
-                    }}>
-                      {isLoading ? (
-                        <p style={{ fontSize: '13px', color: 'var(--text-tertiary)', margin: 0 }}>Loading…</p>
-                      ) : (
-                        <>
-                          {/* Mains */}
-                          {mainItems.length > 0 && (
-                            <div style={{ marginBottom: '16px' }}>
-                              <div style={{
-                                fontSize: '11px',
-                                fontWeight: '600',
-                                color: 'var(--text-tertiary)',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.07em',
-                                marginBottom: '10px',
-                              }}>
-                                Mains
-                              </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
-                                {mainItems.map(item => (
-                                  <div key={item.id} style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: '1fr auto auto auto',
-                                    gap: '16px',
-                                    alignItems: 'baseline',
-                                    fontSize: '13px',
-                                  }}>
-                                    <span style={{ color: 'var(--text-primary)' }}>
-                                      {item.menu_items?.name ?? '—'}
-                                      <span style={{ color: 'var(--text-tertiary)', marginLeft: '8px', fontSize: '12px' }}>
-                                        {variantLabel(item)}
-                                      </span>
-                                    </span>
-                                    <span style={{ color: 'var(--text-tertiary)' }}>× {item.quantity}</span>
-                                    <span style={{ color: 'var(--text-tertiary)' }}>{fmt(item.unit_price)}</span>
-                                    <span style={{ fontFamily: 'var(--font-fraunces)', fontSize: '14px', color: 'var(--text-primary)', textAlign: 'right' }}>
-                                      {fmt(item.unit_price * item.quantity)}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Salads */}
-                          {saladItems.length > 0 && (
-                            <div style={{ marginBottom: '16px' }}>
-                              <div style={{
-                                fontSize: '11px',
-                                fontWeight: '600',
-                                color: 'var(--text-tertiary)',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.07em',
-                                marginBottom: '10px',
-                              }}>
-                                Salads
-                              </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
-                                {saladItems.map(item => (
-                                  <div key={item.id} style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: '1fr auto auto auto',
-                                    gap: '16px',
-                                    alignItems: 'baseline',
-                                    fontSize: '13px',
-                                  }}>
-                                    <span style={{ color: 'var(--text-primary)' }}>
-                                      {item.menu_items?.name ?? '—'}
-                                      <span style={{ color: 'var(--text-tertiary)', marginLeft: '8px', fontSize: '12px' }}>
-                                        {variantLabel(item)}
-                                      </span>
-                                    </span>
-                                    <span style={{ color: 'var(--text-tertiary)' }}>× {item.quantity}</span>
-                                    <span style={{ color: 'var(--text-tertiary)' }}>{fmt(item.unit_price)}</span>
-                                    <span style={{ fontFamily: 'var(--font-fraunces)', fontSize: '14px', color: 'var(--text-primary)', textAlign: 'right' }}>
-                                      {fmt(item.unit_price * item.quantity)}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Chef's special */}
-                          {orderSpecials.length > 0 && (
-                            <div style={{ marginBottom: '16px' }}>
-                              <div style={{
-                                fontSize: '11px',
-                                fontWeight: '600',
-                                color: 'var(--text-tertiary)',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.07em',
-                                marginBottom: '10px',
-                              }}>
-                                Chef's special
-                              </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
-                                {orderSpecials.map(s => (
-                                  <div key={s.id} style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: '1fr auto auto auto',
-                                    gap: '16px',
-                                    alignItems: 'baseline',
-                                    fontSize: '13px',
-                                  }}>
-                                    <span style={{ color: 'var(--text-primary)' }}>
-                                      {s.specials?.name ?? '—'}
-                                    </span>
-                                    <span style={{ color: 'var(--text-tertiary)' }}>× {s.quantity}</span>
-                                    <span style={{ color: 'var(--text-tertiary)' }}>{fmt(s.unit_price)}</span>
-                                    <span style={{
-                                      fontFamily: 'var(--font-fraunces)',
-                                      fontSize: '14px',
-                                      color: 'var(--text-primary)',
-                                      textAlign: 'right',
-                                    }}>
-                                      {fmt(s.unit_price * s.quantity)}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Add-ons */}
-                          {allAddons.length > 0 && (
-                            <div style={{ marginBottom: '16px' }}>
-                              <div style={{
-                                fontSize: '11px',
-                                fontWeight: '600',
-                                color: 'var(--text-tertiary)',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.07em',
-                                marginBottom: '10px',
-                              }}>
-                                Protein add-ons
-                              </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
-                                {allAddons.map((addon, i) => (
-                                  <div key={i} style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: '1fr auto auto auto',
-                                    gap: '16px',
-                                    alignItems: 'baseline',
-                                    fontSize: '13px',
-                                  }}>
-                                    <span style={{ color: 'var(--text-primary)' }}>
-                                      {addon.protein_addons?.name ?? '—'}
-                                    </span>
-                                    <span style={{ color: 'var(--text-tertiary)' }}>× {addon.quantity}</span>
-                                    <span style={{ color: 'var(--text-tertiary)' }}>{fmt(addon.unit_price)}</span>
-                                    <span style={{
-                                      fontFamily: 'var(--font-fraunces)',
-                                      fontSize: '14px',
-                                      color: 'var(--text-primary)',
-                                      textAlign: 'right',
-                                    }}>
-                                      {fmt(addon.unit_price * addon.quantity)}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Delivery + Notes */}
-                          <div style={{
-                            borderTop: '1px solid var(--border)',
-                            paddingTop: '16px',
-                            display: 'flex',
-                            gap: '40px',
-                            flexWrap: 'wrap',
-                          }}>
-                            <div>
-                              <div style={{
-                                fontSize: '11px',
-                                fontWeight: '600',
-                                color: 'var(--text-tertiary)',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.07em',
-                                marginBottom: '8px',
-                              }}>
-                                Delivery
-                              </div>
-                              <div style={{ fontSize: '13px', color: 'var(--text-primary)', marginBottom: '4px' }}>
-                                {deliveryLabel(order)} · Zone {order.delivery_zone}
-                              </div>
-                              {order.address_building && (
-                                <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{order.address_building}</div>
-                              )}
-                              {order.address_street && (
-                                <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{order.address_street}</div>
-                              )}
-                              {order.address_apartment && (
-                                <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{order.address_apartment}</div>
-                              )}
-                              {order.address_landmark && (
-                                <div style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>Near {order.address_landmark}</div>
-                              )}
-                            </div>
-
-                            {order.notes && (
-                              <div>
-                                <div style={{
-                                  fontSize: '11px',
-                                  fontWeight: '600',
-                                  color: 'var(--text-tertiary)',
-                                  textTransform: 'uppercase',
-                                  letterSpacing: '0.07em',
-                                  marginBottom: '8px',
-                                }}>
-                                  Notes
-                                </div>
-                                <div style={{ fontSize: '13px', color: 'var(--text-secondary)', maxWidth: '300px', lineHeight: '1.5' }}>
-                                  {order.notes}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </>
-                      )}
                     </div>
                   </div>
                 </div>
-              )
-            })}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </>
   )
 }

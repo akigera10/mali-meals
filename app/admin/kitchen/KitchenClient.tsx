@@ -49,6 +49,7 @@ type RawItem = {
   order_id: string
   quantity: number
   variant: string
+  meat_type: string | null
   menu_items: { name: string; meat_upgrade_type: string | null } | null
   order_item_addons: {
     quantity: number
@@ -66,7 +67,7 @@ type RawSpecial = {
 
 function variantLabel(item: RawItem): string {
   if (item.variant === 'vegetarian') return 'Vegetarian'
-  const t = item.menu_items?.meat_upgrade_type
+  const t = item.meat_type || item.menu_items?.meat_upgrade_type
   if (t === 'beef') return 'With beef'
   if (t === 'chicken') return 'With chicken'
   return 'With meat'
@@ -149,7 +150,7 @@ export default function KitchenClient() {
         const [{ data: itemsData }, { data: specialsData }] = await Promise.all([
           (supabase.from('order_items') as any)
             .select(`
-              order_id, quantity, variant,
+              order_id, quantity, variant, meat_type,
               menu_items(name, meat_upgrade_type),
               order_item_addons(quantity, protein_addons(name))
             `)
@@ -162,6 +163,7 @@ export default function KitchenClient() {
           order_id: item.order_id,
           quantity: item.quantity,
           variant: item.variant,
+          meat_type: item.meat_type ?? null,
           menu_items: item.menu_items,
           order_item_addons: item.order_item_addons || [],
         }))

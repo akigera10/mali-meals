@@ -7,6 +7,7 @@ export type CartEntry = {
   name: string
   variant: 'vegetarian' | 'meat' | 'addon' | 'special'
   meatType?: 'beef' | 'chicken' | 'both' | null
+  category?: 'mains' | 'salads' | null
   unitPrice: number
   quantity: number
 }

@@ -34,12 +34,6 @@ type LayoutPage = { items: LayoutItem[]; cutLines: CutLine[] }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const ZONE_NAMES: Record<number, string> = {
-  1: 'Lavington, Kilimani, Kileleshwa, Hurlingham',
-  2: 'Riverside, Westlands, Parklands, Peponi',
-  3: 'Lower Kabete, Loresho, Kitisuru, Nyari, Pangani, Ngara, Muthaiga',
-  4: 'Karen, Roselyn, Runda, Gigiri, Garden Estate, Langata Road',
-}
 
 const A4_W = 794
 const A4_H = 1122

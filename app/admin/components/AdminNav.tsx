@@ -1,9 +1,11 @@
 'use client'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 
 export default function AdminNav() {
   const pathname = usePathname()
+  const router = useRouter()
 
   const links = [
     { href: '/admin', label: 'Orders' },
@@ -12,6 +14,11 @@ export default function AdminNav() {
     { href: '/admin/payments', label: 'Payments' },
     { href: '/admin/deliveries', label: 'Deliveries' },
   ]
+
+  async function handleSignOut() {
+    await supabase.auth.signOut()
+    router.push('/admin/login')
+  }
 
   return (
     <nav style={{
@@ -58,6 +65,24 @@ export default function AdminNav() {
             </Link>
           )
         })}
+        <button
+          onClick={handleSignOut}
+          style={{
+            marginLeft: 'auto',
+            padding: '0 8px',
+            height: '52px',
+            display: 'flex',
+            alignItems: 'center',
+            fontSize: '13px',
+            fontFamily: 'var(--font-inter)',
+            color: 'var(--text-tertiary)',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+          }}
+        >
+          Sign out
+        </button>
       </div>
     </nav>
   )

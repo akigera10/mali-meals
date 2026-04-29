@@ -1,25 +1,31 @@
 import { createClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 /**
- * Browser client — safe to use in Client Components.
- * Created lazily so a missing env var doesn't crash the module on import
- * when this file is loaded by a server component that only uses createServerClient().
+ * Browser client — use in Client Components (auth + data).
+ * Uses createBrowserClient from @supabase/ssr so auth tokens are stored
+ * in cookies instead of localStorage. This is what lets middleware.ts read
+ * and validate the session on every request.
+ * Lazy-initialised so importing this module in a server context doesn't crash.
  */
-let _browserClient: ReturnType<typeof createClient> | null = null;
-export const supabase = new Proxy({} as ReturnType<typeof createClient>, {
+let _browserClient: ReturnType<typeof createBrowserClient> | null = null;
+export const supabase = new Proxy({} as ReturnType<typeof createBrowserClient>, {
   get(_t, prop, receiver) {
-    if (!_browserClient) _browserClient = createClient(supabaseUrl, supabaseAnonKey);
+    if (!_browserClient) _browserClient = createBrowserClient(supabaseUrl, supabaseAnonKey);
     const val = Reflect.get(_browserClient, prop, receiver);
     return typeof val === 'function' ? val.bind(_browserClient) : val;
   },
 });
 
 /**
- * Server client — use in Server Components and Route Handlers.
- * Created fresh per call so it never leaks state between requests.
+ * Server data client — use in Server Components and Route Handlers for
+ * database queries. Not session-aware; uses the anon key directly.
+ *
+ * For middleware session validation, see middleware.ts — it creates its own
+ * cookie-aware client using createServerClient from @supabase/ssr directly.
  */
 export function createServerClient() {
   return createClient(supabaseUrl, supabaseAnonKey, {

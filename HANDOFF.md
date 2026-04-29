@@ -450,6 +450,7 @@ NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
 RESEND_API_KEY
 ADMIN_PASSWORD
+MALI_PHONE
 ```
 
 ### Local `.env.local`
@@ -458,6 +459,7 @@ NEXT_PUBLIC_SUPABASE_URL=https://ouolrgndrqsbjkopsdso.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<from Supabase dashboard>
 RESEND_API_KEY=<from resend.com>
 ADMIN_PASSWORD=<your chosen password>
+MALI_PHONE=+254708470580
 ```
 
 ---

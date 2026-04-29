@@ -263,9 +263,9 @@ export async function POST(req: NextRequest) {
     `.trim()
 
     const { error } = await resend.emails.send({
-      from: 'onboarding@resend.dev', // TODO: swap to verified sending domain before launch
-      to: 'amanda@confid3ntial.studio', // TODO: swap to customer email before launch
-      replyTo: 'malismealorders@gmail.com', // TODO: update to Mali's final email before launch
+      from: "Mali's Meals <orders@malismeals.com>",
+      to: customer_email,
+      replyTo: 'orders@malismeals.com',
       subject: `Your Mali's Meals order — ${order_ref}`,
       html,
     })

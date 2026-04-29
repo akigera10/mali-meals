@@ -199,6 +199,23 @@ export default function DeliveriesClient() {
                 </button>
               )}
               <button onClick={() => setWeekOffset(w => w + 1)} style={navBtnStyle} aria-label="Next week">→</button>
+              <Link
+                href={`/admin/packing-slips?day=${selectedDay}&week=${encodeURIComponent(weekBounds.start.toISOString())}`}
+                style={{
+                  padding: '6px 16px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--border-strong)',
+                  backgroundColor: 'var(--surface-raised)',
+                  color: 'var(--text-secondary)',
+                  fontSize: '13px',
+                  fontFamily: 'var(--font-inter)',
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                }}
+              >
+                Packing slips
+              </Link>
               <button
                 onClick={() => window.print()}
                 style={{

@@ -173,6 +173,23 @@ export default function OrderDetailClient({
     setSaving(false)
   }
 
+  async function handleMarkDispatched() {
+    await handleStatusUpdate('dispatched')
+    console.log('[dispatch] status updated — firing send-dispatch for order', order.id, order.order_ref)
+    fetch('/api/send-dispatch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId: order.id }),
+    }).then(res => {
+      console.log('[dispatch] send-dispatch response status:', res.status)
+      return res.json()
+    }).then(data => {
+      console.log('[dispatch] send-dispatch response body:', data)
+    }).catch((err) => {
+      console.error('[dispatch] send-dispatch fetch error:', err)
+    })
+  }
+
   async function handleCancel() {
     if (!window.confirm(`Cancel order ${order.order_ref}? This cannot be undone.`)) return
     setSaving(true)
@@ -293,6 +310,18 @@ export default function OrderDetailClient({
 
           {/* Action buttons */}
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <Link
+              href={`/admin/packing-slips?order=${order.id}`}
+              style={{
+                ...btnSecondary,
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                fontSize: '13px',
+              }}
+            >
+              Print slip
+            </Link>
             {order.payment_status === 'unpaid' && (
               <button
                 style={btnPrimary}
@@ -308,7 +337,7 @@ export default function OrderDetailClient({
               </button>
             )}
             {order.order_status === 'confirmed' && (
-              <button style={btnSecondary} onClick={() => handleStatusUpdate('dispatched')} disabled={saving}>
+              <button style={btnSecondary} onClick={handleMarkDispatched} disabled={saving}>
                 Mark dispatched
               </button>
             )}

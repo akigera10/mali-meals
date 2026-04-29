@@ -338,49 +338,38 @@ No logout button yet — to add.
 
 ## Known issues and next steps
 
-### Issue 1 — Kitchen tab needs redesign (PRIORITY)
-The current Kitchen tab is too flat and unintuitive. A full redesign has been specced. See the redesign spec below.
+### Known Issue 1 — Kitchen tab needs redesign (PRIORITY)
+The current Kitchen tab is too flat and unintuitive. Full redesign spec below.
+Not yet built.
 
-### Issue 2 — Packing slips not yet built
-Mali needs printable packing slips to attach to delivery bags. Specced below.
+### Known Issue 2 — No logout button
+Admin has no way to log out. Will be resolved when Supabase Auth is implemented
+(see Security section below).
 
-### Issue 3 — No logout button
-Admin has no way to log out. Need a logout button that clears the admin_session cookie.
+### Known Issue 3 — Resend email (RESOLVED)
+Domain malismeals.com verified on Resend. Both confirmation and dispatch emails
+send from orders@malismeals.com to real customer emails. Reply-to is
+orders@malismeals.com which routes to Zoho Mail inbox.
 
-### Issue 4 — No notification to Mali when new order placed
-Mali has no alert when a new order comes in. Options discussed: email notification (simplest, Resend already set up), WhatsApp (most practical, future phase), in-app badge (already partially addressed with 'X new orders' indicator).
-
-### Issue 5 — Resend email not configured for production
-Do not fix until Mali commits to purchasing a domain. Three TODOs in `app/api/send-confirmation/route.ts`.
-
-### Issue 6 — RLS partially configured
+### Known Issue 4 — RLS partially configured
 Before public launch — audit all tables and add proper read/write policies.
+See Security section below.
 
-### Issue 7 — No customer tab
-Discussed but not yet built. See spec below.
+### Known Issue 5 — No customer tab
+Discussed but not yet built. Spec below. No new tables needed — all data
+exists in orders table.
+
+### Known Issue 6 — Payment flow does not reflect real business model
+Current flow: NEW → CONFIRMED → DISPATCHED → DELIVERED (M-Pesa captured
+at delivery). Real flow: payment is collected BEFORE dispatch — Godrick
+messages customer with bill, customer pays via M-Pesa to personal number,
+then rider dispatches. Flow rework specced for future phase.
+
 
 ---
 
 ## Builds in progress / next to build
 
-### 1. Kitchen tab redesign (PRIORITY)
-Full redesign spec:
-
-**Section 1 — Week snapshot**
-Two side-by-side cards for Sunday and Monday. Each shows: date, total orders, total revenue, count of unconfirmed orders (in brand-gold). Clicking a card filters the cooking summary below.
-
-**Section 2 — Cooking summary**
-Grouped by dish with variants indented:
-```
-MAINS — 12 portions total
-━━━━━━━━━━━━━━━━━━━━━━━━
-Pad kra pow rice bowl
-  Vegetarian     ●●●○○  3
-  With chicken   ●●○○○  2
-  With beef      ●○○○○  1
-                 ───────
-                 Total  6
-```
 Filled dots (●) in brand-gold for ordered portions, empty (○) for context up to 5. If more than 5, just show the number.
 MAINS and SALADS as separate sections with totals.
 Chef's special and protein add-ons below.
@@ -390,43 +379,90 @@ Compact list of NEW status orders. 'Confirm' button inline — clicking confirms
 
 Print button — prints cooking summary only as a prep sheet.
 
-### 2. Packing slips
-Printable slips attached to delivery bags. One slip per order.
+### 2. Packing slips ✅ BUILT
+Built and working. One slip per order. Accessible from:
+- Deliveries tab — "Print packing slips" button for all orders on selected day
+- Order detail page — "Print slip" button for individual orders
+- Page at /admin/packing-slips — batch mode (?day=sunday&week=) or single (?order=id)
 
-**Physical format:** A4 sheet fits 4 slips (2×2 grid). Mali prints, cuts, staples to bags.
-
-**Each slip shows:**
-- Mali's Meals branding + order ref (large, scannable)
-- Customer name + phone number
-- Full delivery address + zone + delivery window
-- Itemised contents: dish name + variant, chef's special, add-ons (no prices needed on slip)
-- Total amount
-- Payment status — 'COLLECT PAYMENT: Ksh X,XXX' in prominent red/terracotta if unpaid, '✓ PAID' in green if paid
-- Customer notes/allergies (prominent — safety critical)
-- Subtle dashed cut lines between slips
-
-**Where to access:**
-- Bulk print from Deliveries tab — "Print packing slips" button for all orders on selected day
-- Individual print from order detail page — "Print slip" button
-
-**Implementation:** CSS print media queries only — no PDF library. On screen shows as cards, on print arranges 2×2 on A4.
+Print layout uses client-side JS measurement to bin slips by height and pack
+into A4 pages. Black and white safe — payment status uses weight and borders
+not color.
 
 ### 3. Customer tab `/admin/customers`
-Not yet built. Purpose: Mali needs to see who her repeat customers are, their order history, and their preferences.
+Not yet built. Purpose: Mali needs to see who her repeat customers are,
+their order history, and their preferences.
 
 **What it should show:**
 - List of all unique customers (by phone number or email)
-- Each customer: name, phone, email, total orders, total spent, last order date, delivery zone, common allergens
+- Each customer: name, phone, email, total orders, total spent, last order
+  date, delivery zone, common allergens
 - Clicking a customer shows their full order history
-- Useful for: identifying loyal customers, understanding preferences, following up on unpaid orders
+- Useful for: identifying loyal customers, understanding preferences,
+  following up on unpaid orders
 
-**Database:** No new tables needed — all data exists in orders table. Query distinct customers and aggregate.
+**Database:** No new tables needed — all data exists in orders table.
+Query distinct customers and aggregate.
 
 ### 4. Logout button
-Simple — add a logout button to AdminNav that calls an API route to clear the admin_session cookie and redirects to /admin/login.
+Resolved when Supabase Auth is implemented — signOut() replaces the
+cookie clear. Do not build as a standalone feature.
 
 ### 5. Email notification to Mali on new order
-When a customer places an order, send Mali an email with the order summary. Uses existing Resend setup. Second email template alongside the customer confirmation.
+When a customer places an order, send Mali an email at orders@malismeals.com
+with the order summary. Uses existing Resend setup. Third email template
+alongside customer confirmation and dispatch notification.
+Not yet built.
+
+### 6. Supabase Auth — replace cookie auth (DO THIS FIRST)
+Replace the current password cookie system with proper Supabase Auth.
+
+What to do:
+- Create a Supabase Auth user for Mali in the Supabase dashboard
+  (Authentication → Users → Add user). Use orders@malismeals.com as
+  the email.
+- Update /admin/login/page.tsx to use Supabase Auth signInWithPassword()
+- Update middleware.ts to check Supabase session instead of admin_session
+  cookie. Use @supabase/ssr — already in the stack.
+- Remove /api/admin-login/route.ts — no longer needed
+- Add logout button to AdminNav that calls Supabase signOut() and redirects
+  to /admin/login
+- Remove ADMIN_PASSWORD from all env files and Vercel once migration
+  is confirmed working
+
+### 7. RLS full audit (CRITICAL — before public launch)
+Currently RLS is partially configured. Audit all tables in Supabase:
+- menu_items, specials, protein_addons — public read only, no write
+- orders, order_items, order_specials, order_item_addons — public insert
+  only (customers placing orders), no read, no update, no delete from
+  anon key
+- Admin read/write must go through service role key server-side only
+- Never expose service role key to the browser
+
+### 8. Rate limiting on admin login (HIGH — before public launch)
+After Supabase Auth is implemented, Supabase handles brute force protection
+natively — no additional work needed.
+If reverting to cookie auth for any reason: use upstash/ratelimit —
+5 failed attempts, 15 minute lockout.
+
+### 9. Server-side validation on order submission (HIGH — before public launch)
+Checkout validation currently exists only in CheckoutClient.tsx (browser).
+Mirror all validation server-side in the order submission API route:
+- Required fields: name, phone, email, address, zone, delivery_day
+- Zone must be integer 1-4
+- delivery_day must be 'sunday' or 'monday'
+- Items must exist in database and be active, not sold out
+- Quantities must be positive integers
+- Prices must match database values — never trust client-submitted prices
+
+### 10. Rate limiting on order submission (after public launch)
+Protects against fake order floods. Use upstash/ratelimit with free
+Upstash Redis instance. Limit: 10 order submissions per IP per hour.
+
+### 11. Domain connection — www.malismeals.com to Vercel (DO THIS NEXT)
+Domain purchased at Zoho Domains. Add in Vercel dashboard → Settings →
+Domains, then add the DNS records Vercel provides into Zoho Domains DNS
+panel. Both www.malismeals.com and malismeals.com should point to Vercel.
 
 ---
 
@@ -477,11 +513,23 @@ Say: "Read the HANDOFF.md file in this project. Then I want to work on [specific
 Paste this entire document and say what you want to work on.
 
 ### Key rules to remind any AI before touching code
-1. All styling must use inline `style={}` with CSS custom properties — no Tailwind classes in components
-2. Check existing files like `app/components/MenuClient.tsx` for the styling pattern
-3. Do not remove `typescript.ignoreBuildErrors: true` from next.config.mjs
-4. The variant column on order_items is strictly 'vegetarian' or 'meat' — there is NO meat_type column
-5. Chef's special items use the `specials` table and `order_specials` table — never `menu_items` or `order_items`
-6. Cart items with `special:` prefix are chef's specials — always display in their own section
-7. Payment is on delivery — M-Pesa code is captured when marking an order as delivered
-8. Order status values are: 'new', 'confirmed', 'dispatched', 'delivered', 'cancelled' — never use 'pending' or 'out_for_delivery'
+1. All styling must use inline style={} with CSS custom properties — no Tailwind
+   classes in components ever
+2. Check existing files like app/components/MenuClient.tsx for the styling pattern
+3. Do not remove typescript.ignoreBuildErrors: true from next.config.mjs
+4. The variant column on order_items is strictly 'vegetarian' or 'meat' — there
+   is NO meat_type column
+5. Chef's special items use the specials table and order_specials table — never
+   menu_items or order_items
+6. Cart items with special: prefix are chef's specials — always display in their
+   own section
+7. Payment is collected before dispatch in the real business — M-Pesa code capture
+   at delivery is the current app model but does not reflect reality. Do not
+   change the payment flow without explicit instruction.
+8. Order status values are: 'new', 'confirmed', 'dispatched', 'delivered',
+   'cancelled' — never use 'pending' or 'out_for_delivery'
+9. Email sender is orders@malismeals.com — never revert to onboarding@resend.dev
+10. Never hardcode email addresses or phone numbers — always use environment
+    variables
+11. Supabase Auth is being implemented to replace the cookie auth system —
+    do not add new logic that depends on the admin_session cookie

@@ -34,9 +34,13 @@ export async function middleware(request: NextRequest) {
   )
 
   // getUser() validates the session against Supabase — never trusts the local JWT alone
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.redirect(new URL('/admin/login', request.url))
+    }
+  } catch {
+    // Network error reaching Supabase — redirect to login rather than crashing
     return NextResponse.redirect(new URL('/admin/login', request.url))
   }
 

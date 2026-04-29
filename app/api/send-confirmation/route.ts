@@ -72,8 +72,7 @@ export async function POST(req: NextRequest) {
     const dayLabel = buildDeliveryLabel(delivery_day, delivery_slot)
     const freeDelivery = delivery_fee === 0 && subtotal >= 5000
 
-    function dishRows(entries: CartEntry[]) {
-      return entries.map(e => `
+    const dishRows = (entries: CartEntry[]) => entries.map(e => `
         <tr>
           <td style="padding: 10px 0; border-bottom: 1px solid #EDE8DF;">
             <span style="font-family: Georgia, serif; font-size: 15px; color: #1F1B16;">${e.name}</span>
@@ -83,7 +82,6 @@ export async function POST(req: NextRequest) {
           <td style="padding: 10px 0; border-bottom: 1px solid #EDE8DF; text-align: right; font-family: Georgia, serif; font-size: 15px; color: #1F1B16; white-space: nowrap;">${fmt(e.unitPrice * e.quantity)}</td>
         </tr>
       `).join('')
-    }
 
     const mainRows = mains.length > 0 ? `
       <tr>

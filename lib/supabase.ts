@@ -35,3 +35,25 @@ export function createServerClient() {
     },
   });
 }
+
+/**
+ * Admin client — uses the service role key to bypass RLS.
+ * Server-side only. Never call this from a Client Component or expose
+ * the service role key to the browser.
+ */
+export function createAdminClient() {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceRoleKey) {
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set');
+  }
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    serviceRoleKey,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    }
+  );
+}

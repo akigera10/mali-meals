@@ -20,7 +20,10 @@
       "Bash(git push:*)",
       "Bash(git remote:*)",
       "Bash(git branch:*)",
-      "mcp__Claude_in_Chrome__javascript_tool"
+      "mcp__Claude_in_Chrome__javascript_tool",
+      "Bash(npm run *)",
+      "Read(//tmp/**)",
+      "Bash(curl -s http://localhost:3001/admin/login)"
     ]
   }
 }

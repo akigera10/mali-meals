@@ -1,10 +1,10 @@
-import { createServerClient } from '@/lib/supabase'
+import { createAdminClient } from '@/lib/supabase'
 import MenuManagementClient from './MenuManagementClient'
 
 export const revalidate = 0
 
 export default async function AdminMenuPage() {
-  const supabase = createServerClient()
+  const supabase = createAdminClient()
 
   const [
     { data: menuItems, error: menuError },

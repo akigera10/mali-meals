@@ -407,16 +407,17 @@ export default function CheckoutClient() {
                            : form.deliveryDay === 'sunday_free' ? 'free_5_10pm'
                            : form.deliverySlot || null
 
-    // SQL required in Supabase before this works:
-    // ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_email text NOT NULL DEFAULT '';
-    // ALTER TABLE orders ADD COLUMN IF NOT EXISTS address_building text;
-    // ALTER TABLE orders ADD COLUMN IF NOT EXISTS address_street text;
-    // ALTER TABLE orders ADD COLUMN IF NOT EXISTS address_apartment text;
-    // ALTER TABLE orders ADD COLUMN IF NOT EXISTS address_landmark text;
-    // ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_window text;
-    // ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_slot text;
     try {
+      // Generate ID client-side and fetch ref from server — avoids any SELECT under RLS
+      const orderId = crypto.randomUUID()
+
+      const refRes = await fetch('/api/generate-order-ref', { method: 'POST' })
+      if (!refRes.ok) throw new Error('Failed to generate order reference')
+      const { orderRef: ref } = await refRes.json()
+
       const orderPayload = {
+        id: orderId,
+        order_ref: ref,
         customer_name: fullName,
         customer_phone: form.phone,
         customer_email: form.email,
@@ -436,11 +437,9 @@ export default function CheckoutClient() {
         order_status: 'new',
       }
 
-      const { data: orderData, error: orderError } = await supabase
+      const { error: orderError } = await supabase
         .from('orders')
         .insert(orderPayload)
-        .select('id, order_ref')
-        .single()
 
       if (orderError) {
         console.error('Order insert error:', orderError)
@@ -448,18 +447,17 @@ export default function CheckoutClient() {
         throw orderError
       }
 
-      const orderId = orderData.id
-      const ref = orderData.order_ref
-
       const insertedItemIds: string[] = []
 
       for (const entry of [...mains, ...salads]) {
+        const itemId = crypto.randomUUID()
         const menuItemId = entry.id.split(':')[0]
         const variant = entry.variant === 'meat' ? 'meat' : 'vegetarian'
 
-        const { data: itemData, error: itemError } = await supabase
+        const { error: itemError } = await supabase
           .from('order_items')
           .insert({
+            id: itemId,
             order_id: orderId,
             menu_item_id: menuItemId,
             quantity: entry.quantity,
@@ -467,11 +465,9 @@ export default function CheckoutClient() {
             meat_type: entry.meatType || null,
             unit_price: entry.unitPrice,
           })
-          .select('id')
-          .single()
 
         if (itemError) throw itemError
-        insertedItemIds.push(itemData.id)
+        insertedItemIds.push(itemId)
       }
 
       for (const entry of specials) {

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { createServerClient } from '@/lib/supabase'
+import { createAdminClient } from '@/lib/supabase'
 import PackingSlipsClient, { type SlipOrder } from './PackingSlipsClient'
 
 export const revalidate = 0
@@ -9,7 +9,7 @@ export default async function PackingSlipsPage({
 }: {
   searchParams: { order?: string; day?: string; week?: string }
 }) {
-  const supabase = createServerClient()
+  const supabase = createAdminClient()
 
   let rawOrders: any[] = []
 
@@ -39,7 +39,7 @@ export default async function PackingSlipsPage({
   if (orderIds.length > 0) {
     const [{ data: items }, { data: specials }] = await Promise.all([
       (supabase.from('order_items') as any)
-        .select('order_id, quantity, variant, menu_items(name, category, meat_upgrade_type), order_item_addons(quantity, protein_addons(name))')
+        .select('order_id, quantity, variant, meat_type, menu_items(name, category, meat_upgrade_type), order_item_addons(quantity, protein_addons(name))')
         .in('order_id', orderIds),
       (supabase.from('order_specials') as any)
         .select('order_id, quantity, specials(name)')
@@ -83,6 +83,7 @@ export default async function PackingSlipsPage({
         name: i.menu_items?.name ?? 'Unknown',
         category: i.menu_items?.category ?? 'mains',
         variant: i.variant,
+        meat_type: i.meat_type ?? null,
         meat_upgrade_type: i.menu_items?.meat_upgrade_type ?? null,
         quantity: i.quantity,
       })),

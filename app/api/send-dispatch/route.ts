@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Resend } from 'resend'
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase'
+import { createAdminClient } from '@/lib/supabase'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
     const { orderId } = await req.json()
     console.log('[send-dispatch] POST received — orderId:', orderId)
 
-    const db = createServerClient()
+    const db = createAdminClient()
 
     const { data: order, error: orderError } = await (db.from('orders') as any)
       .select('*')

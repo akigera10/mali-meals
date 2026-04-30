@@ -21,7 +21,7 @@ export type SlipOrder = {
   total_amount: number
   payment_status: string | null
   notes: string | null
-  items: { name: string; category: string; variant: string; meat_upgrade_type: string | null; quantity: number }[]
+  items: { name: string; category: string; variant: string; meat_type: string | null; meat_upgrade_type: string | null; quantity: number }[]
   specials: { name: string; quantity: number }[]
   addons: { name: string; quantity: number }[]
 }
@@ -49,10 +49,11 @@ function fmt(n: number) {
   return `Ksh ${n.toLocaleString()}`
 }
 
-function variantLabel(variant: string, meatUpgradeType: string | null): string {
+function variantLabel(variant: string, meatType: string | null, meatUpgradeType: string | null): string {
   if (variant === 'vegetarian') return 'Vegetarian'
-  if (meatUpgradeType === 'beef') return 'With beef'
-  if (meatUpgradeType === 'chicken') return 'With chicken'
+  const t = meatType || meatUpgradeType
+  if (t === 'beef') return 'With beef'
+  if (t === 'chicken') return 'With chicken'
   return 'With meat'
 }
 
@@ -230,7 +231,7 @@ function Slip({ order }: { order: SlipOrder }) {
                   <span>
                     {item.name}
                     <span style={{ color: 'var(--text-tertiary)', marginLeft: '4px' }}>
-                      {variantLabel(item.variant, item.meat_upgrade_type)}
+                      {variantLabel(item.variant, item.meat_type, item.meat_upgrade_type)}
                     </span>
                   </span>
                   <span style={{ color: 'var(--text-secondary)', flexShrink: 0, marginLeft: '6px' }}>×{item.quantity}</span>
@@ -247,7 +248,7 @@ function Slip({ order }: { order: SlipOrder }) {
                   <span>
                     {item.name}
                     <span style={{ color: 'var(--text-tertiary)', marginLeft: '4px' }}>
-                      {variantLabel(item.variant, item.meat_upgrade_type)}
+                      {variantLabel(item.variant, item.meat_type, item.meat_upgrade_type)}
                     </span>
                   </span>
                   <span style={{ color: 'var(--text-secondary)', flexShrink: 0, marginLeft: '6px' }}>×{item.quantity}</span>

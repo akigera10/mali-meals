@@ -33,6 +33,7 @@ type OrderItem = {
   id: string
   quantity: number
   variant: string
+  meat_type: string | null
   unit_price: number
   menu_items: { name: string; category: string | null; meat_upgrade_type: string | null } | null
   order_item_addons: {
@@ -72,7 +73,7 @@ function deliveryLabel(order: Order): string {
 
 function variantLabel(item: OrderItem): string {
   if (item.variant === 'vegetarian') return 'Vegetarian'
-  const t = item.menu_items?.meat_upgrade_type
+  const t = item.meat_type || item.menu_items?.meat_upgrade_type
   if (t === 'beef') return 'With beef'
   if (t === 'chicken') return 'With chicken'
   return 'With meat'

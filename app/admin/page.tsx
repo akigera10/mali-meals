@@ -1,11 +1,11 @@
-import { createServerClient } from '@/lib/supabase'
+import { createAdminClient } from '@/lib/supabase'
 import OrdersClient from './OrdersClient'
 import AdminNav from './components/AdminNav'
 
 export const revalidate = 0
 
 export default async function AdminPage() {
-  const supabase = createServerClient()
+  const supabase = createAdminClient()
   const { data: orders, error } = await supabase
     .from('orders')
     .select('*')

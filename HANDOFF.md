@@ -464,6 +464,36 @@ Domain purchased at Zoho Domains. Add in Vercel dashboard → Settings →
 Domains, then add the DNS records Vercel provides into Zoho Domains DNS
 panel. Both www.malismeals.com and malismeals.com should point to Vercel.
 
+### 12. M-Pesa STK Push — IntaSend integration (FUTURE PHASE)
+Replace the current manual payment collection with automated STK Push.
+When Mali clicks "Request payment" on an order, the app sends an M-Pesa
+payment prompt directly to the customer's phone. Customer enters PIN,
+payment confirmed automatically, order status updates to paid.
+
+Prerequisites before building:
+- Mali needs a registered M-Pesa till number or paybill (business account)
+- Create IntaSend account at payment.intasend.com
+- For testing: sandbox account at sandbox.intasend.com — no real money,
+  reversals within 48hrs, test number 254708374149
+
+What to build:
+- New API route: /api/request-payment — triggers IntaSend STK Push using
+  order's customer_phone and total_amount
+- "Request payment" button on order detail page — visible on confirmed orders
+  with payment_status 'unpaid'
+- Webhook endpoint: /api/intasend-webhook — receives payment confirmation
+  from IntaSend, updates order payment_status to 'paid' and paid_at timestamp
+- New order status step: payment_requested — sits between confirmed and
+  dispatched in the workflow
+
+Environment variables to add:
+INTASEND_PUBLISHABLE_KEY=
+INTASEND_SECRET_KEY=
+
+Dependencies:
+- intasend-node package
+- ngrok for local webhook testing
+
 ---
 
 ## Real-world context (important for understanding the business)

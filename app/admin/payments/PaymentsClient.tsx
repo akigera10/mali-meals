@@ -3,36 +3,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
 
-// ── Week boundary logic (same as Kitchen) ────────────────────────────────────
-
-function getWeekBounds(now: Date): { start: Date; end: Date } {
-  const day = now.getDay()
-  const hour = now.getHours()
-  let daysSince = (day - 5 + 7) % 7
-  if (day === 5 && hour < 14) daysSince = 7
-  const start = new Date(now)
-  start.setDate(now.getDate() - daysSince)
-  start.setHours(14, 0, 0, 0)
-  start.setMilliseconds(0)
-  const end = new Date(start)
-  end.setDate(start.getDate() + 7)
-  return { start, end }
-}
-
-function shiftWeek(base: { start: Date; end: Date }, offset: number): { start: Date; end: Date } {
-  const start = new Date(base.start)
-  start.setDate(start.getDate() + offset * 7)
-  const end = new Date(start)
-  end.setDate(start.getDate() + 7)
-  return { start, end }
-}
-
-function weekLabel(bounds: { start: Date; end: Date }): string {
-  const fmt = (d: Date) =>
-    d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
-  return `${fmt(bounds.start)} 2pm — ${fmt(bounds.end)} 2pm`
-}
-
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type PaymentOrder = {
@@ -50,6 +20,12 @@ type PaymentOrder = {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+function fmtDate(d: string): string {
+  return new Date(d + 'T12:00:00').toLocaleDateString('en-GB', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  })
+}
 
 function fmtPaidAt(ts: string): string {
   const d = new Date(ts)
@@ -81,25 +57,43 @@ const tdStyle: React.CSSProperties = {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function PaymentsClient() {
-  const [baseWeek] = useState(() => getWeekBounds(new Date()))
-  const [weekOffset, setWeekOffset] = useState(0)
-  const [loading, setLoading] = useState(true)
+  const [allDates, setAllDates] = useState<string[]>([])
+  const [dateIdx, setDateIdx] = useState(0)
+  const [datesLoaded, setDatesLoaded] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [orders, setOrders] = useState<PaymentOrder[]>([])
 
-  const weekBounds = useMemo(
-    () => (weekOffset === 0 ? baseWeek : shiftWeek(baseWeek, weekOffset)),
-    [weekOffset, baseWeek]
-  )
-
+  // Load distinct delivery dates on mount
   useEffect(() => {
+    async function loadDates() {
+      const { data } = await (supabase.from('orders') as any)
+        .select('delivery_date')
+        .not('delivery_date', 'is', null)
+        .order('delivery_date', { ascending: true })
+
+      const unique: string[] = Array.from(new Set((data || []).map((r: any) => r.delivery_date as string)))
+      setAllDates(unique)
+
+      const today = new Date().toISOString().slice(0, 10)
+      const idx = unique.findIndex(d => d >= today)
+      setDateIdx(idx === -1 ? Math.max(0, unique.length - 1) : idx)
+      setDatesLoaded(true)
+    }
+    loadDates()
+  }, [])
+
+  const selectedDate = allDates[dateIdx] ?? null
+
+  // Load orders for selected delivery date
+  useEffect(() => {
+    if (!selectedDate) return
     let active = true
     setLoading(true)
 
     async function load() {
       const { data } = await (supabase.from('orders') as any)
         .select('id, order_ref, customer_name, customer_phone, delivery_zone, subtotal, delivery_fee, total_amount, payment_status, mpesa_code, paid_at')
-        .gte('created_at', weekBounds.start.toISOString())
-        .lt('created_at', weekBounds.end.toISOString())
+        .eq('delivery_date', selectedDate)
 
       if (!active) return
       setOrders(data || [])
@@ -108,7 +102,7 @@ export default function PaymentsClient() {
 
     load()
     return () => { active = false }
-  }, [weekBounds])
+  }, [selectedDate])
 
   const paidOrders = useMemo(() =>
     orders
@@ -122,10 +116,11 @@ export default function PaymentsClient() {
   const totalCollected = paidOrders.reduce((s, o) => s + o.total_amount, 0)
   const unpaidCount = orders.filter(o => o.payment_status !== 'paid').length
 
+  const selectedDateLabel = selectedDate ? fmtDate(selectedDate) : '—'
+
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: `
-        [data-noprint] { }
         [data-printonly] { display: none; }
         @media print {
           nav { display: none !important; }
@@ -139,28 +134,24 @@ export default function PaymentsClient() {
       <div style={{ fontFamily: 'var(--font-inter)' }}>
         <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 20px' }}>
 
-          {/* Header — hidden when printing */}
+          {/* Header */}
           <div data-noprint="">
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-              <h1 style={{
-                fontFamily: 'var(--font-fraunces)',
-                fontSize: '28px',
-                color: 'var(--text-primary)',
-                margin: 0,
-                flex: '1',
-              }}>
+              <h1 style={{ fontFamily: 'var(--font-fraunces)', fontSize: '28px', color: 'var(--text-primary)', margin: 0, flex: '1' }}>
                 Payments
               </h1>
-              <button onClick={() => setWeekOffset(w => w - 1)} style={navBtnStyle} aria-label="Previous week">←</button>
-              {weekOffset !== 0 && (
-                <button
-                  onClick={() => setWeekOffset(0)}
-                  style={{ ...navBtnStyle, fontSize: '12px', padding: '5px 10px' }}
-                >
-                  This week
-                </button>
-              )}
-              <button onClick={() => setWeekOffset(w => w + 1)} style={navBtnStyle} aria-label="Next week">→</button>
+              <button
+                onClick={() => setDateIdx(i => i - 1)}
+                disabled={dateIdx <= 0}
+                style={{ ...navBtnStyle, opacity: dateIdx <= 0 ? 0.4 : 1 }}
+                aria-label="Previous date"
+              >←</button>
+              <button
+                onClick={() => setDateIdx(i => i + 1)}
+                disabled={dateIdx >= allDates.length - 1}
+                style={{ ...navBtnStyle, opacity: dateIdx >= allDates.length - 1 ? 0.4 : 1 }}
+                aria-label="Next date"
+              >→</button>
               <button
                 onClick={() => window.print()}
                 style={{
@@ -177,16 +168,18 @@ export default function PaymentsClient() {
                 Print
               </button>
             </div>
-            <p style={{ fontSize: '14px', color: 'var(--text-tertiary)', marginTop: 0, marginBottom: '28px' }}>
-              {weekLabel(weekBounds)}
+            <p style={{ fontSize: '15px', fontFamily: 'var(--font-fraunces)', color: 'var(--text-primary)', marginTop: 0, marginBottom: '28px' }}>
+              {datesLoaded && allDates.length === 0 ? 'No delivery dates found' : selectedDateLabel}
             </p>
 
             {/* Summary bar */}
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '32px', flexWrap: 'wrap' }}>
-              <StatCard label="Paid orders" value={String(paidOrders.length)} />
-              <StatCard label="Collected" value={`Ksh ${totalCollected.toLocaleString()}`} />
-              <StatCard label="Unpaid" value={String(unpaidCount)} alert={unpaidCount > 0} />
-            </div>
+            {datesLoaded && allDates.length > 0 && !loading && (
+              <div style={{ display: 'flex', gap: '12px', marginBottom: '32px', flexWrap: 'wrap' }}>
+                <StatCard label="Paid orders" value={String(paidOrders.length)} />
+                <StatCard label="Collected" value={`Ksh ${totalCollected.toLocaleString()}`} />
+                <StatCard label="Unpaid" value={String(unpaidCount)} alert={unpaidCount > 0} />
+              </div>
+            )}
           </div>
 
           {/* Print-only heading */}
@@ -195,22 +188,23 @@ export default function PaymentsClient() {
               Mali&apos;s Meals — Payments
             </div>
             <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', marginBottom: '20px' }}>
-              {weekLabel(weekBounds)}
+              {selectedDateLabel}
             </div>
           </div>
 
           {/* Table */}
-          {loading ? (
+          {!datesLoaded ? (
+            <p style={{ fontSize: '14px', color: 'var(--text-tertiary)' }}>Loading…</p>
+          ) : allDates.length === 0 ? (
+            <p style={{ fontSize: '15px', color: 'var(--text-secondary)' }}>
+              No orders with delivery dates yet. Orders placed with the new system will appear here.
+            </p>
+          ) : loading ? (
             <p style={{ fontSize: '14px', color: 'var(--text-tertiary)' }}>Loading…</p>
           ) : paidOrders.length === 0 ? (
-            <p style={{ fontSize: '15px', color: 'var(--text-secondary)' }}>No paid orders this week.</p>
+            <p style={{ fontSize: '15px', color: 'var(--text-secondary)' }}>No paid orders for this date.</p>
           ) : (
-            <div style={{
-              backgroundColor: 'var(--surface-raised)',
-              border: '1px solid var(--border)',
-              borderRadius: '8px',
-              overflow: 'hidden',
-            }}>
+            <div style={{ backgroundColor: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ backgroundColor: 'var(--surface-sunken)', borderBottom: '1px solid var(--border)' }}>
@@ -287,29 +281,11 @@ export default function PaymentsClient() {
 
 function StatCard({ label, value, alert }: { label: string; value: string; alert?: boolean }) {
   return (
-    <div style={{
-      backgroundColor: 'var(--surface-raised)',
-      border: '1px solid var(--border)',
-      borderRadius: '8px',
-      padding: '16px 20px',
-      minWidth: '160px',
-      flex: '1',
-    }}>
-      <div style={{
-        fontSize: '12px',
-        color: 'var(--text-tertiary)',
-        marginBottom: '6px',
-        textTransform: 'uppercase',
-        letterSpacing: '0.07em',
-        fontWeight: '600',
-      }}>
+    <div style={{ backgroundColor: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px 20px', minWidth: '160px', flex: '1' }}>
+      <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: '600' }}>
         {label}
       </div>
-      <div style={{
-        fontFamily: 'var(--font-fraunces)',
-        fontSize: '24px',
-        color: alert ? 'var(--accent-terracotta)' : 'var(--text-primary)',
-      }}>
+      <div style={{ fontFamily: 'var(--font-fraunces)', fontSize: '24px', color: alert ? 'var(--accent-terracotta)' : 'var(--text-primary)' }}>
         {value}
       </div>
     </div>

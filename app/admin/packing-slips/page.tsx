@@ -7,7 +7,7 @@ export const revalidate = 0
 export default async function PackingSlipsPage({
   searchParams,
 }: {
-  searchParams: { order?: string; day?: string; week?: string }
+  searchParams: { order?: string; day?: string; week?: string; date?: string }
 }) {
   const supabase = createAdminClient()
 
@@ -17,6 +17,12 @@ export default async function PackingSlipsPage({
     const { data } = await (supabase.from('orders') as any)
       .select('id, order_ref, customer_name, customer_phone, delivery_zone, delivery_day, delivery_window, delivery_slot, address_building, address_street, address_apartment, address_landmark, total_amount, payment_status, notes')
       .eq('id', searchParams.order)
+    rawOrders = data || []
+  } else if (searchParams.date) {
+    const { data } = await (supabase.from('orders') as any)
+      .select('id, order_ref, customer_name, customer_phone, delivery_zone, delivery_day, delivery_window, delivery_slot, address_building, address_street, address_apartment, address_landmark, total_amount, payment_status, notes')
+      .eq('delivery_date', searchParams.date)
+      .order('delivery_zone', { ascending: true })
     rawOrders = data || []
   } else if (searchParams.day && searchParams.week) {
     const weekStart = new Date(decodeURIComponent(searchParams.week))
@@ -99,10 +105,17 @@ export default async function PackingSlipsPage({
     ? `/admin/orders/${searchParams.order}`
     : '/admin/deliveries'
 
-  const dayLabel = searchParams.day === 'monday' ? 'Monday' : 'Sunday'
-  const title = searchParams.order
-    ? `Packing slip — ${slips[0]?.order_ref ?? ''}`
-    : `Packing slips — ${dayLabel}`
+  let title: string
+  if (searchParams.order) {
+    title = `Packing slip — ${slips[0]?.order_ref ?? ''}`
+  } else if (searchParams.date) {
+    const d = new Date(searchParams.date + 'T12:00:00')
+    const dateLabel = d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })
+    title = `Packing slips — ${dateLabel}`
+  } else {
+    const dayLabel = searchParams.day === 'monday' ? 'Monday' : 'Sunday'
+    title = `Packing slips — ${dayLabel}`
+  }
 
   return <PackingSlipsClient slips={slips} backLink={backLink} title={title} />
 }

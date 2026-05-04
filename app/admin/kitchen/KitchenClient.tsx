@@ -4,42 +4,6 @@ import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 
-// ── Week boundary logic ──────────────────────────────────────────────────────
-
-function getWeekBounds(now: Date): { start: Date; end: Date } {
-  const day = now.getDay()
-  const hour = now.getHours()
-  let daysSince = (day - 5 + 7) % 7
-  if (day === 5 && hour < 14) daysSince = 7
-  const start = new Date(now)
-  start.setDate(now.getDate() - daysSince)
-  start.setHours(14, 0, 0, 0)
-  start.setMilliseconds(0)
-  const end = new Date(start)
-  end.setDate(start.getDate() + 7)
-  return { start, end }
-}
-
-function shiftWeek(base: { start: Date; end: Date }, offset: number): { start: Date; end: Date } {
-  const start = new Date(base.start)
-  start.setDate(start.getDate() + offset * 7)
-  const end = new Date(start)
-  end.setDate(start.getDate() + 7)
-  return { start, end }
-}
-
-function weekLabel(bounds: { start: Date; end: Date }): string {
-  const f = (d: Date) =>
-    d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
-  return `${f(bounds.start)} 2pm — ${f(bounds.end)} 2pm`
-}
-
-function deliveryDate(weekStart: Date, day: 'sunday' | 'monday'): string {
-  const d = new Date(weekStart)
-  d.setDate(d.getDate() + (day === 'sunday' ? 2 : 3))
-  return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' })
-}
-
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type RawOrder = {
@@ -73,16 +37,13 @@ type DishBlock = {
   total: number
 }
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-
-const ZONE_NAMES: Record<number, string> = {
-  1: 'Lavington, Kilimani, Kileleshwa, Hurlingham',
-  2: 'Riverside, Westlands, Parklands, Peponi',
-  3: 'Lower Kabete, Loresho, Kitisuru, Nyari, Pangani, Ngara, Muthaiga',
-  4: 'Karen, Roselyn, Runda, Gigiri, Garden Estate, Langata Road',
-}
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+function fmtDate(d: string): string {
+  return new Date(d + 'T12:00:00').toLocaleDateString('en-GB', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  })
+}
 
 function variantLabel(item: RawItem): string {
   if (item.variant === 'vegetarian') return 'Vegetarian'
@@ -94,16 +55,6 @@ function variantLabel(item: RawItem): string {
 
 function fmt(n: number) {
   return `Ksh ${n.toLocaleString()}`
-}
-
-function dayStats(orders: RawOrder[], day: 'sunday' | 'monday') {
-  const dayOrders = orders.filter(o => o.delivery_day === day)
-  return {
-    total: dayOrders.length,
-    revenue: dayOrders.reduce((s, o) => s + o.total_amount, 0),
-    unconfirmed: dayOrders.filter(o => o.order_status === 'new').length,
-    confirmed: dayOrders.filter(o => o.order_status === 'confirmed').length,
-  }
 }
 
 function buildDishBlocks(items: RawItem[], category: string): DishBlock[] {
@@ -124,7 +75,7 @@ function buildDishBlocks(items: RawItem[], category: string): DishBlock[] {
     .sort((a, b) => b.total - a.total)
 }
 
-// ── Shared style ──────────────────────────────────────────────────────────────
+// ── Shared styles ─────────────────────────────────────────────────────────────
 
 const navBtnStyle: React.CSSProperties = {
   padding: '6px 14px',
@@ -151,53 +102,7 @@ function Dots({ qty }: { qty: number }) {
   )
 }
 
-// ── Day card ──────────────────────────────────────────────────────────────────
-
-function DayCard({
-  dateLabel, total, revenue, unconfirmed, confirmed, active, onClick,
-}: {
-  dateLabel: string; total: number; revenue: number
-  unconfirmed: number; confirmed: number; active: boolean; onClick: () => void
-}) {
-  return (
-    <div
-      role="button"
-      onClick={onClick}
-      style={{
-        flex: 1,
-        minWidth: '200px',
-        backgroundColor: active ? 'var(--brand-gold-soft)' : 'var(--surface-raised)',
-        border: `2px solid ${active ? 'var(--brand-gold)' : 'var(--border)'}`,
-        borderRadius: '10px',
-        padding: '20px 22px',
-        cursor: 'pointer',
-        userSelect: 'none',
-      }}
-    >
-      <div style={{ fontFamily: 'var(--font-fraunces)', fontSize: '17px', color: 'var(--text-primary)', marginBottom: '12px' }}>
-        {dateLabel}
-      </div>
-      <div style={{ fontFamily: 'var(--font-fraunces)', fontSize: '28px', color: 'var(--brand-gold)', lineHeight: 1, marginBottom: '4px' }}>
-        {total}
-      </div>
-      <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '14px' }}>
-        {total === 1 ? 'order' : 'orders'} · {fmt(revenue)}
-      </div>
-      <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-        {unconfirmed > 0 && (
-          <span style={{ fontSize: '13px', color: 'var(--brand-gold)', fontWeight: '500' }}>
-            {unconfirmed} unconfirmed
-          </span>
-        )}
-        <span style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
-          {confirmed} confirmed
-        </span>
-      </div>
-    </div>
-  )
-}
-
-// ── Dish section (mains / salads) ─────────────────────────────────────────────
+// ── Dish section ──────────────────────────────────────────────────────────────
 
 function DishSection({ heading, blocks, totalPortions }: {
   heading: string; blocks: DishBlock[]; totalPortions: number
@@ -213,54 +118,31 @@ function DishSection({ heading, blocks, totalPortions }: {
           {totalPortions} portions
         </span>
       </div>
-
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {blocks.map(dish => (
-          <div
-            key={dish.name}
-            style={{
-              backgroundColor: 'var(--surface-raised)',
-              border: '1px solid var(--border)',
-              borderRadius: '8px',
-              padding: '14px 16px',
-            }}
-          >
+          <div key={dish.name} style={{ backgroundColor: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', padding: '14px 16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '10px' }}>
-              <span style={{ fontFamily: 'var(--font-fraunces)', fontSize: '15px', color: 'var(--text-primary)' }}>
-                {dish.name}
-              </span>
-              <span style={{ fontFamily: 'var(--font-fraunces)', fontSize: '14px', color: 'var(--text-tertiary)' }}>
-                {dish.total} total
-              </span>
+              <span style={{ fontFamily: 'var(--font-fraunces)', fontSize: '15px', color: 'var(--text-primary)' }}>{dish.name}</span>
+              <span style={{ fontFamily: 'var(--font-fraunces)', fontSize: '14px', color: 'var(--text-tertiary)' }}>{dish.total} total</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
               {dish.variants.map(({ variant, qty }) => (
-                <div
-                  key={variant}
-                  style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingLeft: '8px' }}
-                >
-                  <span style={{ fontSize: '13px', color: 'var(--text-secondary)', width: '130px', flexShrink: 0 }}>
-                    {variant}
-                  </span>
+                <div key={variant} style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingLeft: '8px' }}>
+                  <span style={{ fontSize: '13px', color: 'var(--text-secondary)', width: '130px', flexShrink: 0 }}>{variant}</span>
                   <Dots qty={qty} />
-                  <span style={{ fontFamily: 'var(--font-fraunces)', fontSize: '14px', color: 'var(--text-primary)', minWidth: '24px' }}>
-                    {qty}
-                  </span>
+                  <span style={{ fontFamily: 'var(--font-fraunces)', fontSize: '14px', color: 'var(--text-primary)', minWidth: '24px' }}>{qty}</span>
                 </div>
               ))}
             </div>
           </div>
         ))}
       </div>
-
       <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', marginTop: '10px', fontStyle: 'italic' }}>
         Total {heading.toLowerCase()}: {totalPortions} portions across {blocks.length} {blocks.length === 1 ? 'dish' : 'dishes'}
       </div>
     </div>
   )
 }
-
-// ── Simple count section (specials / add-ons) ─────────────────────────────────
 
 function CountSection({ heading, rows }: { heading: string; rows: [string, number][] }) {
   if (rows.length === 0) return null
@@ -271,26 +153,11 @@ function CountSection({ heading, rows }: { heading: string; rows: [string, numbe
       </h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {rows.map(([name, qty]) => (
-          <div
-            key={name}
-            style={{
-              backgroundColor: 'var(--surface-raised)',
-              border: '1px solid var(--border)',
-              borderRadius: '8px',
-              padding: '14px 16px',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <span style={{ fontFamily: 'var(--font-fraunces)', fontSize: '15px', color: 'var(--text-primary)' }}>
-              {name}
-            </span>
+          <div key={name} style={{ backgroundColor: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontFamily: 'var(--font-fraunces)', fontSize: '15px', color: 'var(--text-primary)' }}>{name}</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <Dots qty={qty} />
-              <span style={{ fontFamily: 'var(--font-fraunces)', fontSize: '15px', color: 'var(--text-primary)', minWidth: '24px', textAlign: 'right' }}>
-                {qty}
-              </span>
+              <span style={{ fontFamily: 'var(--font-fraunces)', fontSize: '15px', color: 'var(--text-primary)', minWidth: '24px', textAlign: 'right' }}>{qty}</span>
             </div>
           </div>
         ))}
@@ -302,29 +169,46 @@ function CountSection({ heading, rows }: { heading: string; rows: [string, numbe
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function KitchenClient() {
-  const [baseWeek] = useState(() => getWeekBounds(new Date()))
-  const [weekOffset, setWeekOffset] = useState(0)
-  const [loading, setLoading] = useState(true)
+  const [allDates, setAllDates] = useState<string[]>([])
+  const [dateIdx, setDateIdx] = useState(0)
+  const [datesLoaded, setDatesLoaded] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [orders, setOrders] = useState<RawOrder[]>([])
   const [items, setItems] = useState<RawItem[]>([])
   const [rawSpecials, setRawSpecials] = useState<RawSpecial[]>([])
-  const [selectedDay, setSelectedDay] = useState<'sunday' | 'monday'>('sunday')
   const [confirmingIds, setConfirmingIds] = useState<Set<string>>(new Set())
 
-  const weekBounds = useMemo(
-    () => weekOffset === 0 ? baseWeek : shiftWeek(baseWeek, weekOffset),
-    [weekOffset, baseWeek]
-  )
-
+  // Load distinct delivery dates on mount
   useEffect(() => {
+    async function loadDates() {
+      const { data } = await (supabase.from('orders') as any)
+        .select('delivery_date')
+        .not('delivery_date', 'is', null)
+        .order('delivery_date', { ascending: true })
+
+      const unique: string[] = Array.from(new Set((data || []).map((r: any) => r.delivery_date as string)))
+      setAllDates(unique)
+
+      const today = new Date().toISOString().slice(0, 10)
+      const idx = unique.findIndex(d => d >= today)
+      setDateIdx(idx === -1 ? Math.max(0, unique.length - 1) : idx)
+      setDatesLoaded(true)
+    }
+    loadDates()
+  }, [])
+
+  const selectedDate = allDates[dateIdx] ?? null
+
+  // Load orders for selected delivery date
+  useEffect(() => {
+    if (!selectedDate) return
     let active = true
     setLoading(true)
 
     async function load() {
       const { data: ordersData } = await (supabase.from('orders') as any)
         .select('id, order_ref, order_status, delivery_day, delivery_zone, total_amount, customer_name')
-        .gte('created_at', weekBounds.start.toISOString())
-        .lt('created_at', weekBounds.end.toISOString())
+        .eq('delivery_date', selectedDate)
 
       if (!active) return
 
@@ -375,58 +259,34 @@ export default function KitchenClient() {
 
     load()
     return () => { active = false }
-  }, [weekBounds])
-
-  // ── Day stats ───────────────────────────────────────────────────────────────
-
-  const sunStats = useMemo(() => dayStats(orders, 'sunday'), [orders])
-  const monStats = useMemo(() => dayStats(orders, 'monday'), [orders])
-
-  // ── Filtered items for selected day ─────────────────────────────────────────
-
-  const selectedDayOrderIds = useMemo(
-    () => new Set(orders.filter(o => o.delivery_day === selectedDay).map(o => o.id)),
-    [orders, selectedDay]
-  )
-
-  const filteredItems = useMemo(
-    () => items.filter(item => selectedDayOrderIds.has(item.order_id)),
-    [items, selectedDayOrderIds]
-  )
-
-  const filteredSpecials = useMemo(
-    () => rawSpecials.filter(s => selectedDayOrderIds.has(s.order_id)),
-    [rawSpecials, selectedDayOrderIds]
-  )
+  }, [selectedDate])
 
   // ── Dish blocks ─────────────────────────────────────────────────────────────
 
-  const mainBlocks = useMemo(() => buildDishBlocks(filteredItems, 'mains'), [filteredItems])
-  const saladBlocks = useMemo(() => buildDishBlocks(filteredItems, 'salads'), [filteredItems])
+  const mainBlocks = useMemo(() => buildDishBlocks(items, 'mains'), [items])
+  const saladBlocks = useMemo(() => buildDishBlocks(items, 'salads'), [items])
   const mainPortions = useMemo(() => mainBlocks.reduce((s, d) => s + d.total, 0), [mainBlocks])
   const saladPortions = useMemo(() => saladBlocks.reduce((s, d) => s + d.total, 0), [saladBlocks])
 
   const specialGroups = useMemo(() => {
     const map: Record<string, number> = {}
-    for (const s of filteredSpecials) {
+    for (const s of rawSpecials) {
       const name = s.specials?.name ?? 'Unknown'
       map[name] = (map[name] ?? 0) + s.quantity
     }
     return Object.entries(map).sort((a, b) => b[1] - a[1])
-  }, [filteredSpecials])
+  }, [rawSpecials])
 
   const addonGroups = useMemo(() => {
     const map: Record<string, number> = {}
-    for (const item of filteredItems) {
+    for (const item of items) {
       for (const addon of item.order_item_addons || []) {
         const name = addon.protein_addons?.name ?? 'Unknown add-on'
         map[name] = (map[name] ?? 0) + addon.quantity
       }
     }
     return Object.entries(map).sort((a, b) => b[1] - a[1])
-  }, [filteredItems])
-
-  // ── Unconfirmed orders (all week) ───────────────────────────────────────────
+  }, [items])
 
   const unconfirmedOrders = useMemo(
     () => orders.filter(o => o.order_status === 'new'),
@@ -442,12 +302,7 @@ export default function KitchenClient() {
     setConfirmingIds(s => { const next = new Set(s); next.delete(orderId); return next })
   }
 
-  // ── Date labels ─────────────────────────────────────────────────────────────
-
-  const sunLabel = deliveryDate(weekBounds.start, 'sunday')
-  const monLabel = deliveryDate(weekBounds.start, 'monday')
-  const selectedDateLabel = selectedDay === 'sunday' ? sunLabel : monLabel
-
+  const selectedDateLabel = selectedDate ? fmtDate(selectedDate) : '—'
   const hasContent = mainBlocks.length > 0 || saladBlocks.length > 0 || specialGroups.length > 0 || addonGroups.length > 0
 
   // ── Render ──────────────────────────────────────────────────────────────────
@@ -468,19 +323,24 @@ export default function KitchenClient() {
       <div style={{ fontFamily: 'var(--font-inter)' }}>
         <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 20px' }}>
 
-          {/* ── Header + week nav ── */}
+          {/* ── Header + date nav ── */}
           <div data-noprint="">
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
               <h1 style={{ fontFamily: 'var(--font-fraunces)', fontSize: '28px', color: 'var(--text-primary)', margin: 0, flex: '1' }}>
                 Kitchen
               </h1>
-              <button onClick={() => setWeekOffset(w => w - 1)} style={navBtnStyle} aria-label="Previous week">←</button>
-              {weekOffset !== 0 && (
-                <button onClick={() => setWeekOffset(0)} style={{ ...navBtnStyle, fontSize: '12px', padding: '5px 10px' }}>
-                  This week
-                </button>
-              )}
-              <button onClick={() => setWeekOffset(w => w + 1)} style={navBtnStyle} aria-label="Next week">→</button>
+              <button
+                onClick={() => setDateIdx(i => i - 1)}
+                disabled={dateIdx <= 0}
+                style={{ ...navBtnStyle, opacity: dateIdx <= 0 ? 0.4 : 1 }}
+                aria-label="Previous date"
+              >←</button>
+              <button
+                onClick={() => setDateIdx(i => i + 1)}
+                disabled={dateIdx >= allDates.length - 1}
+                style={{ ...navBtnStyle, opacity: dateIdx >= allDates.length - 1 ? 0.4 : 1 }}
+                aria-label="Next date"
+              >→</button>
               <button
                 onClick={() => window.print()}
                 style={{
@@ -497,8 +357,8 @@ export default function KitchenClient() {
                 Print
               </button>
             </div>
-            <p style={{ fontSize: '14px', color: 'var(--text-tertiary)', margin: '0 0 28px 0' }}>
-              {weekLabel(weekBounds)}
+            <p style={{ fontSize: '15px', fontFamily: 'var(--font-fraunces)', color: 'var(--text-primary)', margin: '0 0 28px 0' }}>
+              {datesLoaded && allDates.length === 0 ? 'No delivery dates found' : selectedDateLabel}
             </p>
           </div>
 
@@ -507,55 +367,43 @@ export default function KitchenClient() {
             <div style={{ fontFamily: 'var(--font-fraunces)', fontSize: '18px', color: 'var(--text-primary)', marginBottom: '4px' }}>
               Mali&apos;s Meals — Kitchen Prep Sheet
             </div>
-            <div style={{ fontSize: '14px', color: 'var(--text-primary)', marginBottom: '2px' }}>
+            <div style={{ fontSize: '14px', color: 'var(--text-primary)', marginBottom: '24px' }}>
               {selectedDateLabel}
-            </div>
-            <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', marginBottom: '24px' }}>
-              {weekLabel(weekBounds)}
             </div>
           </div>
 
-          {loading ? (
+          {!datesLoaded ? (
+            <p style={{ fontSize: '14px', color: 'var(--text-tertiary)' }}>Loading…</p>
+          ) : allDates.length === 0 ? (
+            <p style={{ fontSize: '15px', color: 'var(--text-secondary)' }}>
+              No orders with delivery dates yet. Orders placed with the new system will appear here.
+            </p>
+          ) : loading ? (
             <p style={{ fontSize: '14px', color: 'var(--text-tertiary)' }}>Loading…</p>
           ) : (
             <>
-              {/* ── Section 1: Day cards ── */}
-              <div data-noprint="" style={{ display: 'flex', gap: '12px', marginBottom: '36px', flexWrap: 'wrap' }}>
-                <DayCard
-                  dateLabel={sunLabel}
-                  total={sunStats.total}
-                  revenue={sunStats.revenue}
-                  unconfirmed={sunStats.unconfirmed}
-                  confirmed={sunStats.confirmed}
-                  active={selectedDay === 'sunday'}
-                  onClick={() => setSelectedDay('sunday')}
-                />
-                <DayCard
-                  dateLabel={monLabel}
-                  total={monStats.total}
-                  revenue={monStats.revenue}
-                  unconfirmed={monStats.unconfirmed}
-                  confirmed={monStats.confirmed}
-                  active={selectedDay === 'monday'}
-                  onClick={() => setSelectedDay('monday')}
-                />
+              {/* ── Stats bar ── */}
+              <div data-noprint="" style={{ display: 'flex', gap: '24px', marginBottom: '32px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+                  <strong style={{ color: 'var(--brand-gold)', fontFamily: 'var(--font-fraunces)', fontSize: '18px' }}>{orders.length}</strong>
+                  {' '}order{orders.length !== 1 ? 's' : ''}
+                  {' · '}Ksh {orders.reduce((s, o) => s + o.total_amount, 0).toLocaleString()}
+                </span>
+                {unconfirmedOrders.length > 0 && (
+                  <span style={{ fontSize: '14px', color: 'var(--accent-terracotta)', fontWeight: '500' }}>
+                    {unconfirmedOrders.length} unconfirmed
+                  </span>
+                )}
               </div>
 
-              {/* ── Section 2: Cooking summary ── */}
+              {/* ── Cooking summary ── */}
               <section style={{ marginBottom: '48px' }}>
-                <div style={{
-                  fontSize: '11px',
-                  fontWeight: '600',
-                  color: 'var(--text-tertiary)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.07em',
-                  marginBottom: '24px',
-                }}>
+                <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '24px' }}>
                   Cooking summary · {selectedDateLabel}
                 </div>
 
                 {!hasContent ? (
-                  <p style={{ fontSize: '15px', color: 'var(--text-secondary)' }}>No orders for this day.</p>
+                  <p style={{ fontSize: '15px', color: 'var(--text-secondary)' }}>No orders for this date.</p>
                 ) : (
                   <>
                     <DishSection heading="MAINS" blocks={mainBlocks} totalPortions={mainPortions} />
@@ -566,7 +414,7 @@ export default function KitchenClient() {
                 )}
               </section>
 
-              {/* ── Section 3: Unconfirmed orders (screen only) ── */}
+              {/* ── Unconfirmed orders ── */}
               {unconfirmedOrders.length > 0 && (
                 <section data-noprint="">
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '16px' }}>
@@ -581,21 +429,9 @@ export default function KitchenClient() {
                     {unconfirmedOrders.map(order => (
                       <div
                         key={order.id}
-                        style={{
-                          backgroundColor: 'var(--surface-raised)',
-                          border: '1px solid var(--border)',
-                          borderRadius: '8px',
-                          padding: '12px 16px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '12px',
-                          flexWrap: 'wrap',
-                        }}
+                        style={{ backgroundColor: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}
                       >
-                        <Link
-                          href={`/admin/orders/${order.id}`}
-                          style={{ fontFamily: 'var(--font-fraunces)', fontSize: '14px', color: 'var(--brand-gold)', textDecoration: 'none', minWidth: '80px' }}
-                        >
+                        <Link href={`/admin/orders/${order.id}`} style={{ fontFamily: 'var(--font-fraunces)', fontSize: '14px', color: 'var(--brand-gold)', textDecoration: 'none', minWidth: '80px' }}>
                           {order.order_ref}
                         </Link>
                         <span style={{ fontSize: '14px', color: 'var(--text-primary)', flex: 1, minWidth: '120px' }}>
@@ -603,10 +439,6 @@ export default function KitchenClient() {
                         </span>
                         <span style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
                           Zone {order.delivery_zone}
-                          {ZONE_NAMES[order.delivery_zone] ? ` — ${ZONE_NAMES[order.delivery_zone].split(',')[0]}` : ''}
-                        </span>
-                        <span style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
-                          {order.delivery_day === 'sunday' ? 'Sunday' : 'Monday'}
                         </span>
                         <span style={{ fontFamily: 'var(--font-fraunces)', fontSize: '14px', color: 'var(--text-primary)' }}>
                           {fmt(order.total_amount)}

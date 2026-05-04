@@ -19,6 +19,8 @@ type MenuItem = {
   is_freezer_friendly: boolean
   is_spicy: boolean
   is_family_friendly: boolean
+  available_weekend: boolean
+  available_midweek: boolean
 }
 
 type Addon = {
@@ -185,6 +187,38 @@ function DishCard({
                 }}
               >
                 {option.label}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Cycle availability */}
+      <div style={{ marginBottom: '14px' }}>
+        <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '8px' }}>Available in cycle</div>
+        <div style={{ display: 'flex', gap: '6px' }}>
+          {([
+            { key: 'available_weekend', label: 'Weekend' },
+            { key: 'available_midweek', label: 'Midweek' },
+          ] as const).map(opt => {
+            const isActive = dish[opt.key as keyof MenuItem] as boolean
+            return (
+              <button
+                key={opt.key}
+                onClick={() => onUpdate({ [opt.key]: !isActive } as Partial<MenuItem>)}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: '6px',
+                  border: isActive ? '1.5px solid var(--brand-gold)' : '1px solid var(--border-strong)',
+                  backgroundColor: isActive ? 'var(--brand-gold-soft)' : 'var(--surface-raised)',
+                  color: isActive ? 'var(--brand-gold-dark)' : 'var(--text-tertiary)',
+                  fontSize: '13px',
+                  fontFamily: 'var(--font-inter)',
+                  cursor: 'pointer',
+                  fontWeight: isActive ? '500' : '400',
+                }}
+              >
+                {opt.label}
               </button>
             )
           })}
@@ -553,6 +587,8 @@ export default function MenuManagementClient({
       is_spicy: dish.is_spicy,
       is_family_friendly: dish.is_family_friendly,
       is_sold_out: dish.is_sold_out,
+      available_weekend: dish.available_weekend,
+      available_midweek: dish.available_midweek,
     }).eq('id', id)
 
     if (error) {

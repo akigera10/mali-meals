@@ -211,7 +211,7 @@ function StepIndicator({ step }: { step: 1 | 2 }) {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function CheckoutClient() {
-  const { cart, clearCart, savedForm, saveForm } = useCart()
+  const { cart, clearCart, savedForm, saveForm, cycleInfo } = useCart()
   const [step, setStep] = useState<1 | 2>(1)
   const [isSuccess, setIsSuccess] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -406,6 +406,11 @@ export default function CheckoutClient() {
     const dbDeliveryWindow = form.deliveryDay === 'sunday_5pm'  ? 'by_5pm'
                            : form.deliveryDay === 'sunday_free' ? 'free_5_10pm'
                            : form.deliverySlot || null
+    const deliveryDate = cycleInfo.activeCycle === 'midweek'
+      ? cycleInfo.nextWednesdayDate
+      : dbDeliveryDay === 'monday'
+        ? cycleInfo.nextMondayDate
+        : cycleInfo.nextSundayDate
 
     try {
       // Generate ID client-side and fetch ref from server — avoids any SELECT under RLS
@@ -430,6 +435,8 @@ export default function CheckoutClient() {
         delivery_day: dbDeliveryDay,
         delivery_window: dbDeliveryWindow,
         delivery_slot: form.deliverySlot || null,
+        delivery_date: deliveryDate || null,
+        cycle_type: cycleInfo.activeCycle || 'weekend',
         notes: form.notes || null,
         subtotal,
         delivery_fee: deliveryFee,

@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, ReactNode } from 'react'
+import { createContext, useContext, useState, useCallback, ReactNode } from 'react'
 
 export type CartEntry = {
   id: string
@@ -27,6 +27,13 @@ export type SavedForm = {
   notes: string
 }
 
+export type CycleInfo = {
+  activeCycle: string | null
+  nextSundayDate: string | null
+  nextMondayDate: string | null
+  nextWednesdayDate: string | null
+}
+
 type CartContextValue = {
   cart: CartEntry[]
   adjust: (entry: Omit<CartEntry, 'quantity'>, delta: number) => void
@@ -34,6 +41,8 @@ type CartContextValue = {
   clearCart: () => void
   savedForm: SavedForm | null
   saveForm: (form: SavedForm) => void
+  cycleInfo: CycleInfo
+  setCycleInfo: (info: CycleInfo) => void
 }
 
 const CartContext = createContext<CartContextValue | null>(null)
@@ -41,6 +50,12 @@ const CartContext = createContext<CartContextValue | null>(null)
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartEntry[]>([])
   const [savedForm, setSavedForm] = useState<SavedForm | null>(null)
+  const [cycleInfo, setCycleInfoState] = useState<CycleInfo>({
+    activeCycle: null,
+    nextSundayDate: null,
+    nextMondayDate: null,
+    nextWednesdayDate: null,
+  })
 
   function getQty(key: string): number {
     return cart.find(e => e.id === key)?.quantity ?? 0
@@ -67,8 +82,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setSavedForm(form)
   }
 
+  const setCycleInfo = useCallback((info: CycleInfo) => {
+    setCycleInfoState(info)
+  }, [])
+
   return (
-    <CartContext.Provider value={{ cart, adjust, getQty, clearCart, savedForm, saveForm }}>
+    <CartContext.Provider value={{ cart, adjust, getQty, clearCart, savedForm, saveForm, cycleInfo, setCycleInfo }}>
       {children}
     </CartContext.Provider>
   )

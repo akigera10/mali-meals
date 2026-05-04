@@ -3,22 +3,6 @@
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
 
-// ── Week bounds (for "Delivered this week" card) ──────────────────────────────
-
-function getWeekBounds(now: Date): { start: Date; end: Date } {
-  const day = now.getDay()
-  const hour = now.getHours()
-  let daysSince = (day - 5 + 7) % 7
-  if (day === 5 && hour < 14) daysSince = 7
-  const start = new Date(now)
-  start.setDate(now.getDate() - daysSince)
-  start.setHours(14, 0, 0, 0)
-  start.setMilliseconds(0)
-  const end = new Date(start)
-  end.setDate(start.getDate() + 7)
-  return { start, end }
-}
-
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type Order = {
@@ -31,6 +15,7 @@ type Order = {
   delivery_day: string
   delivery_window: string | null
   delivery_slot: string | null
+  delivery_date: string | null
   notes: string | null
   address_building: string | null
   address_street: string | null
@@ -125,33 +110,26 @@ function StatusCard({
 export default function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
   const orders = initialOrders
   const [activeFilter, setActiveFilter] = useState<string | null>(null)
-
-  const weekBounds = useState(() => getWeekBounds(new Date()))[0]
+  const [dateFilter, setDateFilter] = useState<string>('')
 
   // ── Card stats ──────────────────────────────────────────────────────────────
 
   const newOrders = useMemo(() => orders.filter(o => o.order_status === 'new'), [orders])
   const confirmedOrders = useMemo(() => orders.filter(o => o.order_status === 'confirmed'), [orders])
   const dispatchedOrders = useMemo(() => orders.filter(o => o.order_status === 'dispatched'), [orders])
-  const deliveredThisWeek = useMemo(() =>
-    orders.filter(o =>
-      o.order_status === 'delivered' &&
-      new Date(o.created_at) >= weekBounds.start &&
-      new Date(o.created_at) < weekBounds.end
-    ),
-    [orders, weekBounds]
-  )
+  const deliveredOrders = useMemo(() => orders.filter(o => o.order_status === 'delivered'), [orders])
 
   // ── Filtered list ───────────────────────────────────────────────────────────
 
   const visibleOrders = useMemo(() => {
-    if (!activeFilter) return orders
-    if (activeFilter === 'delivered') return deliveredThisWeek
-    if (activeFilter === 'new') return newOrders
-    if (activeFilter === 'confirmed') return confirmedOrders
-    if (activeFilter === 'dispatched') return dispatchedOrders
-    return orders
-  }, [activeFilter, orders, newOrders, confirmedOrders, dispatchedOrders, deliveredThisWeek])
+    let base = orders
+    if (activeFilter === 'new') base = newOrders
+    else if (activeFilter === 'confirmed') base = confirmedOrders
+    else if (activeFilter === 'dispatched') base = dispatchedOrders
+    else if (activeFilter === 'delivered') base = deliveredOrders
+    if (dateFilter) base = base.filter(o => o.delivery_date === dateFilter)
+    return base
+  }, [activeFilter, dateFilter, orders, newOrders, confirmedOrders, dispatchedOrders, deliveredOrders])
 
   function handleCardClick(status: string) {
     setActiveFilter(f => f === status ? null : status)
@@ -204,21 +182,58 @@ export default function OrdersClient({ initialOrders }: { initialOrders: Order[]
               onClick={() => handleCardClick('dispatched')}
             />
             <StatusCard
-              label="Delivered this week"
-              count={deliveredThisWeek.length}
-              total={totalKsh(deliveredThisWeek)}
+              label="Delivered"
+              count={deliveredOrders.length}
+              total={totalKsh(deliveredOrders)}
               active={activeFilter === 'delivered'}
               onClick={() => handleCardClick('delivered')}
             />
           </div>
 
+          {/* ── Date filter ── */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', marginTop: '-8px' }}>
+            <label style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>Filter by delivery date:</label>
+            <input
+              type="date"
+              value={dateFilter}
+              onChange={e => setDateFilter(e.target.value)}
+              style={{
+                padding: '5px 10px',
+                borderRadius: '6px',
+                border: '1px solid var(--border-strong)',
+                backgroundColor: 'var(--surface-raised)',
+                fontFamily: 'var(--font-inter)',
+                fontSize: '13px',
+                color: 'var(--text-primary)',
+                outline: 'none',
+              }}
+            />
+            {dateFilter && (
+              <button
+                onClick={() => setDateFilter('')}
+                style={{
+                  fontSize: '12px',
+                  color: 'var(--text-tertiary)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '4px 8px',
+                }}
+              >
+                Clear
+              </button>
+            )}
+          </div>
+
           {/* ── Filter label ── */}
-          {activeFilter && (
-            <p style={{ fontSize: '13px', color: 'var(--text-tertiary)', marginBottom: '16px', marginTop: '-16px' }}>
-              Showing {visibleOrders.length} {activeFilter === 'delivered' ? 'delivered this week' : activeFilter} order{visibleOrders.length !== 1 ? 's' : ''} ·{' '}
+          {(activeFilter || dateFilter) && (
+            <p style={{ fontSize: '13px', color: 'var(--text-tertiary)', marginBottom: '16px', marginTop: '-8px' }}>
+              Showing {visibleOrders.length} order{visibleOrders.length !== 1 ? 's' : ''}
+              {activeFilter ? ` · ${activeFilter}` : ''}
+              {dateFilter ? ` · ${dateFilter}` : ''} ·{' '}
               <span
                 role="button"
-                onClick={() => setActiveFilter(null)}
+                onClick={() => { setActiveFilter(null); setDateFilter('') }}
                 style={{ color: 'var(--brand-gold)', cursor: 'pointer', textDecoration: 'underline' }}
               >
                 show all
@@ -229,7 +244,7 @@ export default function OrdersClient({ initialOrders }: { initialOrders: Order[]
           {/* ── Orders list ── */}
           {visibleOrders.length === 0 ? (
             <p style={{ color: 'var(--text-secondary)', fontSize: '15px' }}>
-              {activeFilter ? 'No orders in this status.' : 'No orders yet.'}
+              {activeFilter || dateFilter ? 'No orders match this filter.' : 'No orders yet.'}
             </p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -273,7 +288,10 @@ export default function OrdersClient({ initialOrders }: { initialOrders: Order[]
                   {/* Col 2: delivery + badges */}
                   <div>
                     <div style={{ fontSize: '13px', color: 'var(--text-primary)', marginBottom: '6px' }}>
-                      {deliveryLabel(order)} · Zone {order.delivery_zone}
+                      {order.delivery_date
+                        ? new Date(order.delivery_date + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+                        : deliveryLabel(order)
+                      } · Zone {order.delivery_zone}
                     </div>
                     <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                       <span style={{

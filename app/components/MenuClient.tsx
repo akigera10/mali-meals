@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCart } from '@/app/context/CartContext'
 import type { CartEntry } from '@/app/context/CartContext'
@@ -629,13 +629,30 @@ export default function MenuClient({
   menuItems,
   addons,
   specials,
+  activeCycle,
+  nextSundayDate,
+  nextMondayDate,
+  nextWednesdayDate,
 }: {
   menuItems: MenuItem[]
   addons: ProteinAddon[]
   specials: Special[]
+  activeCycle?: string | null
+  nextSundayDate?: string | null
+  nextMondayDate?: string | null
+  nextWednesdayDate?: string | null
 }) {
-  const { cart, adjust, getQty } = useCart()
+  const { cart, adjust, getQty, setCycleInfo } = useCart()
   const router = useRouter()
+
+  useEffect(() => {
+    setCycleInfo({
+      activeCycle: activeCycle ?? null,
+      nextSundayDate: nextSundayDate ?? null,
+      nextMondayDate: nextMondayDate ?? null,
+      nextWednesdayDate: nextWednesdayDate ?? null,
+    })
+  }, [activeCycle, nextSundayDate, nextMondayDate, nextWednesdayDate, setCycleInfo])
 
   const mains = menuItems.filter(m => m.category === 'mains')
   const salads = menuItems.filter(m => m.category === 'salads')
@@ -680,7 +697,10 @@ export default function MenuClient({
             margin: '6px 0 0',
             letterSpacing: '0.01em',
           }}>
-            Order by Friday 2 pm · Sunday &amp; Monday delivery
+            {activeCycle === 'midweek'
+              ? `Order by Tuesday 2pm${nextWednesdayDate ? ` · Wednesday ${new Date(nextWednesdayDate + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })} delivery` : ' · Wednesday delivery'}`
+              : `Order by Friday 2pm${nextSundayDate ? ` · Sunday ${new Date(nextSundayDate + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })} & Monday ${nextMondayDate ? new Date(nextMondayDate + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long' }) : ''} delivery` : ' · Sunday & Monday delivery'}`
+            }
           </p>
         </header>
 

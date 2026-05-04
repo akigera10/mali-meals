@@ -13,6 +13,7 @@ export default function AdminNav() {
     { href: '/admin/kitchen', label: 'Kitchen' },
     { href: '/admin/payments', label: 'Payments' },
     { href: '/admin/deliveries', label: 'Deliveries' },
+    { href: '/admin/settings', label: 'Settings' },
   ]
 
   async function handleSignOut() {

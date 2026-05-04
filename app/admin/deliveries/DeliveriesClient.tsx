@@ -4,36 +4,6 @@ import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 
-// ── Week boundary logic (same as Kitchen / Payments) ──────────────────────────
-
-function getWeekBounds(now: Date): { start: Date; end: Date } {
-  const day = now.getDay()
-  const hour = now.getHours()
-  let daysSince = (day - 5 + 7) % 7
-  if (day === 5 && hour < 14) daysSince = 7
-  const start = new Date(now)
-  start.setDate(now.getDate() - daysSince)
-  start.setHours(14, 0, 0, 0)
-  start.setMilliseconds(0)
-  const end = new Date(start)
-  end.setDate(start.getDate() + 7)
-  return { start, end }
-}
-
-function shiftWeek(base: { start: Date; end: Date }, offset: number): { start: Date; end: Date } {
-  const start = new Date(base.start)
-  start.setDate(start.getDate() + offset * 7)
-  const end = new Date(start)
-  end.setDate(start.getDate() + 7)
-  return { start, end }
-}
-
-function weekLabel(bounds: { start: Date; end: Date }): string {
-  const fmt = (d: Date) =>
-    d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
-  return `${fmt(bounds.start)} 2pm — ${fmt(bounds.end)} 2pm`
-}
-
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const ZONE_NAMES: Record<number, string> = {
@@ -66,6 +36,12 @@ type DeliveryOrder = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+function fmtDate(d: string): string {
+  return new Date(d + 'T12:00:00').toLocaleDateString('en-GB', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  })
+}
+
 function fmt(n: number) {
   return `Ksh ${n.toLocaleString()}`
 }
@@ -85,14 +61,6 @@ function addressLine(order: DeliveryOrder): string {
     .join(', ')
 }
 
-function deliveryDate(weekStart: Date, day: 'sunday' | 'monday'): string {
-  const d = new Date(weekStart)
-  d.setDate(d.getDate() + (day === 'sunday' ? 2 : 3))
-  const dayName = d.toLocaleDateString('en-GB', { weekday: 'long' })
-  const dayNum = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-  return `${dayName} ${dayNum}`
-}
-
 // ── Shared style tokens ───────────────────────────────────────────────────────
 
 const navBtnStyle: React.CSSProperties = {
@@ -110,29 +78,44 @@ const navBtnStyle: React.CSSProperties = {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function DeliveriesClient() {
-  const [baseWeek] = useState(() => getWeekBounds(new Date()))
-  const [weekOffset, setWeekOffset] = useState(0)
-  // Default to Monday if today is Sunday, otherwise Sunday
-  const [selectedDay, setSelectedDay] = useState<'sunday' | 'monday'>(
-    () => new Date().getDay() === 0 ? 'monday' : 'sunday'
-  )
-  const [loading, setLoading] = useState(true)
+  const [allDates, setAllDates] = useState<string[]>([])
+  const [dateIdx, setDateIdx] = useState(0)
+  const [datesLoaded, setDatesLoaded] = useState(false)
+  const [loading, setLoading] = useState(false)
   const [orders, setOrders] = useState<DeliveryOrder[]>([])
 
-  const weekBounds = useMemo(
-    () => weekOffset === 0 ? baseWeek : shiftWeek(baseWeek, weekOffset),
-    [weekOffset, baseWeek]
-  )
-
+  // Load distinct delivery dates on mount
   useEffect(() => {
+    async function loadDates() {
+      const { data } = await (supabase.from('orders') as any)
+        .select('delivery_date')
+        .not('delivery_date', 'is', null)
+        .order('delivery_date', { ascending: true })
+
+      const unique: string[] = Array.from(new Set((data || []).map((r: any) => r.delivery_date as string)))
+      setAllDates(unique)
+
+      const today = new Date().toISOString().slice(0, 10)
+      const idx = unique.findIndex(d => d >= today)
+      setDateIdx(idx === -1 ? Math.max(0, unique.length - 1) : idx)
+      setDatesLoaded(true)
+    }
+    loadDates()
+  }, [])
+
+  const selectedDate = allDates[dateIdx] ?? null
+
+  // Load orders for selected delivery date
+  useEffect(() => {
+    if (!selectedDate) return
     let active = true
     setLoading(true)
 
     async function load() {
       const { data } = await (supabase.from('orders') as any)
         .select('id, order_ref, customer_name, customer_phone, delivery_zone, delivery_day, delivery_window, delivery_slot, address_building, address_street, address_apartment, address_landmark, total_amount, payment_status, order_status, notes')
-        .gte('created_at', weekBounds.start.toISOString())
-        .lt('created_at', weekBounds.end.toISOString())
+        .eq('delivery_date', selectedDate)
+        .order('delivery_zone', { ascending: true })
 
       if (!active) return
       setOrders(data || [])
@@ -141,24 +124,21 @@ export default function DeliveriesClient() {
 
     load()
     return () => { active = false }
-  }, [weekBounds])
+  }, [selectedDate])
 
-  // Filter to selected day then group by zone
+  // Group by zone
   const zones = useMemo(() => {
-    const dayOrders = orders.filter(o => o.delivery_day === selectedDay)
     const groups: Record<number, DeliveryOrder[]> = {}
-    for (const order of dayOrders) {
+    for (const order of orders) {
       if (!groups[order.delivery_zone]) groups[order.delivery_zone] = []
       groups[order.delivery_zone].push(order)
     }
     return Object.entries(groups)
       .map(([z, list]) => ({ zone: Number(z), orders: list }))
       .sort((a, b) => a.zone - b.zone)
-  }, [orders, selectedDay])
+  }, [orders])
 
-  const sunLabel = deliveryDate(weekBounds.start, 'sunday')
-  const monLabel = deliveryDate(weekBounds.start, 'monday')
-  const selectedDateLabel = selectedDay === 'sunday' ? sunLabel : monLabel
+  const selectedDateLabel = selectedDate ? fmtDate(selectedDate) : '—'
 
   return (
     <>
@@ -180,42 +160,40 @@ export default function DeliveriesClient() {
           {/* ── Header row ── */}
           <div data-noprint="">
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-              <h1 style={{
-                fontFamily: 'var(--font-fraunces)',
-                fontSize: '28px',
-                color: 'var(--text-primary)',
-                margin: 0,
-                flex: '1',
-              }}>
+              <h1 style={{ fontFamily: 'var(--font-fraunces)', fontSize: '28px', color: 'var(--text-primary)', margin: 0, flex: '1' }}>
                 Deliveries
               </h1>
-              <button onClick={() => setWeekOffset(w => w - 1)} style={navBtnStyle} aria-label="Previous week">←</button>
-              {weekOffset !== 0 && (
-                <button
-                  onClick={() => setWeekOffset(0)}
-                  style={{ ...navBtnStyle, fontSize: '12px', padding: '5px 10px' }}
+              <button
+                onClick={() => setDateIdx(i => i - 1)}
+                disabled={dateIdx <= 0}
+                style={{ ...navBtnStyle, opacity: dateIdx <= 0 ? 0.4 : 1 }}
+                aria-label="Previous date"
+              >←</button>
+              <button
+                onClick={() => setDateIdx(i => i + 1)}
+                disabled={dateIdx >= allDates.length - 1}
+                style={{ ...navBtnStyle, opacity: dateIdx >= allDates.length - 1 ? 0.4 : 1 }}
+                aria-label="Next date"
+              >→</button>
+              {selectedDate && (
+                <Link
+                  href={`/admin/packing-slips?date=${selectedDate}`}
+                  style={{
+                    padding: '6px 16px',
+                    borderRadius: '6px',
+                    border: '1px solid var(--border-strong)',
+                    backgroundColor: 'var(--surface-raised)',
+                    color: 'var(--text-secondary)',
+                    fontSize: '13px',
+                    fontFamily: 'var(--font-inter)',
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                  }}
                 >
-                  This week
-                </button>
+                  Packing slips
+                </Link>
               )}
-              <button onClick={() => setWeekOffset(w => w + 1)} style={navBtnStyle} aria-label="Next week">→</button>
-              <Link
-                href={`/admin/packing-slips?day=${selectedDay}&week=${encodeURIComponent(weekBounds.start.toISOString())}`}
-                style={{
-                  padding: '6px 16px',
-                  borderRadius: '6px',
-                  border: '1px solid var(--border-strong)',
-                  backgroundColor: 'var(--surface-raised)',
-                  color: 'var(--text-secondary)',
-                  fontSize: '13px',
-                  fontFamily: 'var(--font-inter)',
-                  textDecoration: 'none',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                }}
-              >
-                Packing slips
-              </Link>
               <button
                 onClick={() => window.print()}
                 style={{
@@ -233,37 +211,9 @@ export default function DeliveriesClient() {
               </button>
             </div>
 
-            {/* Week label */}
-            <p style={{ fontSize: '14px', color: 'var(--text-tertiary)', margin: '0 0 24px 0' }}>
-              {weekLabel(weekBounds)}
+            <p style={{ fontSize: '15px', fontFamily: 'var(--font-fraunces)', color: 'var(--text-primary)', margin: '0 0 28px 0' }}>
+              {datesLoaded && allDates.length === 0 ? 'No delivery dates found' : selectedDateLabel}
             </p>
-
-            {/* Sunday / Monday toggle */}
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '28px' }}>
-              {(['sunday', 'monday'] as const).map(day => {
-                const label = day === 'sunday' ? sunLabel : monLabel
-                const active = selectedDay === day
-                return (
-                  <button
-                    key={day}
-                    onClick={() => setSelectedDay(day)}
-                    style={{
-                      padding: '8px 20px',
-                      borderRadius: '20px',
-                      border: `1px solid ${active ? 'var(--brand-gold)' : 'var(--border-strong)'}`,
-                      backgroundColor: active ? 'var(--brand-gold)' : 'var(--surface-raised)',
-                      color: active ? '#fff' : 'var(--text-secondary)',
-                      fontSize: '14px',
-                      fontFamily: 'var(--font-inter)',
-                      fontWeight: active ? '500' : '400',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {label}
-                  </button>
-                )
-              })}
-            </div>
           </div>
 
           {/* ── Print-only header ── */}
@@ -271,26 +221,22 @@ export default function DeliveriesClient() {
             <div style={{ fontFamily: 'var(--font-fraunces)', fontSize: '18px', color: 'var(--text-primary)', marginBottom: '4px' }}>
               Mali&apos;s Meals — Delivery Manifest
             </div>
-            <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', marginBottom: '20px' }}>
-              {weekLabel(weekBounds)}
+            <div style={{ fontSize: '14px', color: 'var(--text-primary)', marginBottom: '20px' }}>
+              {selectedDateLabel}
             </div>
           </div>
 
-          {/* ── Delivery date heading (always visible) ── */}
-          <h2 style={{
-            fontFamily: 'var(--font-fraunces)',
-            fontSize: '22px',
-            color: 'var(--text-primary)',
-            margin: '0 0 24px 0',
-          }}>
-            {selectedDateLabel}
-          </h2>
-
           {/* ── Main content ── */}
-          {loading ? (
+          {!datesLoaded ? (
+            <p style={{ fontSize: '14px', color: 'var(--text-tertiary)' }}>Loading…</p>
+          ) : allDates.length === 0 ? (
+            <p style={{ fontSize: '15px', color: 'var(--text-secondary)' }}>
+              No orders with delivery dates yet. Orders placed with the new system will appear here.
+            </p>
+          ) : loading ? (
             <p style={{ fontSize: '14px', color: 'var(--text-tertiary)' }}>Loading…</p>
           ) : zones.length === 0 ? (
-            <p style={{ fontSize: '15px', color: 'var(--text-secondary)' }}>No orders for this day.</p>
+            <p style={{ fontSize: '15px', color: 'var(--text-secondary)' }}>No orders for this date.</p>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
               {zones.map(({ zone, orders: zoneOrders }) => {
@@ -308,12 +254,7 @@ export default function DeliveriesClient() {
                       paddingBottom: '10px',
                       borderBottom: '2px solid var(--border-strong)',
                     }}>
-                      <h3 style={{
-                        fontFamily: 'var(--font-fraunces)',
-                        fontSize: '17px',
-                        color: 'var(--text-primary)',
-                        margin: 0,
-                      }}>
+                      <h3 style={{ fontFamily: 'var(--font-fraunces)', fontSize: '17px', color: 'var(--text-primary)', margin: 0 }}>
                         Zone {zone} — {ZONE_NAMES[zone]}
                       </h3>
                       <span style={{ fontSize: '13px', color: 'var(--text-tertiary)', whiteSpace: 'nowrap' }}>
@@ -326,46 +267,18 @@ export default function DeliveriesClient() {
                       {zoneOrders.map(order => (
                         <div
                           key={order.id}
-                          style={{
-                            backgroundColor: 'var(--surface-raised)',
-                            border: '1px solid var(--border)',
-                            borderRadius: '8px',
-                            padding: '14px 16px',
-                          }}
+                          style={{ backgroundColor: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', padding: '14px 16px' }}
                         >
                           {/* Row 1: ref, name, phone, amount */}
-                          <div style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'baseline',
-                            flexWrap: 'wrap',
-                            gap: '8px',
-                            marginBottom: '6px',
-                          }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '8px', marginBottom: '6px' }}>
                             <div style={{ display: 'flex', gap: '12px', alignItems: 'baseline', flexWrap: 'wrap' }}>
-                              <Link
-                                href={`/admin/orders/${order.id}`}
-                                style={{
-                                  fontFamily: 'var(--font-fraunces)',
-                                  fontSize: '15px',
-                                  color: 'var(--brand-gold)',
-                                  textDecoration: 'none',
-                                }}
-                              >
+                              <Link href={`/admin/orders/${order.id}`} style={{ fontFamily: 'var(--font-fraunces)', fontSize: '15px', color: 'var(--brand-gold)', textDecoration: 'none' }}>
                                 {order.order_ref}
                               </Link>
-                              <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: '500' }}>
-                                {order.customer_name}
-                              </span>
-                              <span style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
-                                {order.customer_phone}
-                              </span>
+                              <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: '500' }}>{order.customer_name}</span>
+                              <span style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>{order.customer_phone}</span>
                             </div>
-                            <span style={{
-                              fontFamily: 'var(--font-fraunces)',
-                              fontSize: '15px',
-                              color: 'var(--text-primary)',
-                            }}>
+                            <span style={{ fontFamily: 'var(--font-fraunces)', fontSize: '15px', color: 'var(--text-primary)' }}>
                               {fmt(order.total_amount)}
                             </span>
                           </div>
@@ -383,13 +296,7 @@ export default function DeliveriesClient() {
                           )}
 
                           {/* Row 3: slot, notes, badges */}
-                          <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            marginTop: '8px',
-                            flexWrap: 'wrap',
-                          }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
                             <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginRight: '4px' }}>
                               {slotLabel(order)}
                             </span>
@@ -403,14 +310,7 @@ export default function DeliveriesClient() {
                             }}>
                               {order.payment_status === 'paid' ? '✓ Paid' : 'Unpaid'}
                             </span>
-                            <span style={{
-                              padding: '2px 8px',
-                              borderRadius: '4px',
-                              fontSize: '11px',
-                              fontWeight: '500',
-                              backgroundColor: 'var(--surface-sunken)',
-                              color: 'var(--text-secondary)',
-                            }}>
+                            <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '500', backgroundColor: 'var(--surface-sunken)', color: 'var(--text-secondary)' }}>
                               {order.order_status}
                             </span>
                             {order.notes && (

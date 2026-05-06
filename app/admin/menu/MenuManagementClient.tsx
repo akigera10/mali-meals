@@ -708,6 +708,8 @@ export default function MenuManagementClient({
     )
   }
 
+  const [activeTab, setActiveTab] = useState<'weekend' | 'midweek' | 'addons'>('weekend')
+
   function renderSpecials() {
     if (specials.length === 0) {
       return (
@@ -748,12 +750,18 @@ export default function MenuManagementClient({
     )
   }
 
+  const TABS = [
+    { key: 'weekend', label: 'Weekend Menu' },
+    { key: 'midweek', label: 'Midweek Menu' },
+    { key: 'addons',  label: 'Protein Add-ons' },
+  ] as const
+
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--surface-base)', fontFamily: 'var(--font-inter)' }}>
       <AdminNav />
 
       {/* Page header */}
-      <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 20px 32px' }}>
+      <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 20px 28px' }}>
         <h1 style={{
           fontFamily: 'var(--font-fraunces)',
           fontSize: '28px',
@@ -767,118 +775,97 @@ export default function MenuManagementClient({
         </p>
       </div>
 
-      {/* ── Weekend Menu ── */}
-      <div style={{ borderTop: '1px solid var(--border)' }}>
-        <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 20px 56px' }}>
-
-          {/* Section heading */}
-          <div style={{ marginBottom: '36px' }}>
-            <h2 style={{
-              fontFamily: 'var(--font-fraunces)',
-              fontSize: '22px',
-              color: 'var(--text-primary)',
-              margin: '0 0 4px',
-            }}>
-              Weekend Menu
-            </h2>
-            <p style={{ fontSize: '13px', color: 'var(--text-tertiary)', margin: 0 }}>
-              Friday 2pm cutoff · Sunday &amp; Monday delivery
-            </p>
-          </div>
-
-          {/* Mains */}
-          <div style={{ marginBottom: '40px' }}>
-            <CategoryLabel>Mains · Ksh 995 · with meat Ksh 1,295</CategoryLabel>
-            {renderDishList(weekendMains)}
-          </div>
-
-          {/* Salads */}
-          <div style={{ marginBottom: '40px' }}>
-            <CategoryLabel>Salads · Ksh 580 · with meat Ksh 880</CategoryLabel>
-            {renderDishList(weekendSalads)}
-          </div>
-
-          {/* Chef's special */}
-          <div>
-            <CategoryLabel>Chef&apos;s special · Shows on menu when active</CategoryLabel>
-            {renderSpecials()}
-          </div>
+      {/* Tab bar */}
+      <div style={{ borderBottom: '1px solid var(--border)' }}>
+        <div style={{ maxWidth: '960px', margin: '0 auto', padding: '0 20px', display: 'flex', gap: '0' }}>
+          {TABS.map(tab => {
+            const isActive = activeTab === tab.key
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                style={{
+                  padding: '12px 20px',
+                  border: 'none',
+                  borderBottom: isActive ? '2px solid var(--brand-gold)' : '2px solid transparent',
+                  backgroundColor: 'transparent',
+                  fontFamily: 'var(--font-inter)',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: isActive ? 'var(--text-primary)' : 'var(--text-tertiary)',
+                  cursor: 'pointer',
+                  marginBottom: '-1px',
+                }}
+              >
+                {tab.label}
+              </button>
+            )
+          })}
         </div>
       </div>
 
-      {/* ── Midweek Menu ── */}
-      <div style={{ backgroundColor: 'var(--surface-sunken)', borderTop: '2px solid var(--border-strong)' }}>
-        <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 20px 56px' }}>
+      {/* Tab content */}
+      <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 20px 56px' }}>
 
-          {/* Section heading */}
-          <div style={{ marginBottom: '36px' }}>
-            <h2 style={{
-              fontFamily: 'var(--font-fraunces)',
-              fontSize: '22px',
-              color: 'var(--text-primary)',
-              margin: '0 0 4px',
-            }}>
-              Midweek Menu
-            </h2>
-            <p style={{ fontSize: '13px', color: 'var(--text-tertiary)', margin: 0 }}>
-              Tuesday 2pm cutoff · Wednesday delivery
-            </p>
-          </div>
-
-          {/* Mains */}
-          <div style={{ marginBottom: '40px' }}>
-            <CategoryLabel>Mains · Ksh 995 · with meat Ksh 1,295</CategoryLabel>
-            {renderDishList(midweekMains)}
-          </div>
-
-          {/* Salads */}
-          <div style={{ marginBottom: '40px' }}>
-            <CategoryLabel>Salads · Ksh 580 · with meat Ksh 880</CategoryLabel>
-            {renderDishList(midweekSalads)}
-          </div>
-
-          {/* Chef's special */}
+        {/* Weekend Menu tab */}
+        {activeTab === 'weekend' && (
           <div>
-            <CategoryLabel>Chef&apos;s special · Shows on menu when active</CategoryLabel>
-            {renderSpecials()}
+            <div style={{ marginBottom: '40px' }}>
+              <CategoryLabel>Mains · Ksh 995 · with meat Ksh 1,295</CategoryLabel>
+              {renderDishList(weekendMains)}
+            </div>
+            <div style={{ marginBottom: '40px' }}>
+              <CategoryLabel>Salads · Ksh 580 · with meat Ksh 880</CategoryLabel>
+              {renderDishList(weekendSalads)}
+            </div>
+            <div>
+              <CategoryLabel>Chef&apos;s Special · Shows on menu when active</CategoryLabel>
+              {renderSpecials()}
+            </div>
           </div>
-        </div>
-      </div>
+        )}
 
-      {/* ── Protein add-ons ── */}
-      <div style={{ borderTop: '2px solid var(--border-strong)' }}>
-        <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 20px 56px' }}>
-          <div style={{ marginBottom: '20px' }}>
-            <h2 style={{
-              fontFamily: 'var(--font-fraunces)',
-              fontSize: '22px',
-              color: 'var(--text-primary)',
-              margin: '0 0 4px',
+        {/* Midweek Menu tab */}
+        {activeTab === 'midweek' && (
+          <div>
+            <div style={{ marginBottom: '40px' }}>
+              <CategoryLabel>Mains · Ksh 995 · with meat Ksh 1,295</CategoryLabel>
+              {renderDishList(midweekMains)}
+            </div>
+            <div style={{ marginBottom: '40px' }}>
+              <CategoryLabel>Salads · Ksh 580 · with meat Ksh 880</CategoryLabel>
+              {renderDishList(midweekSalads)}
+            </div>
+            <div>
+              <CategoryLabel>Chef&apos;s Special · Shows on menu when active</CategoryLabel>
+              {renderSpecials()}
+            </div>
+          </div>
+        )}
+
+        {/* Protein Add-ons tab */}
+        {activeTab === 'addons' && (
+          <div>
+            <div style={{
+              backgroundColor: 'var(--surface-raised)',
+              border: '1px solid var(--border)',
+              borderRadius: '8px',
+              overflow: 'hidden',
             }}>
-              Protein add-ons
-            </h2>
-            <p style={{ fontSize: '13px', color: 'var(--text-tertiary)', margin: 0 }}>
-              Available on all orders
-            </p>
+              {addons.map((addon, i) => (
+                <AddonRow
+                  key={addon.id}
+                  addon={addon}
+                  saveState={saveStates[addon.id] || 'idle'}
+                  isLast={i === addons.length - 1}
+                  onUpdate={changes => updateAddon(addon.id, changes)}
+                  onSave={() => saveAddon(addon.id)}
+                />
+              ))}
+            </div>
           </div>
-          <div style={{
-            backgroundColor: 'var(--surface-raised)',
-            border: '1px solid var(--border)',
-            borderRadius: '8px',
-            overflow: 'hidden',
-          }}>
-            {addons.map((addon, i) => (
-              <AddonRow
-                key={addon.id}
-                addon={addon}
-                saveState={saveStates[addon.id] || 'idle'}
-                isLast={i === addons.length - 1}
-                onUpdate={changes => updateAddon(addon.id, changes)}
-                onSave={() => saveAddon(addon.id)}
-              />
-            ))}
-          </div>
-        </div>
+        )}
+
       </div>
     </div>
   )

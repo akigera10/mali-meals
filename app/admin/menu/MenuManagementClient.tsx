@@ -285,23 +285,36 @@ function DishCard({
         </div>
       </div>
 
-      {/* Bottom row: sold out + save */}
+      {/* Bottom row: show on menu + sold out + save */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingTop: '16px',
         borderTop: '1px solid var(--border)',
+        gap: '12px',
+        flexWrap: 'wrap',
       }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-          <input
-            type="checkbox"
-            checked={dish.is_sold_out}
-            onChange={e => onUpdate({ is_sold_out: e.target.checked })}
-            style={{ cursor: 'pointer', width: '15px', height: '15px' }}
-          />
-          <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Sold out</span>
-        </label>
+        <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={dish.is_active}
+              onChange={e => onUpdate({ is_active: e.target.checked })}
+              style={{ cursor: 'pointer', width: '15px', height: '15px' }}
+            />
+            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Show on menu</span>
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={dish.is_sold_out}
+              onChange={e => onUpdate({ is_sold_out: e.target.checked })}
+              style={{ cursor: 'pointer', width: '15px', height: '15px' }}
+            />
+            <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Sold out</span>
+          </label>
+        </div>
 
         <button
           onClick={onSave}
@@ -536,6 +549,21 @@ function SpecialCard({
   )
 }
 
+function CategoryLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{
+      fontFamily: 'var(--font-fraunces)',
+      fontSize: '16px',
+      color: 'var(--text-primary)',
+      marginBottom: '16px',
+      paddingBottom: '10px',
+      borderBottom: '1px solid var(--border)',
+    }}>
+      {children}
+    </div>
+  )
+}
+
 export default function MenuManagementClient({
   initialMenuItems,
   initialAddons,
@@ -586,6 +614,7 @@ export default function MenuManagementClient({
       is_freezer_friendly: dish.is_freezer_friendly,
       is_spicy: dish.is_spicy,
       is_family_friendly: dish.is_family_friendly,
+      is_active: dish.is_active,
       is_sold_out: dish.is_sold_out,
       available_weekend: dish.available_weekend,
       available_midweek: dish.available_midweek,
@@ -645,19 +674,86 @@ export default function MenuManagementClient({
     }
   }
 
-  const mains = dishes
-    .filter(d => d.category === 'mains')
+  const weekendMains = dishes
+    .filter(d => d.available_weekend && d.category === 'mains')
     .sort((a, b) => a.sort_order - b.sort_order)
 
-  const salads = dishes
-    .filter(d => d.category === 'salads')
+  const weekendSalads = dishes
+    .filter(d => d.available_weekend && d.category === 'salads')
     .sort((a, b) => a.sort_order - b.sort_order)
+
+  const midweekMains = dishes
+    .filter(d => d.available_midweek && d.category === 'mains')
+    .sort((a, b) => a.sort_order - b.sort_order)
+
+  const midweekSalads = dishes
+    .filter(d => d.available_midweek && d.category === 'salads')
+    .sort((a, b) => a.sort_order - b.sort_order)
+
+  function renderDishList(list: MenuItem[]) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {list.map((dish, i) => (
+          <DishCard
+            key={dish.id}
+            dish={dish}
+            index={i}
+            saveState={saveStates[dish.id] || 'idle'}
+            onUpdate={changes => updateDish(dish.id, changes)}
+            onToggleAllergen={allergen => toggleAllergen(dish.id, allergen)}
+            onSave={() => saveDish(dish.id)}
+          />
+        ))}
+      </div>
+    )
+  }
+
+  function renderSpecials() {
+    if (specials.length === 0) {
+      return (
+        <div>
+          <p style={{ fontSize: '14px', color: 'var(--text-tertiary)', marginBottom: '12px' }}>
+            No special yet.
+          </p>
+          <button
+            onClick={addSpecial}
+            style={{
+              padding: '8px 20px',
+              borderRadius: '8px',
+              border: '1px solid var(--border-strong)',
+              backgroundColor: 'var(--surface-raised)',
+              color: 'var(--text-secondary)',
+              fontSize: '14px',
+              fontFamily: 'var(--font-inter)',
+              cursor: 'pointer',
+            }}
+          >
+            + Add special
+          </button>
+        </div>
+      )
+    }
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {specials.map(special => (
+          <SpecialCard
+            key={special.id}
+            special={special}
+            saveState={saveStates[special.id] || 'idle'}
+            onUpdate={changes => updateSpecial(special.id, changes)}
+            onSave={() => saveSpecial(special.id)}
+          />
+        ))}
+      </div>
+    )
+  }
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--surface-base)', fontFamily: 'var(--font-inter)' }}>
       <AdminNav />
 
-      <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 20px' }}>
+      {/* Page header */}
+      <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 20px 32px' }}>
         <h1 style={{
           fontFamily: 'var(--font-fraunces)',
           fontSize: '28px',
@@ -666,81 +762,104 @@ export default function MenuManagementClient({
         }}>
           Menu
         </h1>
-        <p style={{ fontSize: '14px', color: 'var(--text-tertiary)', marginBottom: '40px' }}>
+        <p style={{ fontSize: '14px', color: 'var(--text-tertiary)', margin: 0 }}>
           Update dish details for this week. Each dish saves independently.
         </p>
+      </div>
 
-        {/* Mains */}
-        <section style={{ marginBottom: '52px' }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '20px' }}>
+      {/* ── Weekend Menu ── */}
+      <div style={{ borderTop: '1px solid var(--border)' }}>
+        <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 20px 56px' }}>
+
+          {/* Section heading */}
+          <div style={{ marginBottom: '36px' }}>
             <h2 style={{
               fontFamily: 'var(--font-fraunces)',
-              fontSize: '20px',
+              fontSize: '22px',
               color: 'var(--text-primary)',
-              margin: 0,
+              margin: '0 0 4px',
             }}>
-              Mains
+              Weekend Menu
             </h2>
-            <span style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
-              Ksh 995 · with meat Ksh 1,295
-            </span>
+            <p style={{ fontSize: '13px', color: 'var(--text-tertiary)', margin: 0 }}>
+              Friday 2pm cutoff · Sunday &amp; Monday delivery
+            </p>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {mains.map((dish, i) => (
-              <DishCard
-                key={dish.id}
-                dish={dish}
-                index={i}
-                saveState={saveStates[dish.id] || 'idle'}
-                onUpdate={changes => updateDish(dish.id, changes)}
-                onToggleAllergen={allergen => toggleAllergen(dish.id, allergen)}
-                onSave={() => saveDish(dish.id)}
-              />
-            ))}
-          </div>
-        </section>
 
-        {/* Salads */}
-        <section style={{ marginBottom: '52px' }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '20px' }}>
+          {/* Mains */}
+          <div style={{ marginBottom: '40px' }}>
+            <CategoryLabel>Mains · Ksh 995 · with meat Ksh 1,295</CategoryLabel>
+            {renderDishList(weekendMains)}
+          </div>
+
+          {/* Salads */}
+          <div style={{ marginBottom: '40px' }}>
+            <CategoryLabel>Salads · Ksh 580 · with meat Ksh 880</CategoryLabel>
+            {renderDishList(weekendSalads)}
+          </div>
+
+          {/* Chef's special */}
+          <div>
+            <CategoryLabel>Chef&apos;s special · Shows on menu when active</CategoryLabel>
+            {renderSpecials()}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Midweek Menu ── */}
+      <div style={{ backgroundColor: 'var(--surface-sunken)', borderTop: '2px solid var(--border-strong)' }}>
+        <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 20px 56px' }}>
+
+          {/* Section heading */}
+          <div style={{ marginBottom: '36px' }}>
             <h2 style={{
               fontFamily: 'var(--font-fraunces)',
-              fontSize: '20px',
+              fontSize: '22px',
               color: 'var(--text-primary)',
-              margin: 0,
+              margin: '0 0 4px',
             }}>
-              Salads
+              Midweek Menu
             </h2>
-            <span style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
-              Ksh 580 · with meat Ksh 880
-            </span>
+            <p style={{ fontSize: '13px', color: 'var(--text-tertiary)', margin: 0 }}>
+              Tuesday 2pm cutoff · Wednesday delivery
+            </p>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {salads.map((dish, i) => (
-              <DishCard
-                key={dish.id}
-                dish={dish}
-                index={i}
-                saveState={saveStates[dish.id] || 'idle'}
-                onUpdate={changes => updateDish(dish.id, changes)}
-                onToggleAllergen={allergen => toggleAllergen(dish.id, allergen)}
-                onSave={() => saveDish(dish.id)}
-              />
-            ))}
-          </div>
-        </section>
 
-        {/* Protein add-ons */}
-        <section style={{ marginBottom: '52px' }}>
-          <div style={{ marginBottom: '16px' }}>
+          {/* Mains */}
+          <div style={{ marginBottom: '40px' }}>
+            <CategoryLabel>Mains · Ksh 995 · with meat Ksh 1,295</CategoryLabel>
+            {renderDishList(midweekMains)}
+          </div>
+
+          {/* Salads */}
+          <div style={{ marginBottom: '40px' }}>
+            <CategoryLabel>Salads · Ksh 580 · with meat Ksh 880</CategoryLabel>
+            {renderDishList(midweekSalads)}
+          </div>
+
+          {/* Chef's special */}
+          <div>
+            <CategoryLabel>Chef&apos;s special · Shows on menu when active</CategoryLabel>
+            {renderSpecials()}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Protein add-ons ── */}
+      <div style={{ borderTop: '2px solid var(--border-strong)' }}>
+        <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 20px 56px' }}>
+          <div style={{ marginBottom: '20px' }}>
             <h2 style={{
               fontFamily: 'var(--font-fraunces)',
-              fontSize: '20px',
+              fontSize: '22px',
               color: 'var(--text-primary)',
-              margin: 0,
+              margin: '0 0 4px',
             }}>
               Protein add-ons
             </h2>
+            <p style={{ fontSize: '13px', color: 'var(--text-tertiary)', margin: 0 }}>
+              Available on all orders
+            </p>
           </div>
           <div style={{
             backgroundColor: 'var(--surface-raised)',
@@ -759,58 +878,7 @@ export default function MenuManagementClient({
               />
             ))}
           </div>
-        </section>
-
-        {/* Chef's special */}
-        <section>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '20px' }}>
-            <h2 style={{
-              fontFamily: 'var(--font-fraunces)',
-              fontSize: '20px',
-              color: 'var(--text-primary)',
-              margin: 0,
-            }}>
-              Chef&apos;s special
-            </h2>
-            <span style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
-              Shows on menu when active
-            </span>
-          </div>
-          {specials.length === 0 ? (
-            <div>
-              <p style={{ fontSize: '14px', color: 'var(--text-tertiary)', marginBottom: '12px' }}>
-                No special yet.
-              </p>
-              <button
-                onClick={addSpecial}
-                style={{
-                  padding: '8px 20px',
-                  borderRadius: '8px',
-                  border: '1px solid var(--border-strong)',
-                  backgroundColor: 'var(--surface-raised)',
-                  color: 'var(--text-secondary)',
-                  fontSize: '14px',
-                  fontFamily: 'var(--font-inter)',
-                  cursor: 'pointer',
-                }}
-              >
-                + Add special
-              </button>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {specials.map(special => (
-                <SpecialCard
-                  key={special.id}
-                  special={special}
-                  saveState={saveStates[special.id] || 'idle'}
-                  onUpdate={changes => updateSpecial(special.id, changes)}
-                  onSave={() => saveSpecial(special.id)}
-                />
-              ))}
-            </div>
-          )}
-        </section>
+        </div>
       </div>
     </div>
   )

@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
-import { useState, useEffect, useMemo } from 'react'
-import { supabase } from '@/lib/supabase'
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type PaymentOrder = {
+type PaidOrder = {
   id: string
   order_ref: string
   customer_name: string
@@ -14,9 +14,16 @@ type PaymentOrder = {
   subtotal: number
   delivery_fee: number
   total_amount: number
-  payment_status: string
-  mpesa_code: string | null
-  paid_at: string | null
+  mpesa_code: string
+  paid_at: string
+}
+
+type UnpaidOrder = {
+  id: string
+  order_ref: string
+  customer_name: string
+  customer_phone: string
+  total_amount: number
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -34,6 +41,10 @@ function fmtPaidAt(ts: string): string {
   return `${date}, ${time}`
 }
 
+function fmt(n: number) {
+  return `Ksh ${n.toLocaleString()}`
+}
+
 const navBtnStyle: React.CSSProperties = {
   padding: '6px 14px',
   borderRadius: '6px',
@@ -46,12 +57,37 @@ const navBtnStyle: React.CSSProperties = {
   lineHeight: 1,
 }
 
+const thStyle: React.CSSProperties = {
+  padding: '10px 16px',
+  textAlign: 'left',
+  fontSize: '11px',
+  fontWeight: '600',
+  fontFamily: 'var(--font-inter)',
+  color: 'var(--text-tertiary)',
+  textTransform: 'uppercase',
+  letterSpacing: '0.07em',
+  whiteSpace: 'nowrap',
+}
+
 const tdStyle: React.CSSProperties = {
   padding: '11px 16px',
   fontSize: '13px',
   color: 'var(--text-primary)',
   fontFamily: 'var(--font-inter)',
   verticalAlign: 'middle',
+}
+
+function StatCard({ label, value, alert }: { label: string; value: string; alert?: boolean }) {
+  return (
+    <div style={{ backgroundColor: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px 20px', minWidth: '160px', flex: '1' }}>
+      <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: '600' }}>
+        {label}
+      </div>
+      <div style={{ fontFamily: 'var(--font-fraunces)', fontSize: '24px', color: alert ? 'var(--accent-terracotta)' : 'var(--text-primary)' }}>
+        {value}
+      </div>
+    </div>
+  )
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -61,17 +97,15 @@ export default function PaymentsClient() {
   const [dateIdx, setDateIdx] = useState(0)
   const [datesLoaded, setDatesLoaded] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [orders, setOrders] = useState<PaymentOrder[]>([])
+  const [paidOrders, setPaidOrders] = useState<PaidOrder[]>([])
+  const [unpaidOrders, setUnpaidOrders] = useState<UnpaidOrder[]>([])
 
   // Load distinct delivery dates on mount
   useEffect(() => {
     async function loadDates() {
-      const { data } = await (supabase.from('orders') as any)
-        .select('delivery_date')
-        .not('delivery_date', 'is', null)
-        .order('delivery_date', { ascending: true })
-
-      const unique: string[] = Array.from(new Set((data || []).map((r: any) => r.delivery_date as string)))
+      const res = await fetch('/api/admin/payments-data')
+      const { dates } = await res.json()
+      const unique: string[] = dates ?? []
       setAllDates(unique)
 
       const today = new Date().toISOString().slice(0, 10)
@@ -91,12 +125,11 @@ export default function PaymentsClient() {
     setLoading(true)
 
     async function load() {
-      const { data } = await (supabase.from('orders') as any)
-        .select('id, order_ref, customer_name, customer_phone, delivery_zone, subtotal, delivery_fee, total_amount, payment_status, mpesa_code, paid_at')
-        .eq('delivery_date', selectedDate)
-
+      const res = await fetch(`/api/admin/payments-data?date=${selectedDate}`)
       if (!active) return
-      setOrders(data || [])
+      const { paid, unpaid } = await res.json()
+      setPaidOrders(paid ?? [])
+      setUnpaidOrders(unpaid ?? [])
       setLoading(false)
     }
 
@@ -104,17 +137,9 @@ export default function PaymentsClient() {
     return () => { active = false }
   }, [selectedDate])
 
-  const paidOrders = useMemo(() =>
-    orders
-      .filter(o => o.payment_status === 'paid' && o.mpesa_code)
-      .sort((a, b) => new Date(b.paid_at!).getTime() - new Date(a.paid_at!).getTime()),
-    [orders]
-  )
-
   const totalFoodSubtotal = paidOrders.reduce((s, o) => s + o.subtotal, 0)
-  const totalDeliveryFees = paidOrders.reduce((s, o) => s + o.delivery_fee, 0)
-  const totalCollected = paidOrders.reduce((s, o) => s + o.total_amount, 0)
-  const unpaidCount = orders.filter(o => o.payment_status !== 'paid').length
+  const totalDeliveryFees  = paidOrders.reduce((s, o) => s + o.delivery_fee, 0)
+  const totalCollected     = paidOrders.reduce((s, o) => s + o.total_amount, 0)
 
   const selectedDateLabel = selectedDate ? fmtDate(selectedDate) : '—'
 
@@ -177,7 +202,7 @@ export default function PaymentsClient() {
               <div style={{ display: 'flex', gap: '12px', marginBottom: '32px', flexWrap: 'wrap' }}>
                 <StatCard label="Paid orders" value={String(paidOrders.length)} />
                 <StatCard label="Collected" value={`Ksh ${totalCollected.toLocaleString()}`} />
-                <StatCard label="Unpaid" value={String(unpaidCount)} alert={unpaidCount > 0} />
+                <StatCard label="Outstanding" value={String(unpaidOrders.length)} alert={unpaidOrders.length > 0} />
               </div>
             )}
           </div>
@@ -192,7 +217,6 @@ export default function PaymentsClient() {
             </div>
           </div>
 
-          {/* Table */}
           {!datesLoaded ? (
             <p style={{ fontSize: '14px', color: 'var(--text-tertiary)' }}>Loading…</p>
           ) : allDates.length === 0 ? (
@@ -201,93 +225,128 @@ export default function PaymentsClient() {
             </p>
           ) : loading ? (
             <p style={{ fontSize: '14px', color: 'var(--text-tertiary)' }}>Loading…</p>
-          ) : paidOrders.length === 0 ? (
-            <p style={{ fontSize: '15px', color: 'var(--text-secondary)' }}>No paid orders for this date.</p>
           ) : (
-            <div style={{ backgroundColor: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ backgroundColor: 'var(--surface-sunken)', borderBottom: '1px solid var(--border)' }}>
-                    {['Date paid', 'Order ref', 'Customer', 'Phone', 'Zone', 'Food total', 'Delivery', 'Total', 'M-Pesa code'].map(h => (
-                      <th key={h} style={{
-                        padding: '10px 16px',
-                        textAlign: 'left',
-                        fontSize: '11px',
-                        fontWeight: '600',
-                        fontFamily: 'var(--font-inter)',
-                        color: 'var(--text-tertiary)',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.07em',
-                        whiteSpace: 'nowrap',
-                      }}>
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {paidOrders.map(order => (
-                    <tr key={order.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                      <td style={{ ...tdStyle, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
-                        {fmtPaidAt(order.paid_at!)}
-                      </td>
-                      <td style={{ ...tdStyle, fontFamily: 'var(--font-fraunces)', fontSize: '14px' }}>
-                        {order.order_ref}
-                      </td>
-                      <td style={tdStyle}>{order.customer_name}</td>
-                      <td style={{ ...tdStyle, color: 'var(--text-secondary)' }}>{order.customer_phone}</td>
-                      <td style={{ ...tdStyle, color: 'var(--text-secondary)' }}>Zone {order.delivery_zone}</td>
-                      <td style={{ ...tdStyle, fontFamily: 'var(--font-fraunces)', fontSize: '14px', whiteSpace: 'nowrap' }}>
-                        Ksh {order.subtotal.toLocaleString()}
-                      </td>
-                      <td style={{ ...tdStyle, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
-                        Ksh {order.delivery_fee.toLocaleString()}
-                      </td>
-                      <td style={{ ...tdStyle, fontFamily: 'var(--font-fraunces)', fontSize: '14px', whiteSpace: 'nowrap' }}>
-                        Ksh {order.total_amount.toLocaleString()}
-                      </td>
-                      <td style={{ ...tdStyle, letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
-                        {order.mpesa_code}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-                <tfoot>
-                  <tr style={{ borderTop: '2px solid var(--border-strong)', backgroundColor: 'var(--surface-sunken)' }}>
-                    <td colSpan={5} style={{ padding: '12px 16px', fontSize: '13px', fontFamily: 'var(--font-inter)', color: 'var(--text-secondary)', fontWeight: '500' }}>
-                      {paidOrders.length} order{paidOrders.length !== 1 ? 's' : ''}
-                    </td>
-                    <td style={{ padding: '12px 16px', fontFamily: 'var(--font-fraunces)', fontSize: '14px', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
-                      Ksh {totalFoodSubtotal.toLocaleString()}
-                    </td>
-                    <td style={{ padding: '12px 16px', fontSize: '13px', fontFamily: 'var(--font-inter)', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
-                      Ksh {totalDeliveryFees.toLocaleString()}
-                    </td>
-                    <td style={{ padding: '12px 16px', fontFamily: 'var(--font-fraunces)', fontSize: '15px', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
-                      Ksh {totalCollected.toLocaleString()}
-                    </td>
-                    <td style={{ padding: '12px 16px' }} />
-                  </tr>
-                </tfoot>
-              </table>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
+
+              {/* ── Outstanding payments ── */}
+              {unpaidOrders.length > 0 && (
+                <section>
+                  <h2 style={{ fontFamily: 'var(--font-fraunces)', fontSize: '20px', color: 'var(--accent-terracotta)', margin: '0 0 16px 0' }}>
+                    Outstanding payments
+                  </h2>
+                  <div style={{ backgroundColor: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr style={{ backgroundColor: 'var(--surface-sunken)', borderBottom: '1px solid var(--border)' }}>
+                          {['Order ref', 'Customer', 'Phone', 'Amount due'].map(h => (
+                            <th key={h} style={thStyle}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {unpaidOrders.map(order => (
+                          <tr key={order.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                            <td style={{ ...tdStyle }}>
+                              <Link href={`/admin/orders/${order.id}`} style={{ fontFamily: 'var(--font-fraunces)', fontSize: '14px', color: 'var(--brand-gold)', textDecoration: 'none' }}>
+                                {order.order_ref}
+                              </Link>
+                            </td>
+                            <td style={tdStyle}>{order.customer_name}</td>
+                            <td style={{ ...tdStyle, color: 'var(--text-secondary)' }}>{order.customer_phone}</td>
+                            <td style={{ ...tdStyle, fontFamily: 'var(--font-fraunces)', fontSize: '14px', whiteSpace: 'nowrap' }}>
+                              {fmt(order.total_amount)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot>
+                        <tr style={{ borderTop: '2px solid var(--border-strong)', backgroundColor: 'var(--surface-sunken)' }}>
+                          <td colSpan={3} style={{ padding: '12px 16px', fontSize: '13px', fontFamily: 'var(--font-inter)', color: 'var(--text-secondary)', fontWeight: '500' }}>
+                            {unpaidOrders.length} order{unpaidOrders.length !== 1 ? 's' : ''} outstanding
+                          </td>
+                          <td style={{ padding: '12px 16px', fontFamily: 'var(--font-fraunces)', fontSize: '15px', color: 'var(--accent-terracotta)', whiteSpace: 'nowrap' }}>
+                            {fmt(unpaidOrders.reduce((s, o) => s + o.total_amount, 0))}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                </section>
+              )}
+
+              {/* ── Paid orders reconciliation ── */}
+              <section>
+                <h2 style={{ fontFamily: 'var(--font-fraunces)', fontSize: '20px', color: 'var(--text-primary)', margin: '0 0 16px 0' }}>
+                  Paid orders
+                </h2>
+                {paidOrders.length === 0 ? (
+                  <p style={{ fontSize: '15px', color: 'var(--text-secondary)' }}>No paid orders for this date.</p>
+                ) : (
+                  <div style={{ backgroundColor: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                      <thead>
+                        <tr style={{ backgroundColor: 'var(--surface-sunken)', borderBottom: '1px solid var(--border)' }}>
+                          {['Date paid', 'Order ref', 'Customer', 'Phone', 'Zone', 'Food total', 'Delivery', 'Total', 'M-Pesa code'].map(h => (
+                            <th key={h} style={thStyle}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paidOrders.map(order => (
+                          <tr key={order.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                            <td style={{ ...tdStyle, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                              {fmtPaidAt(order.paid_at)}
+                            </td>
+                            <td style={{ ...tdStyle }}>
+                              <Link href={`/admin/orders/${order.id}`} style={{ fontFamily: 'var(--font-fraunces)', fontSize: '14px', color: 'var(--brand-gold)', textDecoration: 'none' }}>
+                                {order.order_ref}
+                              </Link>
+                            </td>
+                            <td style={tdStyle}>{order.customer_name}</td>
+                            <td style={{ ...tdStyle, color: 'var(--text-secondary)' }}>{order.customer_phone}</td>
+                            <td style={{ ...tdStyle, color: 'var(--text-secondary)' }}>Zone {order.delivery_zone}</td>
+                            <td style={{ ...tdStyle, fontFamily: 'var(--font-fraunces)', fontSize: '14px', whiteSpace: 'nowrap' }}>
+                              Ksh {order.subtotal.toLocaleString()}
+                            </td>
+                            <td style={{ ...tdStyle, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                              Ksh {order.delivery_fee.toLocaleString()}
+                            </td>
+                            <td style={{ ...tdStyle, fontFamily: 'var(--font-fraunces)', fontSize: '14px', whiteSpace: 'nowrap' }}>
+                              Ksh {order.total_amount.toLocaleString()}
+                            </td>
+                            <td style={{ ...tdStyle, letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
+                              {order.mpesa_code}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot>
+                        <tr style={{ borderTop: '2px solid var(--border-strong)', backgroundColor: 'var(--surface-sunken)' }}>
+                          <td colSpan={5} style={{ padding: '12px 16px', fontSize: '13px', fontFamily: 'var(--font-inter)', color: 'var(--text-secondary)', fontWeight: '500' }}>
+                            {paidOrders.length} order{paidOrders.length !== 1 ? 's' : ''}
+                          </td>
+                          <td style={{ padding: '12px 16px', fontFamily: 'var(--font-fraunces)', fontSize: '14px', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                            Ksh {totalFoodSubtotal.toLocaleString()}
+                          </td>
+                          <td style={{ padding: '12px 16px', fontSize: '13px', fontFamily: 'var(--font-inter)', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                            Ksh {totalDeliveryFees.toLocaleString()}
+                          </td>
+                          <td style={{ padding: '12px 16px', fontFamily: 'var(--font-fraunces)', fontSize: '15px', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                            Ksh {totalCollected.toLocaleString()}
+                          </td>
+                          <td style={{ padding: '12px 16px' }} />
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+                )}
+              </section>
+
             </div>
           )}
 
         </div>
       </div>
     </>
-  )
-}
-
-function StatCard({ label, value, alert }: { label: string; value: string; alert?: boolean }) {
-  return (
-    <div style={{ backgroundColor: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px 20px', minWidth: '160px', flex: '1' }}>
-      <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: '600' }}>
-        {label}
-      </div>
-      <div style={{ fontFamily: 'var(--font-fraunces)', fontSize: '24px', color: alert ? 'var(--accent-terracotta)' : 'var(--text-primary)' }}>
-        {value}
-      </div>
-    </div>
   )
 }

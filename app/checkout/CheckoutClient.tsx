@@ -57,6 +57,7 @@ function buildAddress(f: FormData): string {
 function buildDeliveryLabel(deliveryDay: string, deliverySlot: string): string {
   if (deliveryDay === 'sunday_5pm')  return 'Sunday — by 5pm'
   if (deliveryDay === 'sunday_free') return 'Sunday — 5–10pm (free delivery)'
+  if (deliveryDay === 'wednesday')   return 'Wednesday'
   if (deliveryDay === 'monday') {
     const slot = SLOT_OPTIONS.find(s => s.value === deliverySlot)
     return slot ? `Monday ${slot.label}` : 'Monday'
@@ -285,7 +286,7 @@ export default function CheckoutClient() {
           border: '1px solid var(--border)',
           borderRadius: 8,
           padding: '20px 24px',
-          marginBottom: 20,
+          marginBottom: 32,
         }}>
           <p style={{
             fontFamily: 'var(--font-inter), sans-serif',
@@ -312,18 +313,9 @@ export default function CheckoutClient() {
             color: 'var(--text-secondary)',
             margin: 0,
           }}>
-            Use this as your M-Pesa payment reference
+            Your order summary and payment details have been sent to {successEmail}
           </p>
         </div>
-        <p style={{
-          fontFamily: 'var(--font-inter), sans-serif',
-          fontSize: 14,
-          color: 'var(--text-secondary)',
-          margin: '0 0 32px',
-          lineHeight: 1.6,
-        }}>
-          A confirmation email is on its way to {successEmail}.
-        </p>
         <Link href="/" style={{
           fontFamily: 'var(--font-inter), sans-serif',
           fontSize: 14,
@@ -352,13 +344,15 @@ export default function CheckoutClient() {
   const dayLabel = buildDeliveryLabel(form.deliveryDay, form.deliverySlot)
   const fullName = `${form.firstName.trim()} ${form.lastName.trim()}`.trim()
 
-  const deliveryOpts = [
-    { key: 'sunday_5pm',  label: 'Sunday — by 5pm', badge: null as string | null },
-    ...(subtotal >= FREE_DELIVERY_THRESHOLD ? [{
-      key: 'sunday_free', label: 'Sunday — 5–10pm', badge: 'Free' as string | null,
-    }] : []),
-    { key: 'monday',      label: 'Monday',           badge: null as string | null },
-  ]
+  const deliveryOpts = cycleInfo.activeCycle === 'midweek'
+    ? [{ key: 'wednesday', label: 'Wednesday', badge: null as string | null }]
+    : [
+        { key: 'sunday_5pm',  label: 'Sunday — by 5pm', badge: null as string | null },
+        ...(subtotal >= FREE_DELIVERY_THRESHOLD ? [{
+          key: 'sunday_free', label: 'Sunday — 5–10pm', badge: 'Free' as string | null,
+        }] : []),
+        { key: 'monday',      label: 'Monday',           badge: null as string | null },
+      ]
 
   // ── Field helpers ─────────────────────────────────────────────────────────
 
@@ -402,11 +396,14 @@ export default function CheckoutClient() {
     setSubmitError(null)
 
     const formattedAddress = buildAddress(form)
-    const dbDeliveryDay    = form.deliveryDay === 'monday' ? 'monday' : 'sunday'
+    const dbDeliveryDay    = form.deliveryDay === 'wednesday' ? 'wednesday'
+                           : form.deliveryDay === 'monday'    ? 'monday'
+                           : 'sunday'
     const dbDeliveryWindow = form.deliveryDay === 'sunday_5pm'  ? 'by_5pm'
                            : form.deliveryDay === 'sunday_free' ? 'free_5_10pm'
+                           : form.deliveryDay === 'wednesday'   ? null
                            : form.deliverySlot || null
-    const deliveryDate = cycleInfo.activeCycle === 'midweek'
+    const deliveryDate = dbDeliveryDay === 'wednesday'
       ? cycleInfo.nextWednesdayDate
       : dbDeliveryDay === 'monday'
         ? cycleInfo.nextMondayDate
@@ -525,6 +522,7 @@ export default function CheckoutClient() {
           total_amount: total,
           delivery_zone: Number(form.zone),
           delivery_day: form.deliveryDay,
+          delivery_date: deliveryDate || null,
           delivery_slot: form.deliverySlot || null,
           delivery_address: formattedAddress,
           address_building: form.addrBuilding,

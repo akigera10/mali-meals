@@ -12,13 +12,13 @@ export type SlipOrder = {
   customer_phone: string
   delivery_zone: number
   delivery_day: string
+  delivery_date: string | null
   delivery_window: string | null
   delivery_slot: string | null
   address_building: string | null
   address_street: string | null
   address_apartment: string | null
   address_landmark: string | null
-  total_amount: number
   payment_status: string | null
   notes: string | null
   items: { name: string; category: string; variant: string; meat_type: string | null; meat_upgrade_type: string | null; quantity: number }[]
@@ -45,10 +45,6 @@ const BIN_2UP = 540  // half page   — 2 per A4
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function fmt(n: number) {
-  return `Ksh ${n.toLocaleString()}`
-}
-
 function variantLabel(variant: string, meatType: string | null, meatUpgradeType: string | null): string {
   if (variant === 'vegetarian') return 'Vegetarian'
   const t = meatType || meatUpgradeType
@@ -58,6 +54,15 @@ function variantLabel(variant: string, meatType: string | null, meatUpgradeType:
 }
 
 function deliveryLabel(order: SlipOrder): string {
+  if (order.delivery_day === 'wednesday') {
+    if (order.delivery_date) {
+      const dateStr = new Date(order.delivery_date + 'T12:00:00')
+        .toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+        .replace(',', '')
+      return `Wednesday · ${dateStr}`
+    }
+    return 'Wednesday'
+  }
   const day = order.delivery_day === 'sunday' ? 'Sunday' : 'Monday'
   const w = order.delivery_window
   if (w === 'by_5pm') return `${day} · by 5pm`
@@ -304,9 +309,7 @@ function Slip({ order }: { order: SlipOrder }) {
         <div style={{
           backgroundColor: 'var(--accent-terracotta)',
           padding: '5px 8px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+          textAlign: 'center',
         }}>
           <div style={{
             fontSize: '9px',
@@ -317,20 +320,14 @@ function Slip({ order }: { order: SlipOrder }) {
           }}>
             Collect Payment
           </div>
-          <div style={{ fontSize: '13px', fontWeight: '700', color: '#fff' }}>
-            {fmt(order.total_amount)}
-          </div>
         </div>
       ) : (
         <div style={{
           backgroundColor: 'var(--accent-forest)',
           padding: '5px 8px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+          textAlign: 'center',
         }}>
           <div style={{ fontSize: '12px', fontWeight: '700', color: '#fff' }}>✓ PAID</div>
-          <div style={{ fontSize: '12px', color: '#fff' }}>{fmt(order.total_amount)}</div>
         </div>
       )}
     </div>

@@ -15,12 +15,12 @@ export default async function PackingSlipsPage({
 
   if (searchParams.order) {
     const { data } = await (supabase.from('orders') as any)
-      .select('id, order_ref, customer_name, customer_phone, delivery_zone, delivery_day, delivery_window, delivery_slot, address_building, address_street, address_apartment, address_landmark, total_amount, payment_status, notes')
+      .select('id, order_ref, customer_name, customer_phone, delivery_zone, delivery_day, delivery_date, delivery_window, delivery_slot, address_building, address_street, address_apartment, address_landmark, payment_status, notes')
       .eq('id', searchParams.order)
     rawOrders = data || []
   } else if (searchParams.date) {
     const { data } = await (supabase.from('orders') as any)
-      .select('id, order_ref, customer_name, customer_phone, delivery_zone, delivery_day, delivery_window, delivery_slot, address_building, address_street, address_apartment, address_landmark, total_amount, payment_status, notes')
+      .select('id, order_ref, customer_name, customer_phone, delivery_zone, delivery_day, delivery_date, delivery_window, delivery_slot, address_building, address_street, address_apartment, address_landmark, payment_status, notes')
       .eq('delivery_date', searchParams.date)
       .order('delivery_zone', { ascending: true })
     rawOrders = data || []
@@ -29,7 +29,7 @@ export default async function PackingSlipsPage({
     const weekEnd = new Date(weekStart)
     weekEnd.setDate(weekEnd.getDate() + 7)
     const { data } = await (supabase.from('orders') as any)
-      .select('id, order_ref, customer_name, customer_phone, delivery_zone, delivery_day, delivery_window, delivery_slot, address_building, address_street, address_apartment, address_landmark, total_amount, payment_status, notes')
+      .select('id, order_ref, customer_name, customer_phone, delivery_zone, delivery_day, delivery_date, delivery_window, delivery_slot, address_building, address_street, address_apartment, address_landmark, payment_status, notes')
       .eq('delivery_day', searchParams.day)
       .gte('created_at', weekStart.toISOString())
       .lt('created_at', weekEnd.toISOString())
@@ -76,13 +76,13 @@ export default async function PackingSlipsPage({
       customer_phone: o.customer_phone,
       delivery_zone: o.delivery_zone,
       delivery_day: o.delivery_day,
+      delivery_date: o.delivery_date ?? null,
       delivery_window: o.delivery_window,
       delivery_slot: o.delivery_slot,
       address_building: o.address_building,
       address_street: o.address_street,
       address_apartment: o.address_apartment,
       address_landmark: o.address_landmark,
-      total_amount: o.total_amount,
       payment_status: o.payment_status ?? 'unpaid',
       notes: o.notes,
       items: orderItems.map((i: any) => ({

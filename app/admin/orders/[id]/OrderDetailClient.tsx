@@ -2,7 +2,6 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
 
 type Order = {
   id: string
@@ -12,6 +11,7 @@ type Order = {
   customer_email: string
   delivery_zone: number
   delivery_day: string
+  delivery_date: string | null
   delivery_window: string | null
   delivery_slot: string | null
   notes: string | null
@@ -62,6 +62,15 @@ function fmt(n: number) {
 }
 
 function deliveryLabel(order: Order): string {
+  if (order.delivery_day === 'wednesday') {
+    if (order.delivery_date) {
+      const dateStr = new Date(order.delivery_date + 'T12:00:00')
+        .toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+        .replace(',', '')
+      return `Wednesday · ${dateStr}`
+    }
+    return 'Wednesday'
+  }
   const day = order.delivery_day === 'sunday' ? 'Sunday' : 'Monday'
   const w = order.delivery_window
   if (w === 'by_5pm') return `${day} · by 5pm`
@@ -152,15 +161,19 @@ export default function OrderDetailClient({
   const saladItems = items.filter(i => i.menu_items?.category === 'salads')
   const allAddons = items.flatMap(i => i.order_item_addons || [])
 
+  async function updateOrder(updates: Record<string, any>) {
+    await fetch('/api/admin/update-order', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId: order.id, updates }),
+    })
+  }
+
   async function handleMarkPaid() {
     if (!mpesaCode.trim()) return
     setSaving(true)
     const paidAt = new Date().toISOString()
-    await (supabase.from('orders') as any).update({
-      payment_status: 'paid',
-      mpesa_code: mpesaCode.trim(),
-      paid_at: paidAt,
-    }).eq('id', order.id)
+    await updateOrder({ payment_status: 'paid', mpesa_code: mpesaCode.trim(), paid_at: paidAt })
     setOrder({ ...order, payment_status: 'paid', mpesa_code: mpesaCode.trim(), paid_at: paidAt })
     setShowMpesaForm(false)
     setMpesaCode('')
@@ -169,7 +182,7 @@ export default function OrderDetailClient({
 
   async function handleStatusUpdate(next: string) {
     setSaving(true)
-    await (supabase.from('orders') as any).update({ order_status: next }).eq('id', order.id)
+    await updateOrder({ order_status: next })
     setOrder({ ...order, order_status: next })
     setSaving(false)
   }
@@ -194,13 +207,13 @@ export default function OrderDetailClient({
   async function handleCancel() {
     if (!window.confirm(`Cancel order ${order.order_ref}? This cannot be undone.`)) return
     setSaving(true)
-    await (supabase.from('orders') as any).update({ order_status: 'cancelled' }).eq('id', order.id)
+    await updateOrder({ order_status: 'cancelled' })
     setOrder({ ...order, order_status: 'cancelled' })
     setSaving(false)
   }
 
   async function handleNotesBlur() {
-    await (supabase.from('orders') as any).update({ notes: adminNotes }).eq('id', order.id)
+    await updateOrder({ notes: adminNotes })
   }
 
   const payBadge = {

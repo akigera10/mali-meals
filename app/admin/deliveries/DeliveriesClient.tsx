@@ -2,7 +2,6 @@
 'use client'
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -87,12 +86,9 @@ export default function DeliveriesClient() {
   // Load distinct delivery dates on mount
   useEffect(() => {
     async function loadDates() {
-      const { data } = await (supabase.from('orders') as any)
-        .select('delivery_date')
-        .not('delivery_date', 'is', null)
-        .order('delivery_date', { ascending: true })
-
-      const unique: string[] = Array.from(new Set((data || []).map((r: any) => r.delivery_date as string)))
+      const res = await fetch('/api/admin/deliveries-data')
+      const { dates } = await res.json()
+      const unique: string[] = dates ?? []
       setAllDates(unique)
 
       const today = new Date().toISOString().slice(0, 10)
@@ -112,13 +108,10 @@ export default function DeliveriesClient() {
     setLoading(true)
 
     async function load() {
-      const { data } = await (supabase.from('orders') as any)
-        .select('id, order_ref, customer_name, customer_phone, delivery_zone, delivery_day, delivery_window, delivery_slot, address_building, address_street, address_apartment, address_landmark, total_amount, payment_status, order_status, notes')
-        .eq('delivery_date', selectedDate)
-        .order('delivery_zone', { ascending: true })
-
+      const res = await fetch(`/api/admin/deliveries-data?date=${selectedDate}`)
       if (!active) return
-      setOrders(data || [])
+      const { orders: data } = await res.json()
+      setOrders(data ?? [])
       setLoading(false)
     }
 

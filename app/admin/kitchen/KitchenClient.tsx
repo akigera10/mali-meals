@@ -2,7 +2,6 @@
 'use client'
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -181,12 +180,9 @@ export default function KitchenClient() {
   // Load distinct delivery dates on mount
   useEffect(() => {
     async function loadDates() {
-      const { data } = await (supabase.from('orders') as any)
-        .select('delivery_date')
-        .not('delivery_date', 'is', null)
-        .order('delivery_date', { ascending: true })
-
-      const unique: string[] = Array.from(new Set((data || []).map((r: any) => r.delivery_date as string)))
+      const res = await fetch('/api/admin/delivery-dates')
+      const { dates } = await res.json()
+      const unique: string[] = dates ?? []
       setAllDates(unique)
 
       const today = new Date().toISOString().slice(0, 10)
@@ -206,14 +202,11 @@ export default function KitchenClient() {
     setLoading(true)
 
     async function load() {
-      const { data: ordersData } = await (supabase.from('orders') as any)
-        .select('id, order_ref, order_status, delivery_day, delivery_zone, total_amount, customer_name')
-        .eq('delivery_date', selectedDate)
-
+      const res = await fetch(`/api/admin/orders-by-date?date=${selectedDate}`)
       if (!active) return
+      const { orders: ordersData, items: itemsData, specials: specialsData } = await res.json()
 
-      const rows: any[] = ordersData || []
-      const fetchedOrders: RawOrder[] = rows.map((o: any) => ({
+      const fetchedOrders: RawOrder[] = (ordersData ?? []).map((o: any) => ({
         id: o.id,
         order_ref: o.order_ref,
         order_status: o.order_status,
@@ -222,34 +215,19 @@ export default function KitchenClient() {
         total_amount: o.total_amount,
         customer_name: o.customer_name,
       }))
-
-      let fetchedItems: RawItem[] = []
-      let fetchedSpecials: RawSpecial[] = []
-
-      if (rows.length > 0) {
-        const orderIds = rows.map((o: any) => o.id)
-        const [{ data: itemsData }, { data: specialsData }] = await Promise.all([
-          (supabase.from('order_items') as any)
-            .select('order_id, quantity, variant, meat_type, menu_items(name, category, meat_upgrade_type), order_item_addons(quantity, protein_addons(name))')
-            .in('order_id', orderIds),
-          (supabase.from('order_specials') as any)
-            .select('order_id, quantity, specials(name)')
-            .in('order_id', orderIds),
-        ])
-        fetchedItems = (itemsData || []).map((item: any) => ({
-          order_id: item.order_id,
-          quantity: item.quantity,
-          variant: item.variant,
-          meat_type: item.meat_type ?? null,
-          menu_items: item.menu_items,
-          order_item_addons: item.order_item_addons || [],
-        }))
-        fetchedSpecials = (specialsData || []).map((s: any) => ({
-          order_id: s.order_id,
-          quantity: s.quantity,
-          specials: s.specials,
-        }))
-      }
+      const fetchedItems: RawItem[] = (itemsData ?? []).map((item: any) => ({
+        order_id: item.order_id,
+        quantity: item.quantity,
+        variant: item.variant,
+        meat_type: item.meat_type ?? null,
+        menu_items: item.menu_items,
+        order_item_addons: item.order_item_addons || [],
+      }))
+      const fetchedSpecials: RawSpecial[] = (specialsData ?? []).map((s: any) => ({
+        order_id: s.order_id,
+        quantity: s.quantity,
+        specials: s.specials,
+      }))
 
       setOrders(fetchedOrders)
       setItems(fetchedItems)
@@ -295,9 +273,11 @@ export default function KitchenClient() {
 
   async function confirmOrder(orderId: string) {
     setConfirmingIds(s => new Set(s).add(orderId))
-    await (supabase.from('orders') as any)
-      .update({ order_status: 'confirmed' })
-      .eq('id', orderId)
+    await fetch('/api/admin/update-order', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId, updates: { order_status: 'confirmed' } }),
+    })
     setOrders(prev => prev.map(o => o.id === orderId ? { ...o, order_status: 'confirmed' } : o))
     setConfirmingIds(s => { const next = new Set(s); next.delete(orderId); return next })
   }

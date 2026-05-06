@@ -21,12 +21,20 @@ const SLOT_LABELS: Record<string, string> = {
   '6_8pm':  '6–8pm',
 }
 
-function buildDeliveryLabel(delivery_day: string, delivery_slot: string | null): string {
+function buildDeliveryLabel(delivery_day: string, delivery_slot: string | null, delivery_date: string | null): string {
   if (delivery_day === 'sunday_5pm')  return 'Sunday — by 5pm'
   if (delivery_day === 'sunday_free') return 'Sunday — 5–10pm (free delivery)'
   if (delivery_day === 'monday') {
     const slot = delivery_slot ? SLOT_LABELS[delivery_slot] : null
     return slot ? `Monday ${slot}` : 'Monday'
+  }
+  if (delivery_day === 'wednesday') {
+    if (delivery_date) {
+      const d = new Date(delivery_date + 'T12:00:00')
+      const dateStr = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })
+      return `Wednesday ${dateStr}`
+    }
+    return 'Wednesday'
   }
   return ''
 }
@@ -56,6 +64,7 @@ export async function POST(req: NextRequest) {
       total_amount,
       delivery_zone,
       delivery_day,
+      delivery_date,
       delivery_slot,
       delivery_address,
       address_building,
@@ -69,8 +78,9 @@ export async function POST(req: NextRequest) {
     const salads = (items as CartEntry[]).filter(e => e.category === 'salads')
     const specials = (items as CartEntry[]).filter(e => e.variant === 'special')
     const addons = (items as CartEntry[]).filter(e => e.variant === 'addon')
-    const dayLabel = buildDeliveryLabel(delivery_day, delivery_slot)
+    const dayLabel = buildDeliveryLabel(delivery_day, delivery_slot, delivery_date)
     const freeDelivery = delivery_fee === 0 && subtotal >= 5000
+    const maliPhone = (process.env.MALI_PHONE ?? '').replace('+254', '0')
 
     const dishRows = (entries: CartEntry[]) => entries.map(e => `
         <tr>
@@ -244,9 +254,12 @@ export async function POST(req: NextRequest) {
     </div>
 
     <!-- M-Pesa instruction -->
-    <div style="background: #F5E3C0; border-radius: 8px; padding: 20px; margin-bottom: 28px;">
-      <p style="font-family: Arial, sans-serif; font-size: 14px; color: #1F1B16; margin: 0; line-height: 1.7;">
-        Please send <strong>${fmt(total_amount)}</strong> to <strong>[M-Pesa number]</strong> using reference <strong>${order_ref}</strong>
+    <div style="background: #F5E3C0; border-radius: 8px; padding: 20px; margin-bottom: 28px; border: 1px solid #C8872E;">
+      <p style="font-family: Arial, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #A26B1E; margin: 0 0 10px;">
+        How to pay
+      </p>
+      <p style="font-family: Arial, sans-serif; font-size: 15px; color: #1F1B16; margin: 0; line-height: 1.7;">
+        To pay for your order, send <strong>${fmt(total_amount)}</strong> to <strong>${maliPhone} (Godrick Mali Luta)</strong> via M-Pesa.
       </p>
     </div>
 

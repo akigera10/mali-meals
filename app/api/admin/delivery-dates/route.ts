@@ -12,6 +12,6 @@ export async function GET() {
     .order('delivery_date', { ascending: true })
 
   if (error) return NextResponse.json({ dates: [] })
-  const unique = Array.from(new Set((data ?? []).map((r: any) => r.delivery_date as string)))
+  const unique = Array.from(new Set((data ?? []).map((r: Record<string, unknown>) => r.delivery_date as string)))
   return NextResponse.json({ dates: unique })
 }

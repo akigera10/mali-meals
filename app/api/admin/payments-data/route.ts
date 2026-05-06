@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
       .neq('order_status', 'cancelled')
       .order('delivery_date', { ascending: true })
 
-    const unique = Array.from(new Set((data ?? []).map((r: any) => r.delivery_date as string)))
+    const unique = Array.from(new Set((data ?? []).map((r: Record<string, unknown>) => r.delivery_date as string)))
     return NextResponse.json({ dates: unique })
   }
 
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     .eq('delivery_date', date)
     .neq('order_status', 'cancelled')
 
-  const rows = (data ?? []) as any[]
+  const rows = (data ?? []) as Record<string, unknown>[]
   const paid = rows
     .filter(o => o.payment_status === 'paid' && o.mpesa_code)
     .sort((a, b) => new Date(b.paid_at).getTime() - new Date(a.paid_at).getTime())

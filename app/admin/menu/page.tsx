@@ -10,10 +10,12 @@ export default async function AdminMenuPage() {
     { data: menuItems, error: menuError },
     { data: addons, error: addonError },
     { data: specials, error: specialError },
+    { data: settings },
   ] = await Promise.all([
     supabase.from('menu_items').select('*').order('category').order('sort_order'),
     supabase.from('protein_addons').select('*').order('sort_order'),
     supabase.from('specials').select('*').order('created_at'),
+    supabase.from('settings').select('active_cycle').single(),
   ])
 
   if (menuError || addonError || specialError) {
@@ -29,6 +31,7 @@ export default async function AdminMenuPage() {
       initialMenuItems={menuItems || []}
       initialAddons={addons || []}
       initialSpecials={specials || []}
+      activeCycle={(settings as { active_cycle?: string } | null)?.active_cycle ?? null}
     />
   )
 }

@@ -89,14 +89,12 @@ function saveButtonLabel(saveState: SaveState) {
 
 function DishCard({
   dish,
-  index,
   saveState,
   onUpdate,
   onToggleAllergen,
   onSave,
 }: {
   dish: MenuItem
-  index: number
   saveState: SaveState
   onUpdate: (changes: Partial<MenuItem>) => void
   onToggleAllergen: (allergen: string) => void
@@ -109,16 +107,6 @@ function DishCard({
       borderRadius: '8px',
       padding: '20px',
     }}>
-      <div style={{
-        fontSize: '11px',
-        fontFamily: 'var(--font-inter)',
-        color: 'var(--text-tertiary)',
-        textTransform: 'uppercase',
-        letterSpacing: '0.07em',
-        marginBottom: '12px',
-      }}>
-        #{index + 1}
-      </div>
 
       {/* Name */}
       <input
@@ -193,38 +181,6 @@ function DishCard({
         </div>
       </div>
 
-      {/* Cycle availability */}
-      <div style={{ marginBottom: '14px' }}>
-        <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '8px' }}>Available in cycle</div>
-        <div style={{ display: 'flex', gap: '6px' }}>
-          {([
-            { key: 'available_weekend', label: 'Weekend' },
-            { key: 'available_midweek', label: 'Midweek' },
-          ] as const).map(opt => {
-            const isActive = dish[opt.key as keyof MenuItem] as boolean
-            return (
-              <button
-                key={opt.key}
-                onClick={() => onUpdate({ [opt.key]: !isActive } as Partial<MenuItem>)}
-                style={{
-                  padding: '6px 14px',
-                  borderRadius: '6px',
-                  border: isActive ? '1.5px solid var(--brand-gold)' : '1px solid var(--border-strong)',
-                  backgroundColor: isActive ? 'var(--brand-gold-soft)' : 'var(--surface-raised)',
-                  color: isActive ? 'var(--brand-gold-dark)' : 'var(--text-tertiary)',
-                  fontSize: '13px',
-                  fontFamily: 'var(--font-inter)',
-                  cursor: 'pointer',
-                  fontWeight: isActive ? '500' : '400',
-                }}
-              >
-                {opt.label}
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
       {/* Allergens + Flags */}
       <div style={{ display: 'flex', gap: '28px', marginBottom: '20px', flexWrap: 'wrap' }}>
         <div>
@@ -253,6 +209,9 @@ function DishCard({
                 </button>
               )
             })}
+          </div>
+          <div style={{ marginTop: '6px', fontSize: '11px', color: 'var(--text-tertiary)' }}>
+            D = Dairy · N = Nuts · S = Soy · C = Coconut
           </div>
         </div>
 
@@ -568,10 +527,12 @@ export default function MenuManagementClient({
   initialMenuItems,
   initialAddons,
   initialSpecials,
+  activeCycle,
 }: {
   initialMenuItems: MenuItem[]
   initialAddons: Addon[]
   initialSpecials: Special[]
+  activeCycle: string | null
 }) {
   const [dishes, setDishes] = useState<MenuItem[]>(initialMenuItems)
   const [addons, setAddons] = useState<Addon[]>(initialAddons)
@@ -693,11 +654,10 @@ export default function MenuManagementClient({
   function renderDishList(list: MenuItem[]) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {list.map((dish, i) => (
+        {list.map(dish => (
           <DishCard
             key={dish.id}
             dish={dish}
-            index={i}
             saveState={saveStates[dish.id] || 'idle'}
             onUpdate={changes => updateDish(dish.id, changes)}
             onToggleAllergen={allergen => toggleAllergen(dish.id, allergen)}
@@ -751,10 +711,18 @@ export default function MenuManagementClient({
   }
 
   const TABS = [
-    { key: 'weekend', label: 'Weekend Menu' },
-    { key: 'midweek', label: 'Midweek Menu' },
-    { key: 'addons',  label: 'Protein Add-ons' },
+    { key: 'weekend', label: 'Weekend Menu',    dot: activeCycle === 'weekend' },
+    { key: 'midweek', label: 'Midweek Menu',    dot: activeCycle === 'midweek' },
+    { key: 'addons',  label: 'Protein Add-ons', dot: false },
   ] as const
+
+  const cycleStatusText = activeCycle === 'weekend'
+    ? '● Weekend menu is live · customers are ordering now'
+    : activeCycle === 'midweek'
+    ? '● Midweek menu is live · customers are ordering now'
+    : '● No active cycle set · go to Settings to activate ordering'
+
+  const cycleStatusColor = activeCycle ? 'var(--accent-forest)' : 'var(--accent-terracotta)'
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--surface-base)', fontFamily: 'var(--font-inter)' }}>
@@ -766,12 +734,15 @@ export default function MenuManagementClient({
           fontFamily: 'var(--font-fraunces)',
           fontSize: '28px',
           color: 'var(--text-primary)',
-          marginBottom: '4px',
+          marginBottom: '8px',
         }}>
           Menu
         </h1>
+        <p style={{ fontSize: '13px', color: cycleStatusColor, margin: '0 0 4px', fontWeight: '500' }}>
+          {cycleStatusText}
+        </p>
         <p style={{ fontSize: '14px', color: 'var(--text-tertiary)', margin: 0 }}>
-          Update dish details for this week. Each dish saves independently.
+          Each dish saves independently.
         </p>
       </div>
 
@@ -795,9 +766,15 @@ export default function MenuManagementClient({
                   color: isActive ? 'var(--text-primary)' : 'var(--text-tertiary)',
                   cursor: 'pointer',
                   marginBottom: '-1px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
                 }}
               >
                 {tab.label}
+                {tab.dot && (
+                  <span style={{ fontSize: '8px', color: 'var(--accent-forest)', lineHeight: '1' }}>●</span>
+                )}
               </button>
             )
           })}
@@ -811,11 +788,11 @@ export default function MenuManagementClient({
         {activeTab === 'weekend' && (
           <div>
             <div style={{ marginBottom: '40px' }}>
-              <CategoryLabel>Mains · Ksh 995 · with meat Ksh 1,295</CategoryLabel>
+              <CategoryLabel>Mains · 995 · with meat 1,295</CategoryLabel>
               {renderDishList(weekendMains)}
             </div>
             <div style={{ marginBottom: '40px' }}>
-              <CategoryLabel>Salads · Ksh 580 · with meat Ksh 880</CategoryLabel>
+              <CategoryLabel>Salads · 580 · with meat 880</CategoryLabel>
               {renderDishList(weekendSalads)}
             </div>
             <div>
@@ -829,11 +806,11 @@ export default function MenuManagementClient({
         {activeTab === 'midweek' && (
           <div>
             <div style={{ marginBottom: '40px' }}>
-              <CategoryLabel>Mains · Ksh 995 · with meat Ksh 1,295</CategoryLabel>
+              <CategoryLabel>Mains · 995 · with meat 1,295</CategoryLabel>
               {renderDishList(midweekMains)}
             </div>
             <div style={{ marginBottom: '40px' }}>
-              <CategoryLabel>Salads · Ksh 580 · with meat Ksh 880</CategoryLabel>
+              <CategoryLabel>Salads · 580 · with meat 880</CategoryLabel>
               {renderDishList(midweekSalads)}
             </div>
             <div>

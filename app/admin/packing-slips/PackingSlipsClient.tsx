@@ -50,7 +50,7 @@ function variantLabel(variant: string, meatType: string | null, meatUpgradeType:
   const t = meatType || meatUpgradeType
   if (t === 'beef') return 'With beef'
   if (t === 'chicken') return 'With chicken'
-  return 'With meat'
+  return 'With protein'
 }
 
 function deliveryLabel(order: SlipOrder): string {

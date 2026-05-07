@@ -6,7 +6,7 @@ import { createAdminClient } from '@/lib/supabase'
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 function fmt(n: number) {
-  return `Ksh ${n.toLocaleString('en-KE')}`
+  return n.toLocaleString('en-KE')
 }
 
 function windowLabel(deliveryWindow: string | null, deliverySlot: string | null): string {
@@ -22,7 +22,7 @@ function variantLabel(variant: string, meatUpgradeType: string | null): string {
   if (variant === 'vegetarian') return 'Vegetarian'
   if (meatUpgradeType === 'beef') return 'with beef'
   if (meatUpgradeType === 'chicken') return 'with chicken'
-  return 'with meat'
+  return 'with protein'
 }
 
 function dishRow(name: string, variant: string | null, quantity: number, unitPrice: number): string {
@@ -69,14 +69,14 @@ export async function POST(req: NextRequest) {
 
     const { data: orderItems, error: itemsError } = await (db.from('order_items') as any)
       .select(`
-        id, quantity, variant, unit_price,
+        id, dish_name, quantity, variant, unit_price,
         menu_items ( name, category, meat_upgrade_type ),
         order_item_addons ( quantity, unit_price, protein_addons ( name ) )
       `)
       .eq('order_id', orderId)
 
     const { data: orderSpecials, error: specialsError } = await (db.from('order_specials') as any)
-      .select('id, quantity, unit_price, specials ( name )')
+      .select('id, special_name, quantity, unit_price, specials ( name )')
       .eq('order_id', orderId)
 
     console.log('[send-dispatch] items fetched:', orderItems?.length ?? 0, '| specials:', orderSpecials?.length ?? 0, '| itemsError:', itemsError?.message ?? null, '| specialsError:', specialsError?.message ?? null)
@@ -93,19 +93,19 @@ export async function POST(req: NextRequest) {
 
     const mainRows = mains.length > 0
       ? sectionHeading('Mains') + mains.map((i: any) =>
-          dishRow(i.menu_items?.name ?? '—', variantLabel(i.variant, i.menu_items?.meat_upgrade_type ?? null), i.quantity, i.unit_price)
+          dishRow(i.dish_name || i.menu_items?.name || '—', variantLabel(i.variant, i.menu_items?.meat_upgrade_type ?? null), i.quantity, i.unit_price)
         ).join('')
       : ''
 
     const saladRows = salads.length > 0
       ? sectionHeading('Salads') + salads.map((i: any) =>
-          dishRow(i.menu_items?.name ?? '—', variantLabel(i.variant, i.menu_items?.meat_upgrade_type ?? null), i.quantity, i.unit_price)
+          dishRow(i.dish_name || i.menu_items?.name || '—', variantLabel(i.variant, i.menu_items?.meat_upgrade_type ?? null), i.quantity, i.unit_price)
         ).join('')
       : ''
 
     const specialRows = specials.length > 0
       ? sectionHeading("Chef's special") + specials.map((s: any) =>
-          dishRow(s.specials?.name ?? '—', null, s.quantity, s.unit_price)
+          dishRow(s.special_name || s.specials?.name || '—', null, s.quantity, s.unit_price)
         ).join('')
       : ''
 

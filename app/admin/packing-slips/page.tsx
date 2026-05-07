@@ -45,10 +45,10 @@ export default async function PackingSlipsPage({
   if (orderIds.length > 0) {
     const [{ data: items }, { data: specials }] = await Promise.all([
       (supabase.from('order_items') as any)
-        .select('order_id, quantity, variant, meat_type, menu_items(name, category, meat_upgrade_type), order_item_addons(quantity, protein_addons(name))')
+        .select('order_id, dish_name, quantity, variant, meat_type, menu_items(name, category, meat_upgrade_type), order_item_addons(quantity, protein_addons(name))')
         .in('order_id', orderIds),
       (supabase.from('order_specials') as any)
-        .select('order_id, quantity, specials(name)')
+        .select('order_id, special_name, quantity, specials(name)')
         .in('order_id', orderIds),
     ])
     itemsData = items || []
@@ -86,7 +86,7 @@ export default async function PackingSlipsPage({
       payment_status: o.payment_status ?? 'unpaid',
       notes: o.notes,
       items: orderItems.map((i: any) => ({
-        name: i.menu_items?.name ?? 'Unknown',
+        name: i.dish_name || i.menu_items?.name || 'Unknown',
         category: i.menu_items?.category ?? 'mains',
         variant: i.variant,
         meat_type: i.meat_type ?? null,
@@ -94,7 +94,7 @@ export default async function PackingSlipsPage({
         quantity: i.quantity,
       })),
       specials: orderSpecials.map((s: any) => ({
-        name: s.specials?.name ?? 'Unknown',
+        name: s.special_name || s.specials?.name || 'Unknown',
         quantity: s.quantity,
       })),
       addons,

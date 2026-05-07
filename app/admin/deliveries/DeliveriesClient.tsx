@@ -42,7 +42,7 @@ function fmtDate(d: string): string {
 }
 
 function fmt(n: number) {
-  return `Ksh ${n.toLocaleString()}`
+  return n.toLocaleString()
 }
 
 function slotLabel(order: DeliveryOrder): string {

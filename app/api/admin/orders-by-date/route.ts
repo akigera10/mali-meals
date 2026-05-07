@@ -21,11 +21,11 @@ export async function GET(request: NextRequest) {
   const [{ data: itemsData }, { data: specialsData }] = await Promise.all([
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (db.from('order_items') as any)
-      .select('order_id, quantity, variant, meat_type, menu_items(name, category, meat_upgrade_type), order_item_addons(quantity, protein_addons(name))')
+      .select('order_id, dish_name, quantity, variant, meat_type, menu_items(name, category, meat_upgrade_type), order_item_addons(quantity, protein_addons(name))')
       .in('order_id', orderIds),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (db.from('order_specials') as any)
-      .select('order_id, quantity, specials(name)')
+      .select('order_id, special_name, quantity, specials(name)')
       .in('order_id', orderIds),
   ])
 

@@ -687,7 +687,7 @@ export default function MenuClient({
             color: 'var(--text-secondary)',
             margin: '8px 0 0',
           }}>
-            Home-cooked meals, delivered Sunday evenings in Nairobi
+            Home-cooked meals, delivered in Nairobi
           </p>
           <p style={{
             fontFamily: 'var(--font-inter), sans-serif',

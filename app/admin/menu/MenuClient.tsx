@@ -41,6 +41,12 @@ type Special = {
   is_sold_out: boolean
 }
 
+type Settings = {
+  active_cycle?: string | null
+  weekend_cutoff?: string | null
+  midweek_cutoff?: string | null
+}
+
 type SaveState = 'idle' | 'saving' | 'saved' | 'error'
 
 const ALLERGEN_OPTIONS = [
@@ -248,7 +254,6 @@ function AddonRow({
         style={{ flex: '1 1 180px', padding: '7px 10px', borderRadius: '6px', border: '1px solid var(--border-strong)', backgroundColor: 'var(--surface-raised)', fontFamily: 'var(--font-inter)', fontSize: '14px', color: 'var(--text-primary)', outline: 'none' }}
       />
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-        <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Ksh</span>
         <input
           type="number"
           value={addon.price}
@@ -362,18 +367,21 @@ export default function MenuClient({
   initialMenuItems,
   initialAddons,
   initialSpecials,
-  activeCycle,
+  settings,
 }: {
   initialMenuItems: MenuItem[]
   initialAddons: Addon[]
   initialSpecials: Special[]
-  activeCycle: string | null
+  settings: Settings | null
 }) {
   const [dishes,     setDishes]     = useState<MenuItem[]>(initialMenuItems)
   const [addons,     setAddons]     = useState<Addon[]>(initialAddons)
   const [specials,   setSpecials]   = useState<Special[]>(initialSpecials)
   const [saveStates, setSaveStates] = useState<Record<string, SaveState>>({})
   const [activeTab,  setActiveTab]  = useState<'weekend' | 'midweek' | 'addons'>('weekend')
+  const activeCycle = settings?.active_cycle ?? null
+  const activeCutoff = activeCycle === 'midweek' ? settings?.midweek_cutoff : settings?.weekend_cutoff
+  const isOrderingOpen = Boolean(activeCycle && activeCutoff && new Date() < new Date(activeCutoff))
 
   // ── State updaters ───────────────────────────────────────────────────────────
 
@@ -538,12 +546,14 @@ export default function MenuClient({
         <h1 style={{ fontFamily: 'var(--font-fraunces)', fontSize: '28px', color: 'var(--text-primary)', marginBottom: '8px' }}>
           Menu
         </h1>
-        <p style={{ fontSize: '13px', fontWeight: '500', margin: '0 0 4px', color: activeCycle ? 'var(--accent-forest)' : 'var(--accent-terracotta)' }}>
-          {activeCycle === 'weekend'
+        <p style={{ fontSize: '13px', fontWeight: '500', margin: '0 0 4px', color: !activeCycle || !activeCutoff ? 'var(--accent-terracotta)' : isOrderingOpen ? 'var(--accent-forest)' : 'var(--text-tertiary)' }}>
+          {!activeCycle || !activeCutoff
+            ? '● No active cycle set · go to Settings'
+            : isOrderingOpen && activeCycle === 'weekend'
             ? '● Weekend menu is live · customers are ordering now'
-            : activeCycle === 'midweek'
+            : isOrderingOpen && activeCycle === 'midweek'
             ? '● Midweek menu is live · customers are ordering now'
-            : '● No active cycle set · go to Settings to activate ordering'}
+            : '● Ordering closed · cutoff passed'}
         </p>
         <p style={{ fontSize: '14px', color: 'var(--text-tertiary)', margin: 0 }}>
           Each dish saves independently.
@@ -587,13 +597,13 @@ export default function MenuClient({
           <div>
             <div style={{ marginBottom: '40px' }}>
               <div style={{ fontFamily: 'var(--font-fraunces)', fontSize: '16px', color: 'var(--text-primary)', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)' }}>
-                Mains · 995 · with meat 1,295
+                Mains · 995 · with protein 1,295
               </div>
               {renderDishList(weekendMains)}
             </div>
             <div style={{ marginBottom: '40px' }}>
               <div style={{ fontFamily: 'var(--font-fraunces)', fontSize: '16px', color: 'var(--text-primary)', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)' }}>
-                Salads · 580 · with meat 880
+                Salads · 580 · with protein 880
               </div>
               {renderDishList(weekendSalads)}
             </div>
@@ -610,13 +620,13 @@ export default function MenuClient({
           <div>
             <div style={{ marginBottom: '40px' }}>
               <div style={{ fontFamily: 'var(--font-fraunces)', fontSize: '16px', color: 'var(--text-primary)', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)' }}>
-                Mains · 995 · with meat 1,295
+                Mains · 995 · with protein 1,295
               </div>
               {renderDishList(midweekMains)}
             </div>
             <div style={{ marginBottom: '40px' }}>
               <div style={{ fontFamily: 'var(--font-fraunces)', fontSize: '16px', color: 'var(--text-primary)', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)' }}>
-                Salads · 580 · with meat 880
+                Salads · 580 · with protein 880
               </div>
               {renderDishList(midweekSalads)}
             </div>

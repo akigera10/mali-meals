@@ -17,6 +17,7 @@ type RawOrder = {
 
 type RawItem = {
   order_id: string
+  dish_name: string | null
   quantity: number
   variant: string
   meat_type: string | null
@@ -26,6 +27,7 @@ type RawItem = {
 
 type RawSpecial = {
   order_id: string
+  special_name: string | null
   quantity: number
   specials: { name: string } | null
 }
@@ -49,18 +51,18 @@ function variantLabel(item: RawItem): string {
   const t = item.meat_type || item.menu_items?.meat_upgrade_type
   if (t === 'beef') return 'With beef'
   if (t === 'chicken') return 'With chicken'
-  return 'With meat'
+  return 'With protein'
 }
 
 function fmt(n: number) {
-  return `Ksh ${n.toLocaleString()}`
+  return n.toLocaleString()
 }
 
 function buildDishBlocks(items: RawItem[], category: string): DishBlock[] {
   const dishMap: Record<string, Record<string, number>> = {}
   for (const item of items) {
     if (item.menu_items?.category !== category) continue
-    const name = item.menu_items?.name ?? 'Unknown'
+    const name = item.dish_name || item.menu_items?.name || 'Unknown'
     const variant = variantLabel(item)
     if (!dishMap[name]) dishMap[name] = {}
     dishMap[name][variant] = (dishMap[name][variant] ?? 0) + item.quantity
@@ -217,6 +219,7 @@ export default function KitchenClient() {
       }))
       const fetchedItems: RawItem[] = (itemsData ?? []).map((item: any) => ({
         order_id: item.order_id,
+        dish_name: item.dish_name ?? null,
         quantity: item.quantity,
         variant: item.variant,
         meat_type: item.meat_type ?? null,
@@ -225,6 +228,7 @@ export default function KitchenClient() {
       }))
       const fetchedSpecials: RawSpecial[] = (specialsData ?? []).map((s: any) => ({
         order_id: s.order_id,
+        special_name: s.special_name ?? null,
         quantity: s.quantity,
         specials: s.specials,
       }))
@@ -249,7 +253,7 @@ export default function KitchenClient() {
   const specialGroups = useMemo(() => {
     const map: Record<string, number> = {}
     for (const s of rawSpecials) {
-      const name = s.specials?.name ?? 'Unknown'
+      const name = s.special_name || s.specials?.name || 'Unknown'
       map[name] = (map[name] ?? 0) + s.quantity
     }
     return Object.entries(map).sort((a, b) => b[1] - a[1])
@@ -367,7 +371,7 @@ export default function KitchenClient() {
                 <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
                   <strong style={{ color: 'var(--brand-gold)', fontFamily: 'var(--font-fraunces)', fontSize: '18px' }}>{orders.length}</strong>
                   {' '}order{orders.length !== 1 ? 's' : ''}
-                  {' · '}Ksh {orders.reduce((s, o) => s + o.total_amount, 0).toLocaleString()}
+                  {' · '}{orders.reduce((s, o) => s + o.total_amount, 0).toLocaleString()}
                 </span>
                 {unconfirmedOrders.length > 0 && (
                   <span style={{ fontSize: '14px', color: 'var(--accent-terracotta)', fontWeight: '500' }}>

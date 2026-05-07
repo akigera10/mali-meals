@@ -42,7 +42,7 @@ function fmtPaidAt(ts: string): string {
 }
 
 function fmt(n: number) {
-  return `Ksh ${n.toLocaleString()}`
+  return n.toLocaleString()
 }
 
 const navBtnStyle: React.CSSProperties = {
@@ -201,7 +201,7 @@ export default function PaymentsClient() {
             {datesLoaded && allDates.length > 0 && !loading && (
               <div style={{ display: 'flex', gap: '12px', marginBottom: '32px', flexWrap: 'wrap' }}>
                 <StatCard label="Paid orders" value={String(paidOrders.length)} />
-                <StatCard label="Collected" value={`Ksh ${totalCollected.toLocaleString()}`} />
+                <StatCard label="Collected" value={totalCollected.toLocaleString()} />
                 <StatCard label="Outstanding" value={String(unpaidOrders.length)} alert={unpaidOrders.length > 0} />
               </div>
             )}
@@ -306,13 +306,13 @@ export default function PaymentsClient() {
                             <td style={{ ...tdStyle, color: 'var(--text-secondary)' }}>{order.customer_phone}</td>
                             <td style={{ ...tdStyle, color: 'var(--text-secondary)' }}>Zone {order.delivery_zone}</td>
                             <td style={{ ...tdStyle, fontFamily: 'var(--font-fraunces)', fontSize: '14px', whiteSpace: 'nowrap' }}>
-                              Ksh {order.subtotal.toLocaleString()}
+                              {order.subtotal.toLocaleString()}
                             </td>
                             <td style={{ ...tdStyle, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
-                              Ksh {order.delivery_fee.toLocaleString()}
+                              {order.delivery_fee.toLocaleString()}
                             </td>
                             <td style={{ ...tdStyle, fontFamily: 'var(--font-fraunces)', fontSize: '14px', whiteSpace: 'nowrap' }}>
-                              Ksh {order.total_amount.toLocaleString()}
+                              {order.total_amount.toLocaleString()}
                             </td>
                             <td style={{ ...tdStyle, letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
                               {order.mpesa_code}
@@ -326,13 +326,13 @@ export default function PaymentsClient() {
                             {paidOrders.length} order{paidOrders.length !== 1 ? 's' : ''}
                           </td>
                           <td style={{ padding: '12px 16px', fontFamily: 'var(--font-fraunces)', fontSize: '14px', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
-                            Ksh {totalFoodSubtotal.toLocaleString()}
+                            {totalFoodSubtotal.toLocaleString()}
                           </td>
                           <td style={{ padding: '12px 16px', fontSize: '13px', fontFamily: 'var(--font-inter)', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
-                            Ksh {totalDeliveryFees.toLocaleString()}
+                            {totalDeliveryFees.toLocaleString()}
                           </td>
                           <td style={{ padding: '12px 16px', fontFamily: 'var(--font-fraunces)', fontSize: '15px', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
-                            Ksh {totalCollected.toLocaleString()}
+                            {totalCollected.toLocaleString()}
                           </td>
                           <td style={{ padding: '12px 16px' }} />
                         </tr>

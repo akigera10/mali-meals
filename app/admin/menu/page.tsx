@@ -15,7 +15,7 @@ export default async function AdminMenuPage() {
     supabase.from('menu_items').select('*').order('category').order('sort_order'),
     supabase.from('protein_addons').select('*').order('sort_order'),
     supabase.from('specials').select('*').order('created_at'),
-    supabase.from('settings').select('active_cycle').single(),
+    supabase.from('settings').select('active_cycle, weekend_cutoff, midweek_cutoff').maybeSingle(),
   ])
 
   if (menuError || addonError || specialError) {
@@ -31,7 +31,7 @@ export default async function AdminMenuPage() {
       initialMenuItems={menuItems || []}
       initialAddons={addons || []}
       initialSpecials={specials || []}
-      activeCycle={(settings as { active_cycle?: string } | null)?.active_cycle ?? null}
+      settings={(settings as { active_cycle?: string | null; weekend_cutoff?: string | null; midweek_cutoff?: string | null } | null) ?? null}
     />
   )
 }

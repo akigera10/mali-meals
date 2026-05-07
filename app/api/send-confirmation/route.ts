@@ -40,7 +40,7 @@ function buildDeliveryLabel(delivery_day: string, delivery_slot: string | null, 
 }
 
 function fmt(n: number) {
-  return `Ksh ${n.toLocaleString('en-KE')}`
+  return n.toLocaleString('en-KE')
 }
 
 function variantLabel(e: CartEntry): string {
@@ -48,7 +48,7 @@ function variantLabel(e: CartEntry): string {
   if (e.meatType === 'beef')    return 'with beef'
   if (e.meatType === 'chicken') return 'with chicken'
   const match = e.name.match(/with (beef or chicken|chicken|beef)/i)
-  return match ? match[0] : 'with meat'
+  return match ? match[0] : 'with protein'
 }
 
 export async function POST(req: NextRequest) {

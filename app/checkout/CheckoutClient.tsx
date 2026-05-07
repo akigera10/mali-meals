@@ -46,7 +46,7 @@ type FormErrors = Partial<Record<keyof FormData, string>>
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function fmt(n: number) {
-  return `Ksh\u00a0${n.toLocaleString('en-KE')}`
+  return n.toLocaleString('en-KE')
 }
 
 function buildAddress(f: FormData): string {
@@ -70,7 +70,7 @@ function variantLabel(entry: { variant: string; name: string; meatType?: string 
   if (entry.meatType === 'beef')    return 'with beef'
   if (entry.meatType === 'chicken') return 'with chicken'
   const match = entry.name.match(/with (beef or chicken|chicken|beef)/i)
-  return match ? match[0] : 'with meat'
+  return match ? match[0] : 'with protein'
 }
 
 function validate(data: FormData): FormErrors {
@@ -464,6 +464,7 @@ export default function CheckoutClient() {
             id: itemId,
             order_id: orderId,
             menu_item_id: menuItemId,
+            dish_name: entry.name,
             quantity: entry.quantity,
             variant,
             meat_type: entry.meatType || null,
@@ -482,6 +483,7 @@ export default function CheckoutClient() {
           .insert({
             order_id: orderId,
             special_id: specialId,
+            special_name: entry.name,
             quantity: entry.quantity,
             unit_price: entry.unitPrice,
           })

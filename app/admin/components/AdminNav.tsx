@@ -11,8 +11,9 @@ export default function AdminNav() {
     { href: '/admin', label: 'Orders' },
     { href: '/admin/menu', label: 'Menu' },
     { href: '/admin/kitchen', label: 'Kitchen' },
-    { href: '/admin/payments', label: 'Payments' },
     { href: '/admin/deliveries', label: 'Deliveries' },
+    { href: '/admin/payments', label: 'Payments' },
+    { href: '/admin/reports', label: 'Reports' },
     { href: '/admin/settings', label: 'Settings' },
   ]
 

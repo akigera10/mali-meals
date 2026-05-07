@@ -32,7 +32,7 @@ type Order = {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function fmt(n: number) {
-  return `Ksh ${n.toLocaleString()}`
+  return n.toLocaleString()
 }
 
 function deliveryLabel(order: Order): string {
@@ -45,7 +45,7 @@ function deliveryLabel(order: Order): string {
   return day
 }
 
-function totalKsh(arr: Order[]) {
+function totalAmount(arr: Order[]) {
   return arr.reduce((s, o) => s + o.total_amount, 0)
 }
 
@@ -163,14 +163,14 @@ export default function OrdersClient({ initialOrders }: { initialOrders: Order[]
             <StatusCard
               label="New orders"
               count={newOrders.length}
-              total={totalKsh(newOrders)}
+              total={totalAmount(newOrders)}
               active={activeFilter === 'new'}
               onClick={() => handleCardClick('new')}
             />
             <StatusCard
               label="Confirmed"
               count={confirmedOrders.length}
-              total={totalKsh(confirmedOrders)}
+              total={totalAmount(confirmedOrders)}
               active={activeFilter === 'confirmed'}
               onClick={() => handleCardClick('confirmed')}
             />
@@ -184,7 +184,7 @@ export default function OrdersClient({ initialOrders }: { initialOrders: Order[]
             <StatusCard
               label="Delivered"
               count={deliveredOrders.length}
-              total={totalKsh(deliveredOrders)}
+              total={totalAmount(deliveredOrders)}
               active={activeFilter === 'delivered'}
               onClick={() => handleCardClick('delivered')}
             />

@@ -31,6 +31,7 @@ type Order = {
 
 type OrderItem = {
   id: string
+  dish_name: string | null
   quantity: number
   variant: string
   meat_type: string | null
@@ -45,6 +46,7 @@ type OrderItem = {
 
 type OrderSpecial = {
   id: string
+  special_name: string | null
   quantity: number
   unit_price: number
   specials: { name: string } | null
@@ -58,7 +60,7 @@ const ZONE_NAMES: Record<number, string> = {
 }
 
 function fmt(n: number) {
-  return `Ksh ${n.toLocaleString()}`
+  return n.toLocaleString()
 }
 
 function deliveryLabel(order: Order): string {
@@ -85,7 +87,7 @@ function variantLabel(item: OrderItem): string {
   const t = item.meat_type || item.menu_items?.meat_upgrade_type
   if (t === 'beef') return 'With beef'
   if (t === 'chicken') return 'With chicken'
-  return 'With meat'
+  return 'With protein'
 }
 
 const sectionLabel = {
@@ -511,7 +513,7 @@ export default function OrderDetailClient({
                 <div style={sectionLabel}>Mains</div>
                 <ItemRows items={mainItems.map(i => ({
                   id: i.id,
-                  name: i.menu_items?.name ?? '—',
+                  name: i.dish_name || i.menu_items?.name || '—',
                   variant: variantLabel(i),
                   quantity: i.quantity,
                   unit_price: i.unit_price,
@@ -524,7 +526,7 @@ export default function OrderDetailClient({
                 <div style={sectionLabel}>Salads</div>
                 <ItemRows items={saladItems.map(i => ({
                   id: i.id,
-                  name: i.menu_items?.name ?? '—',
+                  name: i.dish_name || i.menu_items?.name || '—',
                   variant: variantLabel(i),
                   quantity: i.quantity,
                   unit_price: i.unit_price,
@@ -537,7 +539,7 @@ export default function OrderDetailClient({
                 <div style={sectionLabel}>Chef&apos;s Special</div>
                 <ItemRows items={specials.map(s => ({
                   id: s.id,
-                  name: s.specials?.name ?? '—',
+                  name: s.special_name || s.specials?.name || '—',
                   variant: null,
                   quantity: s.quantity,
                   unit_price: s.unit_price,

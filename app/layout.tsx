@@ -17,7 +17,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Mali's Meals",
-  description: "Home-cooked meals, delivered Sunday evenings in Nairobi",
+  description: "Home-cooked meals, delivered in Nairobi",
 };
 
 export default function RootLayout({

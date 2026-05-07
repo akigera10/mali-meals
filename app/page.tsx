@@ -20,7 +20,7 @@ export default async function HomePage() {
       .order('sort_order'),
     supabase
       .from('specials')
-      .select('id, name, description, price, is_sold_out')
+      .select('id, name, description, price, is_active, is_sold_out')
       .eq('is_active', true)
       .eq('is_sold_out', false)
       .order('created_at'),

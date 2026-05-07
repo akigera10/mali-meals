@@ -34,6 +34,7 @@ type Special = {
   name: string
   description: string
   price: number
+  is_active?: boolean
   is_sold_out: boolean
 }
 
@@ -656,6 +657,7 @@ export default function MenuClient({
 
   const mains = menuItems.filter(m => m.category === 'mains')
   const salads = menuItems.filter(m => m.category === 'salads')
+  const visibleSpecials = specials.filter(s => s.is_active !== false && !s.is_sold_out)
 
   const cartTotal = cart.reduce((s, e) => s + e.unitPrice * e.quantity, 0)
   const cartCount = cart.reduce((s, e) => s + e.quantity, 0)
@@ -735,11 +737,11 @@ export default function MenuClient({
         </section>
 
         {/* Chef's special */}
-        {specials.length > 0 && (
+        {visibleSpecials.length > 0 && (
           <section style={{ marginBottom: 52 }}>
             <SectionHeading>Chef&apos;s special</SectionHeading>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {specials.map(special => (
+              {visibleSpecials.map(special => (
                 <SpecialCard key={special.id} special={special} getQty={getQty} adjust={adjust} />
               ))}
             </div>

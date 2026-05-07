@@ -1,4 +1,4 @@
-# Mali's Meals — Master Handoff (April 2026)
+# Mali's Meals — Master Handoff (May 2026)
 
 ## Project identity
 
@@ -11,6 +11,7 @@
 | Supabase region | eu-west-2 (London) |
 | Local dev | `npm run dev` → http://localhost:3000 (or next available port) |
 | Deploy | `git push` to main → Vercel auto-deploys in ~60 seconds |
+| Windows terminal startup | `Remove-Item -Recurse -Force .next; npm run dev` |
 
 ---
 
@@ -67,6 +68,7 @@
 - Customer pages: max-width 600px centered
 - Admin pages: max-width 960px centered
 - All styling inline `style={}` — never Tailwind classes in components
+- NEVER store styles in variables, state, or computed functions — always static object literals directly on JSX elements
 
 ---
 
@@ -77,13 +79,13 @@ mali-meals/
 ├── app/
 │   ├── admin/
 │   │   ├── deliveries/
-│   │   │   └── page.tsx               ← Deliveries tab (zone-grouped view)
+│   │   │   └── page.tsx               ← Deliveries tab (delivery date filtered)
 │   │   ├── kitchen/
-│   │   │   └── page.tsx               ← Kitchen tab
+│   │   │   └── page.tsx               ← Kitchen tab (delivery date filtered)
 │   │   ├── login/
 │   │   │   └── page.tsx               ← Supabase Auth login form
 │   │   ├── menu/
-│   │   │   └── page.tsx               ← Menu management
+│   │   │   └── page.tsx               ← Menu management (tabbed: Weekend|Midweek|Protein Add-ons)
 │   │   ├── orders/
 │   │   │   └── [id]/
 │   │   │       └── page.tsx           ← Individual order detail page
@@ -92,29 +94,37 @@ mali-meals/
 │   │   ├── packing-slips/
 │   │   │   ├── page.tsx               ← Server component, data fetching
 │   │   │   └── PackingSlipsClient.tsx ← Client component, print layout
+│   │   ├── reports/
+│   │   │   └── page.tsx               ← Business intelligence page (TO BE BUILT)
 │   │   ├── settings/
-│   │   │   └── page.tsx               ← Admin settings page (to be built)
+│   │   │   └── page.tsx               ← Active cycle, cutoffs, delivery dates
 │   │   ├── components/
-│   │   │   └── AdminNav.tsx           ← Shared nav: Orders|Menu|Kitchen|Deliveries|Payments|Settings
+│   │   │   └── AdminNav.tsx           ← Shared nav: Orders|Menu|Kitchen|Deliveries|Payments|Reports|Settings
 │   │   ├── OrdersClient.tsx           ← Orders list (read-only badges, clickable refs)
 │   │   └── page.tsx                   ← Orders page with status cards
 │   ├── api/
+│   │   ├── admin/
+│   │   │   ├── deliveries-data/       ← Admin deliveries data API route
+│   │   │   ├── delivery-dates/        ← Fetches distinct delivery dates from orders
+│   │   │   ├── orders-by-date/        ← Orders filtered by delivery_date
+│   │   │   ├── payments-data/         ← Payments filtered by delivery_date
+│   │   │   └── update-order/          ← Updates order status/payment
 │   │   ├── generate-order-ref/
-│   │   │   └── route.ts               ← Server-side order ref generation using createAdminClient()
+│   │   │   └── route.ts               ← Server-side order ref generation (MAX-based, not created_at)
 │   │   ├── send-confirmation/
-│   │   │   └── route.ts               ← Resend confirmation email (fire and forget)
+│   │   │   └── route.ts               ← Resend confirmation email with payment instruction
 │   │   └── send-dispatch/
 │   │       └── route.ts               ← Resend dispatch notification email
 │   ├── checkout/
 │   │   ├── CheckoutClient.tsx         ← Two-step checkout UI
 │   │   └── page.tsx
 │   ├── components/
-│   │   └── MenuClient.tsx             ← Customer menu + cart
+│   │   └── MenuClient.tsx             ← Customer menu + cart (cycle-aware)
 │   ├── context/
 │   │   └── CartContext.tsx            ← Cart state + form state
 │   ├── globals.css                    ← All CSS custom properties
 │   ├── layout.tsx                     ← Root layout, fonts, CartProvider
-│   └── page.tsx                       ← Home: fetches menu from Supabase
+│   └── page.tsx                       ← Home: cycle-aware menu, cutoff check
 ├── lib/
 │   └── supabase.ts                    ← supabase (browser) + createServerClient() + createAdminClient()
 ├── middleware.ts                       ← Protects /admin/* with Supabase Auth session check
@@ -133,21 +143,27 @@ mali-meals/
 | Column | Type | Notes |
 |---|---|---|
 | id | uuid PK | |
-| name | text | changes weekly |
-| description | text | changes weekly |
+| name | text | changes weekly — WARNING: overwritten each week, no history preserved |
+| description | text | changes weekly — WARNING: overwritten each week, no history preserved |
 | category | text | 'mains' or 'salads' |
 | base_price | integer | 995 mains, 580 salads — never changes |
 | meat_upgrade_price | integer | always 300, null if no meat |
 | meat_upgrade_type | text | 'beef', 'chicken', 'both', or null |
-| is_active | boolean | false = hidden |
-| is_sold_out | boolean | |
+| is_active | boolean | false = hidden from customer menu this week |
+| is_sold_out | boolean | temporarily unavailable |
 | sort_order | integer | 1–4 per category |
 | allergens | text[] | ['dairy','nuts','soy','coconut'] |
 | is_freezer_friendly | boolean | |
 | is_spicy | boolean | |
 | is_family_friendly | boolean | |
-| available_weekend | boolean | shows on weekend cycle menu — default true — to be added |
-| available_midweek | boolean | shows on midweek cycle menu — default true — to be added |
+| available_weekend | boolean | true = shows on weekend cycle menu |
+| available_midweek | boolean | true = shows on midweek cycle menu |
+
+**IMPORTANT — menu_items is not a historical record.** Mali overwrites dish names and
+descriptions each week. The dish slots persist but the content changes. This means
+querying menu_items for historical data (e.g. what was on the menu 3 weeks ago) is
+impossible. The only way to preserve what was served historically is through the
+dish_name snapshot on order_items — NOT YET IMPLEMENTED. See Critical Issue 2.
 
 **`protein_addons`**
 | Column | Type | Notes |
@@ -166,7 +182,7 @@ mali-meals/
 | name | text | changes weekly |
 | description | text | |
 | price | integer | variable — 500 for soup, 700 for dessert etc |
-| is_active | boolean | false = hidden from menu |
+| is_active | boolean | false = hidden from menu — MUST check this before displaying |
 | is_sold_out | boolean | |
 | created_at | timestamptz | |
 
@@ -174,7 +190,7 @@ mali-meals/
 | Column | Type | Notes |
 |---|---|---|
 | id | uuid PK | |
-| order_ref | text | MAL-1000, MAL-1001… generated server-side |
+| order_ref | text | MAL-1000, MAL-1001… generated server-side via MAX query |
 | customer_name | text | |
 | customer_phone | text | |
 | customer_email | text | |
@@ -185,8 +201,8 @@ mali-meals/
 | address_landmark | text | nullable |
 | delivery_zone | integer | 1–4 |
 | delivery_day | text | 'sunday', 'monday', or 'wednesday' |
-| delivery_date | date | specific delivery date e.g. 2026-05-04 — to be added |
-| cycle_type | text | 'weekend' or 'midweek' — to be added |
+| delivery_date | date | specific delivery date e.g. 2026-05-11 — populated at checkout |
+| cycle_type | text | 'weekend' or 'midweek' — populated at checkout |
 | delivery_window | text | 'by_5pm', 'free_5_10pm', or slot value |
 | delivery_slot | text | '12_2pm' etc, Monday only |
 | subtotal | integer | food total only |
@@ -206,10 +222,11 @@ mali-meals/
 | id | uuid PK | |
 | order_id | uuid FK → orders | |
 | menu_item_id | uuid FK → menu_items | |
+| dish_name | text | SNAPSHOT — NOT YET ADDED. Critical for data integrity. Must be populated at checkout with the dish name at time of ordering. Without this, historical orders show wrong dish names after menu updates. |
 | quantity | integer | |
 | variant | text | 'vegetarian' or 'meat' ONLY |
 | meat_type | text | 'beef', 'chicken', or null — already exists in DB |
-| unit_price | integer | |
+| unit_price | integer | price snapshot at time of ordering |
 | created_at | timestamptz | |
 
 **`order_item_addons`**
@@ -228,24 +245,23 @@ mali-meals/
 | id | uuid PK | |
 | order_id | uuid FK → orders | |
 | special_id | uuid FK → specials | |
+| special_name | text | SNAPSHOT — NOT YET ADDED. Same issue as dish_name — must snapshot at checkout. |
 | quantity | integer | |
 | unit_price | integer | price snapshot |
 | created_at | timestamptz | |
 
-**`settings`** ← to be created
+**`settings`** ← single row table, Mali updates weekly
 | Column | Type | Notes |
 |---|---|---|
 | id | uuid PK | |
 | active_cycle | text | 'weekend' or 'midweek' |
-| weekend_cutoff | timestamptz | Friday 2pm EAT e.g. 2026-05-08 14:00:00+03 |
-| midweek_cutoff | timestamptz | Tuesday 5pm EAT e.g. 2026-05-12 17:00:00+03 |
+| weekend_cutoff | timestamptz | Friday 2pm EAT e.g. 2026-05-09 14:00:00+03 |
+| midweek_cutoff | timestamptz | Tuesday 2pm EAT e.g. 2026-05-13 14:00:00+03 |
 | next_sunday_date | date | upcoming Sunday delivery |
 | next_monday_date | date | upcoming Monday delivery |
 | next_wednesday_date | date | upcoming Wednesday delivery, nullable |
-| whatsapp_group_link | text | customer WhatsApp group URL |
+| whatsapp_group_link | text | https://chat.whatsapp.com/H9LnTAtoJ0w9uJAeNmQ0i7?mode=gi_t |
 | updated_at | timestamptz | |
-
-One row only. Mali updates weekly from admin settings page.
 
 ---
 
@@ -258,33 +274,57 @@ One row only. Mali updates weekly from admin settings page.
 - Orders open: Wednesday
 - Orders close: Friday 2pm EAT
 - Delivery days: Sunday and Monday
+- Menu format: 4 mains, 4 salads, optional chef's special
 
 **Cycle 2 — Midweek (piloting from 6 May 2026)**
 - Menu goes out: Monday
 - Orders open: Monday
-- Orders close: Tuesday 5pm EAT
+- Orders close: Tuesday 2pm EAT
 - Delivery day: Wednesday
+- Menu format: variable — currently 2 mains, 3 salads, no chef's special
+- Menus are COMPLETELY DIFFERENT from weekend — different dishes entirely
 
-Both cycles may share the same menu or have different menus — controlled per dish via available_weekend and available_midweek toggles in admin menu management. Only one cycle is open for ordering at any time.
+Both cycles managed through available_weekend and available_midweek flags on menu_items.
+Only one cycle is open for ordering at any time — controlled by active_cycle in settings.
 
 ### Delivery zones and fees
 
 | Zone | Fee | Areas |
 |---|---|---|
-| Zone 1 | Ksh 300 | Lavington, Kilimani, Kileleshwa, Hurlingham |
-| Zone 2 | Ksh 350 | Riverside, Westlands, Parklands, Peponi |
-| Zone 3 | Ksh 450 | Lower Kabete, Loresho, Kitisuru, Nyari, Pangani, Ngara, Muthaiga |
-| Zone 4 | Ksh 500 | Karen, Roselyn, Runda, Gigiri, Garden Estate, Langata Road |
+| Zone 1 | 300 | Lavington, Kilimani, Kileleshwa, Hurlingham |
+| Zone 2 | 350 | Riverside, Westlands, Parklands, Peponi |
+| Zone 3 | 450 | Lower Kabete, Loresho, Kitisuru, Nyari, Pangani, Ngara, Muthaiga |
+| Zone 4 | 500 | Karen, Roselyn, Runda, Gigiri, Garden Estate, Langata Road |
 
-Free delivery: orders above Ksh 5,000 get Sunday 5–10pm free.
+Free delivery: orders above 5,000 get Sunday 5–10pm free.
+No currency prefix anywhere in displayed text — numbers only. Never "Ksh" prefix.
 
 ### Payment model
 
-Payment is collected BEFORE dispatch. Mali confirms order, sends payment request to customer. Customer pays via M-Pesa. Rider dispatches after payment confirmed. M-Pesa code captured when marking order as paid.
+Payment is collected BEFORE dispatch. After Mali confirms an order she contacts the
+customer directly (currently WhatsApp/iMessage) to request payment. Customer sends
+money via M-Pesa to Godrick's personal number 0708470580 (from MALI_PHONE env var).
+Mali marks order as paid and dispatches. M-Pesa code captured when marking as paid.
+
+Confirmation email payment instruction:
+"To pay for your order, send [total] to 0708470580 (Godrick Mali Luta) via M-Pesa."
+
+The order reference MAL-XXXX is for customer service inquiries ONLY — not a payment
+reference. Do not tell customers to use it as a payment note.
 
 ### Order ref
 
-MAL-1000, MAL-1001... generated server-side via /api/generate-order-ref using createAdminClient(). Never generated client-side or via anon key.
+MAL-1000, MAL-1001... Generated server-side via /api/generate-order-ref.
+Uses MAX query across all order_refs to find highest number and increments by 1.
+NEVER uses created_at ordering — that caused duplicate ref bugs previously.
+
+### Cutoffs
+
+Both weekend and midweek cutoffs are at 2pm EAT (Africa/Nairobi, UTC+3).
+- Weekend: Friday 2pm
+- Midweek: Tuesday 2pm
+
+All cutoff calculations MUST use Africa/Nairobi timezone. Never UTC or server timezone.
 
 ---
 
@@ -295,108 +335,70 @@ NEW → CONFIRMED → DISPATCHED → DELIVERED
                 → CANCELLED (any stage except delivered)
 ```
 
-- **NEW** — order just placed, Mali hasn't reviewed it
-- **CONFIRMED** — Mali has reviewed, added to cooking plan
-- **DISPATCHED** — rider has left. Payment must be confirmed first.
-- **DELIVERED** — customer received it
-- **CANCELLED** — can be cancelled at new/confirmed/dispatched
+- **NEW** — order placed, Mali hasn't reviewed
+- **CONFIRMED** — Mali reviewed, added to cooking plan
+- **DISPATCHED** — rider left. Payment should be confirmed before dispatching.
+- **DELIVERED** — customer received food
+- **CANCELLED** — available at new/confirmed/dispatched
+
+NOTE: Payment flow rework pending (item 15). Real flow should be:
+NEW → CONFIRMED → PAYMENT REQUESTED → PAID → DISPATCHED → DELIVERED
 
 ---
 
 ## Delivery date model
 
-### Core principle
-
-Every order is anchored to a specific delivery_date (a real calendar date e.g. 2026-05-04). Not an abstract week window. All admin filtering is by delivery date.
-
-### Why this matters
-
-- Mali opens the admin on Wednesday morning — she sees orders for the next upcoming delivery date by default
-- Old orders are hidden unless she explicitly looks for them
-- Wednesday deliveries are just another delivery date — no special handling needed
-- The week window concept (Fri 2pm → Fri 2pm) has been retired
-
-### Admin filtering model
-
-Orders page, Kitchen tab, Deliveries tab, and Payments page all filter by delivery_date. Default view shows next upcoming delivery date. Date selector shows upcoming delivery dates. All orders and date range available for history.
-
-### Pending schema changes
-
-```sql
-ALTER TABLE orders ADD COLUMN delivery_date date;
-ALTER TABLE orders ADD COLUMN cycle_type text
-  CHECK (cycle_type IN ('weekend', 'midweek')) DEFAULT 'weekend';
-ALTER TABLE menu_items ADD COLUMN available_weekend boolean DEFAULT true;
-ALTER TABLE menu_items ADD COLUMN available_midweek boolean DEFAULT true;
-
-CREATE TABLE settings (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  active_cycle text CHECK (active_cycle IN ('weekend', 'midweek')),
-  weekend_cutoff timestamptz,
-  midweek_cutoff timestamptz,
-  next_sunday_date date,
-  next_monday_date date,
-  next_wednesday_date date,
-  whatsapp_group_link text,
-  updated_at timestamptz DEFAULT now()
-);
-
-ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Public can read settings"
-ON settings FOR SELECT USING (true);
-```
+Every order is anchored to a specific delivery_date (real calendar date).
+All admin filtering is by delivery_date — not abstract week windows.
+Default view shows next upcoming delivery date. Old orders hidden by default.
 
 ---
 
 ## Order cutoff — customer side
 
-When a customer visits the menu page the app checks current time against the active cycle's cutoff timestamp.
+Customer menu reads settings table server-side on every page load.
+Compares current Nairobi time against active cycle's cutoff timestamp.
 
-- Current time < cutoff → show menu, ordering open
-- Current time > cutoff → show ordering closed message, hide menu
+- Before cutoff AND settings exist → show menu for active cycle
+- After cutoff OR no settings → show ordering closed message
 
-All cutoff calculations must use Africa/Nairobi timezone (EAT, UTC+3). Never use server timezone or UTC directly for cutoff comparisons.
-
-Closed message shown to customer:
-
-```
-Orders are currently closed.
-Weekend orders open Wednesday and close Friday at 2pm.
+Closed message:
+"Orders are currently closed. Weekend orders open Wednesday and close Friday at 2pm.
 Next delivery: Sunday [date] and Monday [date].
-Join our WhatsApp group to get notified when orders open → [link]
-```
-
-WhatsApp group link stored in settings table.
+Join our WhatsApp group → [whatsapp_group_link from settings]"
 
 ---
 
 ## Menu availability model
 
-Each menu item has two availability flags — one per cycle. Allows same menu for both cycles or completely different menus per cycle.
+- active_cycle = 'weekend' → show dishes where available_weekend = true AND is_active = true
+- active_cycle = 'midweek' → show dishes where available_midweek = true AND is_active = true
 
-- active_cycle = 'weekend' → show dishes where available_weekend = true
-- active_cycle = 'midweek' → show dishes where available_midweek = true
+Weekend and midweek menus use COMPLETELY DIFFERENT dish records.
+Weekend dishes: available_weekend = true, available_midweek = false
+Midweek dishes: available_midweek = true, available_weekend = false
 
-In admin menu management each dish has two extra toggles: Available for weekend delivery and Available for midweek delivery. Same menu for both cycles means both toggles ON for every dish.
+Admin menu management is tabbed: Weekend Menu | Midweek Menu | Protein Add-ons
+Each tab shows only dishes for that cycle.
+is_active = whether dish shows on customer menu this week
+is_sold_out = temporarily unavailable
 
 ---
 
-## Admin settings page — /admin/settings (to be built)
+## Admin settings page — /admin/settings
 
-Mali updates weekly:
+Mali updates this every week:
 - Active cycle toggle: Weekend / Midweek
-- Weekend cutoff: date and time picker (defaults Friday 2pm EAT)
-- Midweek cutoff: date and time picker (defaults Tuesday 5pm EAT)
+- Weekend cutoff: date + time (default Friday 2pm EAT)
+- Midweek cutoff: date + time (default Tuesday 2pm EAT)
 - Next Sunday delivery date
 - Next Monday delivery date
-- Next Wednesday delivery date (shown only when midweek active)
+- Next Wednesday delivery date
 - WhatsApp group link
 
-Mali's weekly workflow:
-1. Wednesday morning — switch to Weekend, set Friday 2pm cutoff, set next Sunday and Monday delivery dates
-2. Friday after 2pm — ordering closes automatically
-3. Monday morning — switch to Midweek, set Tuesday 5pm cutoff, set next Wednesday delivery date
-4. Tuesday after 5pm — ordering closes automatically
+Active cycle indicator on menu page must dynamically check cutoff:
+- Before cutoff: "● [cycle] menu is live · customers are ordering now" in --accent-forest
+- After cutoff: "● Ordering closed · cutoff passed" in --text-tertiary
 
 ---
 
@@ -415,68 +417,71 @@ Mali's weekly workflow:
 
 ### Navigation
 
-Top nav bar: **Orders | Menu | Kitchen | Deliveries | Payments | Settings**
+Top nav bar: **Orders | Menu | Kitchen | Deliveries | Payments | Reports | Settings**
 
-Settings page not yet built — see builds in progress item 13.
+Reports page not yet built — see item 16 in builds in progress.
 
 ### Orders page `/admin`
 
-- Four status cards at top: New, Confirmed, Dispatched, Delivered — clickable to filter list
-- Clean order list — ref (gold, clickable), customer, phone, delivery day/zone, total, payment badge, status badge
-- X new orders indicator in brand-gold when unreviewed orders exist
+- Four status cards: New, Confirmed, Dispatched, Delivered
+- Delivery date selector at top — defaults to next upcoming delivery date
+- Old orders hidden by default, accessible via All Orders
+- Order list: ref (gold, clickable), customer, phone, delivery day/zone, total, payment badge, status badge
 
 ### Order detail page `/admin/orders/[id]`
 
 - Full order breakdown: customer, delivery, items in MAINS / SALADS / CHEF'S SPECIAL / PROTEIN ADD-ONS
 - Meat type displays correctly: With chicken / With beef / Vegetarian
+- Delivery day displays correctly for Wednesday orders
 - Admin notes textarea — saves on blur
-- Print slip button — links to /admin/packing-slips?order=[id]
-- Workflow buttons conditional on status:
-  - New → Confirm order
-  - Confirmed → Mark dispatched
-  - Dispatched → Mark delivered
-  - Delivered → no further actions
-  - Cancel button on new/confirmed/dispatched
+- Print slip button
+- Mark paid button — captures M-Pesa code
+- Confirm, Dispatch, Deliver, Cancel workflow buttons
 
-### Menu page `/admin/menu`
+### Menu page `/admin/menu` — TABBED
 
-- 4 mains + 4 salads — editable name, description, meat option, allergen toggles, flag toggles, sold out toggle, save button
-- Chef's special card — name, description, price, active toggle, sold out toggle
-- Protein add-ons section
-- Available weekend / available midweek toggles per dish — to be added
+Three tabs: Weekend Menu | Midweek Menu | Protein Add-ons
+
+Active cycle indicator at top (CURRENTLY BUGGED — does not check cutoff accurately).
+
+Each dish card: name, description, meat option, allergens + legend, flags, is_active, is_sold_out, save button.
+Allergen legend: D = Dairy · N = Nuts · S = Soy · C = Coconut
+Category headings: "Mains · 995 · with protein 1,295" and "Salads · 580 · with protein 880"
+
+KNOWN BUG: Card styling disappears on tab switch and page refresh. See Critical Issue 1.
 
 ### Kitchen tab `/admin/kitchen`
 
-- Week selector — to be replaced with delivery date selector
-- Sunday/Monday/All filter — Wednesday to be added
+- Delivery date selector
 - Cooking summary with meat type breakdown per dish
 - Chef's special section
 - Protein add-ons section
 
 ### Deliveries tab `/admin/deliveries`
 
-- Sunday/Monday toggle — Wednesday to be added
-- Week selector — to be replaced with delivery date selector
-- Orders grouped by zone with zone heading, order count, total Ksh
-- Each order shows ref (clickable), customer, address, slot, total, status badges
+- Delivery date selector
+- Orders grouped by zone — ALL orders regardless of payment status
+- Payment status badge on each order
 - Print packing slips button
 - Print delivery manifest button
 
 ### Payments page `/admin/payments`
 
-- Week selector — to be replaced with delivery date selector
-- Summary: total paid, total revenue, total unpaid
-- Table: date paid, order ref, customer, phone, zone, food total, delivery fee, total, M-Pesa code
-- Week totals: food subtotal, delivery total, combined total
-- Print button
+- Delivery date selector
+- Paid orders table: M-Pesa codes, paid_at, totals
+- Outstanding payments section: unpaid orders for selected date
 
 ### Packing slips `/admin/packing-slips`
 
-- Batch mode: ?day=sunday&week= — all orders for that day
-- Single mode: ?order=[id] — one order
-- Client-side JS measurement bins slips by height and packs into A4 pages
-- Black and white safe — payment status uses weight and borders not color
-- Meat type displays correctly on slips
+- Batch and single mode
+- No prices — logistics document only
+- COLLECT PAYMENT or PAID status label (no amount)
+- B&W safe
+- Wednesday displays correctly
+
+### Settings page `/admin/settings`
+
+Built and working. See settings section above.
 
 ---
 
@@ -484,30 +489,202 @@ Settings page not yet built — see builds in progress item 13.
 
 | Feature | Status |
 |---|---|
-| Customer menu page — dishes, badges, cart | ✅ Working |
-| Chef's special on customer menu | ✅ Working |
+| Customer menu — cycle-aware, cutoff-aware | ✅ Working |
+| Customer menu — ordering closed message with WhatsApp link | ✅ Working |
+| Chef's special — respects is_active flag | ✅ Working |
+| Family friendly / spicy badges on customer menu | ✅ Working |
 | Two-step checkout — form, validation, review | ✅ Working |
-| Order submission to Supabase | ✅ Working |
-| Order ref generated server-side via /api/generate-order-ref | ✅ Working |
-| Order items split into MAINS/SALADS/CHEF'S SPECIAL/PROTEIN ADD-ONS | ✅ Working |
-| Meat type (beef/chicken) displayed throughout admin | ✅ Working |
-| Order confirmation email — orders@malismeals.com | ✅ Working |
-| Dispatch notification email — orders@malismeals.com | ✅ Working |
-| Reply-to — orders@malismeals.com routes to Zoho Mail inbox | ✅ Working |
-| Domain — www.malismeals.com live on Vercel | ✅ Working |
-| Admin login — Supabase Auth email/password | ✅ Working |
-| Admin sign out button | ✅ Working |
-| Forgot password on login page | ✅ Working |
-| Show/hide password toggle on login page | ✅ Working |
-| Admin orders list with status cards | ✅ Working |
-| Order detail page with workflow buttons | ✅ Working |
-| Admin menu management | ✅ Working |
-| Kitchen tab | ✅ Working — delivery date filter pending |
-| Deliveries tab — zone grouped view | ✅ Working — delivery date filter pending |
-| Payments reconciliation page | ✅ Working — delivery date filter pending |
-| Packing slips — batch and single print | ✅ Working |
+| Order submission — delivery_date and cycle_type stamped | ✅ Working |
+| Wednesday delivery option in checkout | ✅ Working |
+| Order ref — server-side MAX-based generation | ✅ Working |
+| Order confirmation email — payment instruction, no wrong reference note | ✅ Working |
+| Dispatch notification email | ✅ Working |
+| Email sender — orders@malismeals.com | ✅ Working |
+| Domain — www.malismeals.com live | ✅ Working |
+| Admin login — Supabase Auth, sign out, forgot password | ✅ Working |
+| Admin orders list with delivery date filter | ✅ Working |
+| Order detail — meat type, Wednesday display, Mark paid | ✅ Working |
+| Admin menu — tabbed Weekend/Midweek/Protein Add-ons | ✅ Working |
+| Admin menu — allergen legend | ✅ Working |
+| Admin menu — active cycle indicator | ⚠️ Working but inaccurate after cutoff |
+| Admin menu — card styling | ❌ BROKEN — disappears on tab switch |
+| Kitchen tab — delivery date filter | ✅ Working |
+| Deliveries tab — all orders regardless of payment | ✅ Working |
+| Payments page — paid + outstanding sections | ✅ Working |
+| Packing slips — batch and single, no prices, B&W safe | ✅ Working |
+| Settings page — active cycle, cutoffs, delivery dates | ✅ Working |
 | RLS — all tables fully configured | ✅ Complete |
-| Admin client — service role key for all admin operations | ✅ Complete |
+| Admin client — service role key | ✅ Complete |
+| Meat type (beef/chicken) throughout admin | ✅ Working |
+
+---
+
+## Known issues — priority order
+
+### CRITICAL 1 — Menu page styling disappears (architectural bug)
+
+All card styling on app/admin/menu/page.tsx disappears whenever the user
+switches tabs, refreshes the page, or saves a dish. This has persisted
+through multiple fix attempts because the root cause is architectural —
+styles are being stored in state or variables instead of as static inline
+object literals directly on JSX elements.
+
+**Root cause:** The menu page mixes server and client rendering incorrectly.
+Server re-renders on save or data fetch reset client-side styles.
+
+**Correct fix — split the page:**
+- page.tsx: server component ONLY — fetch all data, pass as props
+- MenuClient.tsx: client component ('use client') — ALL rendering and interaction
+
+In MenuClient.tsx:
+- Every style must be a static inline style={{}} object literal on the JSX element
+- No variables (const cardStyle = {...} is WRONG)
+- No useState for styles
+- No computed styles
+- No CSS modules or className
+- Tab switching via useState only — never triggers server re-fetch
+- Save actions update local state immediately after Supabase confirms
+
+This is the most important unfixed bug. Fix before any other menu work.
+
+### CRITICAL 2 — dish_name snapshot missing (data integrity time bomb)
+
+Every week Mali overwrites menu_items.name with new dish names. Every historical
+order that references a menu_item_id now shows the CURRENT dish name, not what
+was actually ordered. This gets worse every week.
+
+Example of the bug:
+- Week 1: Customer orders "Pad kra pow rice bowl" (menu_item_id = abc123)
+- Week 3: Mali updates that slot to "Spinach and mushroom lasagna"
+- Now the week 1 order detail shows "Spinach and mushroom lasagna" — WRONG
+
+This affects: order detail page, kitchen tab cooking summary, packing slips,
+and any future analytics — all show wrong dish names for historical orders.
+
+**Fix required — urgent before more menus are updated:**
+
+Step 1 — Add columns:
+```sql
+ALTER TABLE order_items ADD COLUMN dish_name text;
+ALTER TABLE order_specials ADD COLUMN special_name text;
+```
+
+Step 2 — In CheckoutClient.tsx, populate dish_name when inserting order_items
+with the dish name from the cart at time of ordering.
+
+Step 3 — In CheckoutClient.tsx, populate special_name when inserting order_specials.
+
+Step 4 — Update all display pages to use order_items.dish_name when available,
+falling back to menu_items.name for pre-fix orders:
+- Order detail page
+- Kitchen tab
+- Packing slips
+- Reports page (when built)
+
+After this fix, historical order data becomes permanently accurate regardless
+of future menu changes.
+
+### HIGH 3 — Active cycle indicator inaccurate after cutoff
+
+"Midweek menu is live · customers are ordering now" shows even after Tuesday 2pm
+when ordering is closed. Must compare current Africa/Nairobi time against cutoff.
+
+### HIGH 4 — Ksh prefix still on customer menu
+
+"Ksh 995", "Ksh 1,295" still appearing in MenuClient.tsx and possibly other files.
+Do a complete codebase search for "Ksh" in displayed text and remove all instances.
+Leave "Price (Ksh)" admin input labels intact.
+
+### HIGH 5 — "With meat" copy incorrect
+
+"Mains · 995 · with meat 1,295" should be "Mains · 995 · with protein 1,295"
+"Salads · 580 · with meat 880" should be "Salads · 580 · with protein 880"
+"With meat" appears elsewhere — audit and replace with "with protein" throughout.
+
+### MEDIUM 6 — Customer menu subtitle hardcoded
+
+"Home-cooked meals, delivered Sunday evenings in Nairobi" is hardcoded.
+Change to: "Home-cooked meals, delivered in Nairobi"
+
+### MEDIUM 7 — Server-side validation missing on order submission
+
+All checkout validation is browser-only (CheckoutClient.tsx). A malicious user
+can bypass the browser entirely and POST directly to Supabase with garbage data.
+
+Required before public launch:
+- Required fields: name, phone, email, address, zone, delivery_day
+- Zone must be integer 1-4
+- delivery_day must be 'sunday', 'monday', or 'wednesday'
+- Items must exist in DB and be active, not sold out
+- Quantities must be positive integers
+- Prices must match database values — never trust client-submitted prices
+- delivery_date must match a real upcoming date from settings
+
+### MEDIUM 8 — Rate limiting on order submission
+
+No protection against fake order floods. After public launch: upstash/ratelimit,
+10 orders per IP per hour.
+
+---
+
+## Data integrity — critical context
+
+### The menu overwrite problem
+
+Mali operates with a rotating weekly menu. Every week she overwrites dish names
+and descriptions on existing menu_items rows. The dish slots persist permanently
+but their content is replaced each week.
+
+**What this means for data:**
+- menu_items is NOT a historical record of dishes served
+- It only reflects the CURRENT week's menu
+- Querying menu_items for historical analysis is unreliable after any menu update
+- The dish_name snapshot (Critical Issue 2) is the ONLY way to preserve history
+
+**What IS reliably stored in the database:**
+- orders — complete record: delivery_date, cycle_type, zone, amounts, status
+- order_items — quantity, variant, meat_type, unit_price (price IS snapshotted)
+  dish_name is NOT yet snapshotted — fix required urgently
+- order_item_addons — protein addon quantities and prices — reliable
+- order_specials — quantities and prices — reliable, special_name not yet snapshotted
+
+**Once dish_name snapshot is implemented:**
+All historical analysis becomes fully reliable. You can query what was sold,
+when, in what quantity, at what price — from order_items forever.
+
+### What the data can answer (once dish_name snapshot is in place)
+
+**Dish performance:**
+- Best selling mains by volume — all time and by date range
+- Best selling salads by volume
+- Which dishes get the most protein upgrades
+- Vegetarian vs meat split per dish
+- Dish performance by cycle (weekend vs midweek)
+
+**Revenue analysis:**
+- Revenue by delivery_date — week on week trend
+- Revenue by month — monthly totals and growth
+- Revenue by cycle_type — weekend vs midweek comparison
+- Revenue by delivery_zone — which zones are most valuable
+- Average order value over time — is it growing
+- Delivery fee vs food revenue split
+- Best performing week in any given month
+- This month vs last month comparison
+
+**Customer analysis:**
+- Total unique customers by phone number
+- Repeat customer rate — customers with 2+ orders as % of total
+- Top customers by order count and by total spend
+- Customer zone distribution — where do most customers live
+- Average order frequency — how often does a customer reorder
+- New vs returning customers per month
+
+**Operational:**
+- Protein add-on popularity and revenue contribution
+- Chef's special sales performance
+- Order timing — what time of day do most orders come in
+- Payment timing — how quickly do customers pay after ordering
+- Cancellation rate
 
 ---
 
@@ -516,12 +693,12 @@ Settings page not yet built — see builds in progress item 13.
 ### Completed
 
 - Supabase Auth — email/password login, session management, sign out
-- RLS full audit — all 7 tables configured with correct policies
-- Admin client — createAdminClient() uses service role key server-side
-- Public client — createServerClient() uses anon key, insert-only on order tables
-- Order ref generation — server-side only, never via anon key
+- RLS — all 7 tables with correct policies
+- Admin client — createAdminClient() server-side only
+- Public client — createServerClient() anon key, insert-only on order tables
+- Order ref — server-side only, MAX-based
 
-### RLS policies in place
+### RLS policies
 
 ```
 menu_items        — public SELECT only
@@ -531,254 +708,190 @@ orders            — public INSERT only
 order_items       — public INSERT only
 order_item_addons — public INSERT only
 order_specials    — public INSERT only
-settings          — public SELECT only (to be added when table is created)
+settings          — public SELECT only
 ```
-
-### Must complete before public launch
-
-**Server-side validation on order submission**
-
-Checkout validation currently exists only in CheckoutClient.tsx (browser). Mirror all validation server-side in the order submission API route:
-- Required fields: name, phone, email, address, zone, delivery_day
-- Zone must be integer 1-4
-- delivery_day must be 'sunday', 'monday', or 'wednesday'
-- Items must exist in database and be active, not sold out
-- Quantities must be positive integers
-- Prices must match database values — never trust client-submitted prices
-
-**Rate limiting on order submission**
-
-Use upstash/ratelimit with free Upstash Redis instance. Limit: 10 order submissions per IP per hour.
-
----
-
-## Known issues
-
-### Issue 1 — Delivery date model not yet built (PRIORITY)
-
-All admin pages still use abstract week window (Fri 2pm → Fri 2pm). Must be replaced with delivery_date based filtering. See builds in progress item 13.
-
-### Issue 2 — Wednesday delivery not yet built
-
-Midweek cycle piloting from 6 May 2026. Depends on item 13. See builds in progress item 14.
-
-### Issue 3 — Payment flow mismatch
-
-Current app captures M-Pesa at delivery. Real business collects before dispatch. Rework specced in item 15.
-
-### Issue 4 — Menu availability toggles not yet built
-
-available_weekend and available_midweek columns need to be added to menu_items and wired into menu management page and customer menu. Part of item 13.
-
-### Issue 5 — Settings page not yet built
-
-Admin has no way to manage active cycle, cutoffs, or delivery dates. Part of item 13.
-
-### Issue 6 — Orders page shows all orders with no date filter
-
-Mali cannot easily see just this week's orders. Fixed by item 13.
 
 ---
 
 ## Builds in progress / next to build
 
-### 1. Kitchen tab redesign (PRIORITY)
+Priority order — fix critical issues before building new features.
 
-**Section 1 — Week snapshot**
+### PRIORITY 1 — Fix menu page styling (Critical Issue 1)
+Architectural fix. See Critical Issue 1 above. Must be first.
 
-Two side-by-side cards for Sunday and Monday (Wednesday when midweek active). Each shows: date, total orders, total revenue, count of unconfirmed orders (in brand-gold). Clicking a card filters the cooking summary below.
+### PRIORITY 2 — dish_name and special_name snapshots (Critical Issue 2)
+Data integrity fix. See Critical Issue 2 above. Urgent — every week that
+passes without this makes historical data less reliable.
 
-**Section 2 — Cooking summary**
+### PRIORITY 3 — Ksh removal + "with protein" copy (Issues 4 and 5)
+Quick wins, high visibility fixes.
 
-Grouped by dish with variants indented:
+### PRIORITY 4 — Active cycle indicator accuracy (Issue 3)
+Quick fix, important for Mali's daily workflow.
 
+### 1. Kitchen tab redesign
+
+Full redesign with delivery date cards and cooking summary:
 ```
 MAINS — 12 portions total
 ━━━━━━━━━━━━━━━━━━━━━━━━
-Pad kra pow rice bowl
+Spinach and mushroom lasagna
   Vegetarian     ●●●○○  3
-  With chicken   ●●○○○  2
-  With beef      ●○○○○  1
+  With beef      ●●○○○  2
                  ───────
-                 Total  6
+                 Total  5
 ```
-
-Filled dots (●) in brand-gold for ordered portions, empty (○) for context up to 5. If more than 5, just show the number. MAINS and SALADS as separate sections with totals. Chef's special and protein add-ons below.
-
-**Section 3 — Unconfirmed orders**
-
-Compact list of NEW status orders. Confirm button inline — clicking confirms without navigating away. Hidden when count is 0. Heading in accent-terracotta when orders need attention.
-
-Print button — prints cooking summary only as a prep sheet.
+Dots in --brand-gold up to 5, then show number.
+Unconfirmed orders section with inline confirm buttons.
+Print button for cooking prep sheet.
 
 ### 2. Packing slips ✅ BUILT
 
-Built and working. One slip per order. Accessible from:
-- Deliveries tab — Print packing slips button for all orders on selected day
-- Order detail page — Print slip button for individual orders
-- Page at /admin/packing-slips — batch mode (?day=sunday&week=) or single (?order=id)
-
-Print layout uses client-side JS measurement to bin slips by height and pack into A4 pages. Black and white safe — payment status uses weight and borders not color.
-
 ### 3. Customer tab `/admin/customers`
 
-Not yet built. No new tables needed — all data exists in orders table.
+Not built. Query distinct customers from orders:
+- Name, phone, email, total orders, total spent, last order date, zone
+- Click customer → full order history
 
-What it should show:
-- List of all unique customers (by phone number or email)
-- Each customer: name, phone, email, total orders, total spent, last order date, delivery zone, common allergens
-- Clicking a customer shows their full order history
-- Useful for identifying loyal customers, understanding preferences, following up on unpaid orders
+### 4. Logout ✅ RESOLVED
 
-### 4. Logout button ✅ RESOLVED
+### 5. Email to Mali on new order
 
-Built as part of Supabase Auth — Sign out button in AdminNav.
-
-### 5. Email notification to Mali on new order
-
-When a customer places an order, send Mali an email at orders@malismeals.com with the order summary. Third email template alongside customer confirmation and dispatch notification. Not yet built.
+When customer places order send Mali email at orders@malismeals.com
+with full order summary. Third email template. Not yet built.
 
 ### 6. Supabase Auth ✅ COMPLETE
 
-Email/password login, session management, sign out, forgot password, show/hide password toggle. Admin user: orders@malismeals.com.
-
-### 7. RLS full audit ✅ COMPLETE
-
-All 7 tables configured. See Security section for full policy list.
+### 7. RLS ✅ COMPLETE
 
 ### 8. Rate limiting on admin login ✅ NOT NEEDED
 
-Supabase Auth handles brute force protection natively.
-
 ### 9. Server-side validation on order submission
-
-Checkout validation exists only in browser. Must be mirrored server-side before public launch. See Security section for full spec.
+See Issue 7 above. Required before public launch.
 
 ### 10. Rate limiting on order submission
+After public launch. upstash/ratelimit, 10 orders/IP/hour.
 
-After public launch. Use upstash/ratelimit, 10 orders per IP per hour.
+### 11. Domain ✅ COMPLETE
 
-### 11. Domain connection ✅ COMPLETE
+### 12. M-Pesa STK Push — IntaSend (FUTURE PHASE)
 
-www.malismeals.com and malismeals.com both live on Vercel. DNS managed via Zoho Domains.
-
-### 12. M-Pesa STK Push — IntaSend integration (FUTURE PHASE)
-
-Replace manual payment collection with automated STK Push. When Mali clicks Request payment on an order, the app sends an M-Pesa payment prompt directly to the customer's phone. Customer enters PIN, payment confirmed automatically, order status updates to paid.
-
-Prerequisites before building:
-- Mali needs a registered M-Pesa till number or paybill (business account)
-- Create IntaSend account at payment.intasend.com
-- For testing: sandbox account at sandbox.intasend.com — no real money, reversals within 48hrs, test number 254708374149
-
+Prerequisites: Mali needs M-Pesa till number (not personal number).
 What to build:
-- New API route: /api/request-payment — triggers IntaSend STK Push using order's customer_phone and total_amount
-- Request payment button on order detail page — visible on confirmed orders with payment_status unpaid
-- Webhook endpoint: /api/intasend-webhook — receives payment confirmation from IntaSend, updates order payment_status to paid and paid_at timestamp
-- New order status step: payment_requested — sits between confirmed and dispatched in the workflow
+- /api/request-payment — STK Push to customer phone
+- Request payment button on confirmed unpaid orders
+- /api/intasend-webhook — confirms payment, updates order status
+- New status: payment_requested between confirmed and dispatched
 
 Environment variables to add:
-
 ```
 INTASEND_PUBLISHABLE_KEY=
 INTASEND_SECRET_KEY=
 ```
 
-Dependencies: intasend-node package, ngrok for local webhook testing
+### 13. Delivery date model ✅ COMPLETE
 
-### 13. Delivery date model — replace week windows (DO THIS NEXT)
+### 14. Wednesday delivery ✅ COMPLETE
 
-Retire the abstract week window (Fri 2pm → Fri 2pm) and replace with explicit delivery dates throughout the admin.
+### 15. Payment flow rework
 
-Schema changes to run in Supabase SQL Editor:
-
-```sql
-ALTER TABLE orders ADD COLUMN delivery_date date;
-ALTER TABLE orders ADD COLUMN cycle_type text
-  CHECK (cycle_type IN ('weekend', 'midweek')) DEFAULT 'weekend';
-ALTER TABLE menu_items ADD COLUMN available_weekend boolean DEFAULT true;
-ALTER TABLE menu_items ADD COLUMN available_midweek boolean DEFAULT true;
-
-CREATE TABLE settings (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  active_cycle text CHECK (active_cycle IN ('weekend', 'midweek')),
-  weekend_cutoff timestamptz,
-  midweek_cutoff timestamptz,
-  next_sunday_date date,
-  next_monday_date date,
-  next_wednesday_date date,
-  whatsapp_group_link text,
-  updated_at timestamptz DEFAULT now()
-);
-
-ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Public can read settings"
-ON settings FOR SELECT USING (true);
-```
-
-After running schema changes, populate delivery_date on existing orders:
-
-```sql
-UPDATE orders SET
-  delivery_date = CASE
-    WHEN delivery_day = 'sunday'
-      THEN DATE(created_at AT TIME ZONE 'Africa/Nairobi') +
-           ((7 - EXTRACT(DOW FROM created_at AT TIME ZONE 'Africa/Nairobi')::int) % 7)
-    WHEN delivery_day = 'monday'
-      THEN DATE(created_at AT TIME ZONE 'Africa/Nairobi') +
-           ((8 - EXTRACT(DOW FROM created_at AT TIME ZONE 'Africa/Nairobi')::int) % 7)
-    ELSE DATE(created_at AT TIME ZONE 'Africa/Nairobi')
-  END,
-  cycle_type = 'weekend'
-WHERE delivery_date IS NULL;
-```
-
-What to build:
-- Admin settings page /admin/settings — active cycle toggle, cutoff date/time pickers, next delivery dates, WhatsApp link
-- Orders page — filter by delivery_date, default to next upcoming delivery date, hide old orders by default
-- Kitchen tab — filter by delivery_date, add Wednesday card alongside Sunday and Monday
-- Deliveries tab — filter by delivery_date, add Wednesday option
-- Payments page — filter by delivery_date
-- Customer checkout — set delivery_date and cycle_type on order submission
-- Customer menu page — read settings table server-side, filter dishes by active cycle, show ordering closed message when cutoff has passed using Africa/Nairobi timezone
-- Admin menu management — add available_weekend and available_midweek toggles per dish
-
-### 14. Wednesday delivery — midweek cycle (after item 13)
-
-Depends on delivery date model being in place first.
-
-What to build:
-- Wednesday delivery option in customer checkout
-- Kitchen tab Wednesday card
-- Deliveries tab Wednesday option
-- Order cutoff logic for Tuesday 5pm EAT
-
-### 15. Payment flow rework (after item 13)
-
-Update order workflow to reflect real business model:
-
+Properly reflect real business:
 ```
 NEW → CONFIRMED → PAYMENT REQUESTED → PAID → DISPATCHED → DELIVERED
 ```
+Add payment_requested to order_status values.
+M-Pesa captured at paid not delivered.
+Dispatch only available after paid.
+Pairs with STK Push (item 12).
 
-- Add payment_requested to valid order_status values
-- M-Pesa code captured when marking as paid not delivered
-- Dispatch button only available after payment confirmed
-- Pairs with M-Pesa STK Push (item 12) for full automation
+### 16. Reports / Business intelligence — `/admin/reports`
+
+**High priority strategic build.** Mali needs to understand her business
+over time, not just manage the current week. This is what separates an
+operational tool from a business tool.
+
+Add to AdminNav after Payments.
+
+NOTE: Section 1 (dish performance) requires dish_name snapshot (Issue 2)
+to be accurate. Build the page but note the data limitation until fixed.
+
+**Date range selector** — from/to delivery_date.
+Presets: This week, Last week, This month, Last month, Last 3 months, All time.
+
+**Section 1 — Dish performance**
+Rank all dishes by units sold in date range.
+Show: dish_name (from order_items.dish_name with fallback to menu_items.name),
+total portions sold, vegetarian count, meat count, revenue generated.
+Sort by: units (default), revenue, vegetarian ratio.
+Filter by: cycle_type (weekend / midweek / all).
+This answers: what is my best selling dish, what do customers prefer.
+
+**Section 2 — Revenue by delivery date**
+Table: delivery_date, day of week, cycle_type, order count, total revenue,
+paid revenue, unpaid revenue.
+Ordered by date descending.
+This answers: how did each week perform, which was best.
+
+**Section 3 — Monthly summary**
+Group by month: order count, revenue, unique customers, new customers,
+average order value.
+Month on month comparison as % change.
+This answers: is the business growing month by month.
+
+**Section 4 — Revenue by zone**
+Total revenue per zone in date range with order count and average order value.
+This answers: which zones are most valuable, where to focus delivery expansion.
+
+**Section 5 — Protein upgrade performance**
+Which upgrades (beef, chicken, halloumi etc) are ordered most.
+Count, revenue, attach rate (% of orders with an upgrade).
+This answers: are upgrades worth promoting, which is most popular.
+
+**Section 6 — Repeat customers**
+Total unique customers (by phone).
+Customers with 2+ orders: count and % of total customer base.
+Top 10 by order count: name, phone, orders, total spent, last order date.
+This answers: how loyal is the customer base, who are the VIPs.
+
+**Section 7 — Weekend vs midweek comparison**
+Side by side: order count, revenue, average order value per cycle.
+Tracks Wednesday pilot growth over time.
+This answers: is midweek worth continuing, is it growing.
+
+**Implementation:**
+All queries use createAdminClient().
+All data from orders, order_items, order_item_addons, order_specials.
+No new tables required.
+All styling inline style={{}} — no Tailwind.
+
+### 17. Menu history archive (FUTURE PHASE)
+
+Once dish_name snapshot is live, past menus can be reconstructed from
+order_items.dish_name grouped by delivery_date. No new tables needed.
+Read-only archive showing what was served each week.
 
 ---
 
 ## Real-world context
 
-The developer placed a real order with Mali's Meals via Google Form to understand the actual customer and delivery experience.
+The developer placed a real order via Google Form to understand the
+actual customer and delivery experience.
 
 Key observations:
-- Payment is collected BEFORE dispatch — Godrick messages each customer on WhatsApp/iMessage with the bill and his personal M-Pesa number. Customer pays, then rider dispatches.
-- No order confirmation is sent by the current system — customer has no paper trail. This caused a dispute over what was ordered.
-- The Google Form is the current ordering system — this web app replaces it.
+- Payment is BEFORE dispatch — Godrick messages each customer on
+  WhatsApp/iMessage with the bill and his personal number 0708470580.
+  Customer pays, then rider dispatches.
+- No confirmation existed before this app — customer had no paper trail.
+  A dispute occurred over what was ordered (chicken that may not have
+  been selected). This is why order confirmation email is critical.
+- Google Form is the current system — this app replaces it.
 - Mali uses WhatsApp heavily for customer and rider communication.
-- Riders cover specific zones — assignment not tracked in system yet, future phase.
-- Mali is piloting Wednesday delivery from 6 May 2026 with a potentially different menu to the weekend cycle.
+- Riders cover specific zones — assignment not tracked in system.
+- Mali is piloting Wednesday delivery from 6 May 2026.
+- Wednesday menu is completely different from weekend menu.
+- Weekend: 4 mains, 4 salads, optional chef's special.
+- Midweek: variable — currently 2 mains, 3 salads, no chef's special.
 
 ---
 
@@ -789,10 +902,11 @@ Key observations:
 ```
 NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
-SUPABASE_SERVICE_ROLE_KEY
+SUPABASE_SERVICE_ROLE_KEY      ← server-side only, never expose to browser
 RESEND_API_KEY
-ADMIN_PASSWORD
-MALI_PHONE
+ADMIN_PASSWORD                 ← deprecated, remove after Supabase Auth confirmed
+MALI_PHONE                     ← +254708470580
+WHATSAPP_GROUP_LINK            ← https://chat.whatsapp.com/H9LnTAtoJ0w9uJAeNmQ0i7?mode=gi_t
 ```
 
 ### Local `.env.local`
@@ -800,45 +914,68 @@ MALI_PHONE
 ```
 NEXT_PUBLIC_SUPABASE_URL=https://ouolrgndrqsbjkopsdso.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<from Supabase dashboard>
-SUPABASE_SERVICE_ROLE_KEY=<from Supabase dashboard — never commit this>
+SUPABASE_SERVICE_ROLE_KEY=<from Supabase dashboard — never commit>
 RESEND_API_KEY=<from resend.com>
-ADMIN_PASSWORD=<deprecated — remove after Supabase Auth confirmed in production>
+ADMIN_PASSWORD=<deprecated>
 MALI_PHONE=+254708470580
+WHATSAPP_GROUP_LINK=https://chat.whatsapp.com/H9LnTAtoJ0w9uJAeNmQ0i7?mode=gi_t
 ```
 
 ---
 
 ## How to start a new session
 
-### Claude Code (for building)
+### Windows terminal startup
+
+```powershell
+Remove-Item -Recurse -Force .next; npm run dev
+```
+
+Wait for `✓ Ready on http://localhost:3000`. Then open a SECOND terminal
+with the + button for Claude Code and git commands. Never type commands
+in the terminal running npm run dev.
+
+If styling disappears or "Cannot find module" error appears:
+Ctrl+C to stop → run startup command again → Ctrl+Shift+R to hard refresh browser.
+
+### Claude Code
 
 ```bash
 cd C:\Users\user\OneDrive\Documents\mali-meals
 claude
 ```
 
-Say: "Read the HANDOFF.md file in this project. Then I want to work on [specific feature]."
+### Codex (for complex multi-file architectural tasks)
 
-### New chat window (for planning and prompts)
+Connect to GitHub repo akigera10/mali-meals. Read HANDOFF.md first.
+Codex creates a branch, opens a PR. Review before merging.
+Best used for: menu page architectural fix, dish_name snapshot, reports page.
 
-Paste this entire document and say what you want to work on.
+---
 
-### Key rules to remind any AI before touching code
+## Key rules — every AI must read before touching code
 
-1. All styling must use inline `style={}` with CSS custom properties — no Tailwind classes in components ever
-2. Check existing files like `app/components/MenuClient.tsx` for the styling pattern
+1. All styling must use inline `style={}` with CSS custom properties — no Tailwind ever
+2. CRITICAL: NEVER store styles in variables, state, or computed functions. Static object literals on JSX elements ONLY. Example of WRONG: `const cardStyle = {...}` then `<div style={cardStyle}>`. Example of RIGHT: `<div style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)' }}>`.
 3. Do not remove `typescript.ignoreBuildErrors: true` from `next.config.mjs`
-4. The variant column on order_items is 'vegetarian' or 'meat' ONLY. meat_type is a separate column — 'beef', 'chicken', or null. Always display both together when showing order items.
-5. Chef's special items use the specials table and order_specials table — never menu_items or order_items
-6. Cart items with `special:` prefix are chef's specials — always display in their own section
-7. Payment is collected BEFORE dispatch in the real business. Do not change the payment flow without explicit instruction.
-8. Order status values: 'new', 'confirmed', 'dispatched', 'delivered', 'cancelled' — never use 'pending' or 'out_for_delivery'
+4. variant on order_items is 'vegetarian' or 'meat' ONLY. meat_type is a separate column — 'beef', 'chicken', or null. Always display both together.
+5. Chef's special uses specials table and order_specials table — never menu_items or order_items
+6. Cart items with `special:` prefix are chef's specials — always in their own section
+7. Payment is BEFORE dispatch in the real business — do not change payment flow without explicit instruction
+8. Order status values: 'new', 'confirmed', 'dispatched', 'delivered', 'cancelled' — never 'pending' or 'out_for_delivery'
 9. Email sender is orders@malismeals.com — never revert to onboarding@resend.dev
-10. Never hardcode email addresses or phone numbers — always use environment variables
-11. Admin operations must use `createAdminClient()` from `lib/supabase.ts` — never use `createServerClient()` or the browser client for admin data operations
-12. Public operations (customer menu, checkout) must use `createServerClient()` with anon key — never `createAdminClient()`
-13. Order ref generation is server-side only via `/api/generate-order-ref` — never generate client-side or query orders table from browser
-14. All time and cutoff calculations must use Africa/Nairobi timezone (EAT, UTC+3) — never server timezone or raw UTC
+10. Never hardcode email addresses, phone numbers, or URLs — always environment variables
+11. Admin operations must use `createAdminClient()` — never createServerClient() or browser client for admin data
+12. Public operations (customer menu, checkout) must use `createServerClient()` with anon key — never createAdminClient()
+13. Order ref generation is server-side only via `/api/generate-order-ref` — MAX-based, never created_at
+14. All time and cutoff calculations must use Africa/Nairobi timezone (EAT, UTC+3) — never server timezone or UTC
 15. delivery_day valid values: 'sunday', 'monday', 'wednesday'
 16. cycle_type valid values: 'weekend', 'midweek'
-17. The settings table controls active cycle and cutoffs — read it server-side on the customer menu page to determine what to show
+17. settings table controls active cycle and cutoffs — read server-side on customer menu page
+18. dish_name on order_items is NOT yet implemented — when implementing, populate at checkout and use everywhere menu_items.name is currently displayed for order items
+19. menu_items.name is NOT a reliable historical record — it changes weekly. Never use it for historical order analysis once dish_name snapshot is live
+20. No currency prefix in displayed text anywhere — numbers only, never "Ksh"
+21. "With meat" is incorrect — use "with protein" in all category headings and displayed text
+22. The menu page has a persistent styling bug (Critical Issue 1) — the only correct fix is the server/client component split described in that issue. Do not attempt to fix it any other way.
+23. The order ref generator uses MAX across all order_refs — never sort by created_at as that caused duplicate ref bugs
+24. specials must check is_active = true before displaying on customer menu — do not show inactive specials

@@ -84,7 +84,7 @@ function buildBadges(dish: MenuItem): BadgeSpec[] {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function fmt(n: number) {
-  return `Ksh\u00a0${n.toLocaleString('en-KE')}`
+  return n.toLocaleString('en-KE')
 }
 
 function meatLabel(type: string | null): string {

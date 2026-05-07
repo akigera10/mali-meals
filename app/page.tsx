@@ -22,6 +22,7 @@ export default async function HomePage() {
       .from('specials')
       .select('id, name, description, price, is_sold_out')
       .eq('is_active', true)
+      .eq('is_sold_out', false)
       .order('created_at'),
     (supabase.from('settings') as any)
       .select('active_cycle, weekend_cutoff, midweek_cutoff, next_sunday_date, next_monday_date, next_wednesday_date, whatsapp_group_link')

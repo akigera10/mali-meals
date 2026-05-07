@@ -1,5 +1,5 @@
 import { createAdminClient } from '@/lib/supabase'
-import MenuManagementClient from './MenuManagementClient'
+import MenuClient from './MenuClient'
 
 export const revalidate = 0
 
@@ -27,7 +27,7 @@ export default async function AdminMenuPage() {
   }
 
   return (
-    <MenuManagementClient
+    <MenuClient
       initialMenuItems={menuItems || []}
       initialAddons={addons || []}
       initialSpecials={specials || []}

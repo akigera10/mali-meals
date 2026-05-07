@@ -44,24 +44,26 @@ type Special = {
 type SaveState = 'idle' | 'saving' | 'saved' | 'error'
 
 const ALLERGEN_OPTIONS = [
-  { key: 'dairy', label: 'D' },
-  { key: 'nuts', label: 'N' },
-  { key: 'soy', label: 'S' },
+  { key: 'dairy',   label: 'D' },
+  { key: 'nuts',    label: 'N' },
+  { key: 'soy',     label: 'S' },
   { key: 'coconut', label: 'C' },
 ]
 
 const MEAT_OPTIONS = [
-  { value: null as string | null, label: 'None' },
-  { value: 'beef' as string | null, label: 'Beef' },
-  { value: 'chicken' as string | null, label: 'Chicken' },
-  { value: 'both' as string | null, label: 'Both' },
+  { value: null as string | null,       label: 'None' },
+  { value: 'beef' as string | null,     label: 'Beef' },
+  { value: 'chicken' as string | null,  label: 'Chicken' },
+  { value: 'both' as string | null,     label: 'Both' },
 ]
 
 const FLAG_OPTIONS = [
-  { key: 'is_freezer_friendly', emoji: '❄', title: 'Freezer-friendly' },
-  { key: 'is_spicy', emoji: '🌶', title: 'Spicy' },
-  { key: 'is_family_friendly', emoji: '👨‍👩‍👧', title: 'Family-friendly' },
+  { key: 'is_freezer_friendly', emoji: '❄',      title: 'Freezer-friendly' },
+  { key: 'is_spicy',            emoji: '🌶',      title: 'Spicy' },
+  { key: 'is_family_friendly',  emoji: '👨‍👩‍👧', title: 'Family-friendly' },
 ]
+
+// ─── DishCard ──────────────────────────────────────────────────────────────────
 
 function DishCard({
   dish,
@@ -79,7 +81,6 @@ function DishCard({
   return (
     <div style={{ backgroundColor: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', padding: '20px' }}>
 
-      {/* Name */}
       <input
         type="text"
         value={dish.name}
@@ -88,7 +89,6 @@ function DishCard({
         style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-strong)', backgroundColor: 'var(--surface-raised)', fontFamily: 'var(--font-fraunces)', fontSize: '17px', color: 'var(--text-primary)', outline: 'none', boxSizing: 'border-box', marginBottom: '10px' }}
       />
 
-      {/* Description */}
       <textarea
         value={dish.description || ''}
         onChange={e => onUpdate({ description: e.target.value })}
@@ -180,7 +180,7 @@ function DishCard({
         </div>
       </div>
 
-      {/* Bottom row: show on menu + sold out + save */}
+      {/* Bottom row */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '16px', borderTop: '1px solid var(--border)', gap: '12px', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
@@ -223,6 +223,8 @@ function DishCard({
     </div>
   )
 }
+
+// ─── AddonRow ──────────────────────────────────────────────────────────────────
 
 function AddonRow({
   addon,
@@ -282,6 +284,8 @@ function AddonRow({
     </div>
   )
 }
+
+// ─── SpecialCard ───────────────────────────────────────────────────────────────
 
 function SpecialCard({
   special,
@@ -352,7 +356,9 @@ function SpecialCard({
   )
 }
 
-export default function MenuManagementClient({
+// ─── Main client component ─────────────────────────────────────────────────────
+
+export default function MenuClient({
   initialMenuItems,
   initialAddons,
   initialSpecials,
@@ -363,11 +369,13 @@ export default function MenuManagementClient({
   initialSpecials: Special[]
   activeCycle: string | null
 }) {
-  const [dishes, setDishes] = useState<MenuItem[]>(initialMenuItems)
-  const [addons, setAddons] = useState<Addon[]>(initialAddons)
-  const [specials, setSpecials] = useState<Special[]>(initialSpecials)
+  const [dishes,     setDishes]     = useState<MenuItem[]>(initialMenuItems)
+  const [addons,     setAddons]     = useState<Addon[]>(initialAddons)
+  const [specials,   setSpecials]   = useState<Special[]>(initialSpecials)
   const [saveStates, setSaveStates] = useState<Record<string, SaveState>>({})
-  const [activeTab, setActiveTab] = useState<'weekend' | 'midweek' | 'addons'>('weekend')
+  const [activeTab,  setActiveTab]  = useState<'weekend' | 'midweek' | 'addons'>('weekend')
+
+  // ── State updaters ───────────────────────────────────────────────────────────
 
   function updateDish(id: string, changes: Partial<MenuItem>) {
     setDishes(prev => prev.map(d => d.id === id ? { ...d, ...changes } : d))
@@ -393,22 +401,24 @@ export default function MenuManagementClient({
     setSaveStates(s => ({ ...s, [id]: state }))
   }
 
+  // ── Save handlers ────────────────────────────────────────────────────────────
+
   async function saveDish(id: string) {
     setSave(id, 'saving')
     const dish = dishes.find(d => d.id === id)!
     const { error } = await (supabase.from('menu_items') as any).update({
-      name: dish.name,
-      description: dish.description,
-      meat_upgrade_type: dish.meat_upgrade_type,
+      name:               dish.name,
+      description:        dish.description,
+      meat_upgrade_type:  dish.meat_upgrade_type,
       meat_upgrade_price: dish.meat_upgrade_type ? 300 : null,
-      allergens: dish.allergens,
+      allergens:          dish.allergens,
       is_freezer_friendly: dish.is_freezer_friendly,
-      is_spicy: dish.is_spicy,
+      is_spicy:           dish.is_spicy,
       is_family_friendly: dish.is_family_friendly,
-      is_active: dish.is_active,
-      is_sold_out: dish.is_sold_out,
-      available_weekend: dish.available_weekend,
-      available_midweek: dish.available_midweek,
+      is_active:          dish.is_active,
+      is_sold_out:        dish.is_sold_out,
+      available_weekend:  dish.available_weekend,
+      available_midweek:  dish.available_midweek,
     }).eq('id', id)
     if (error) {
       setSave(id, 'error')
@@ -431,10 +441,10 @@ export default function MenuManagementClient({
     setSave(id, 'saving')
     const special = specials.find(s => s.id === id)!
     const { error } = await (supabase.from('specials') as any).update({
-      name: special.name,
+      name:        special.name,
       description: special.description,
-      price: special.price,
-      is_active: special.is_active,
+      price:       special.price,
+      is_active:   special.is_active,
       is_sold_out: special.is_sold_out,
     }).eq('id', id)
     if (error) {
@@ -449,9 +459,9 @@ export default function MenuManagementClient({
     setSave(id, 'saving')
     const addon = addons.find(a => a.id === id)!
     const { error } = await (supabase.from('protein_addons') as any).update({
-      name: addon.name,
-      price: addon.price,
-      is_active: addon.is_active,
+      name:        addon.name,
+      price:       addon.price,
+      is_active:   addon.is_active,
       is_sold_out: addon.is_sold_out,
     }).eq('id', id)
     if (error) {
@@ -462,10 +472,14 @@ export default function MenuManagementClient({
     }
   }
 
-  const weekendMains  = dishes.filter(d => d.available_weekend && d.category === 'mains').sort((a, b) => a.sort_order - b.sort_order)
-  const weekendSalads = dishes.filter(d => d.available_weekend && d.category === 'salads').sort((a, b) => a.sort_order - b.sort_order)
-  const midweekMains  = dishes.filter(d => d.available_midweek && d.category === 'mains').sort((a, b) => a.sort_order - b.sort_order)
-  const midweekSalads = dishes.filter(d => d.available_midweek && d.category === 'salads').sort((a, b) => a.sort_order - b.sort_order)
+  // ── Derived data ─────────────────────────────────────────────────────────────
+
+  const weekendMains  = dishes.filter(d => d.available_weekend  && d.category === 'mains').sort((a, b) => a.sort_order - b.sort_order)
+  const weekendSalads = dishes.filter(d => d.available_weekend  && d.category === 'salads').sort((a, b) => a.sort_order - b.sort_order)
+  const midweekMains  = dishes.filter(d => d.available_midweek  && d.category === 'mains').sort((a, b) => a.sort_order - b.sort_order)
+  const midweekSalads = dishes.filter(d => d.available_midweek  && d.category === 'salads').sort((a, b) => a.sort_order - b.sort_order)
+
+  // ── Render helpers ───────────────────────────────────────────────────────────
 
   function renderDishList(list: MenuItem[]) {
     return (
@@ -512,6 +526,8 @@ export default function MenuManagementClient({
       </div>
     )
   }
+
+  // ── JSX ──────────────────────────────────────────────────────────────────────
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--surface-base)', fontFamily: 'var(--font-inter)' }}>

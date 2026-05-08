@@ -4,8 +4,8 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Don't protect the login page itself
-  if (pathname === '/admin/login') return NextResponse.next()
+  // Don't protect auth entry pages themselves
+  if (pathname === '/admin/login' || pathname === '/admin/reset-password') return NextResponse.next()
 
   // Start with a passthrough response — may be replaced if session needs refreshing
   let response = NextResponse.next({

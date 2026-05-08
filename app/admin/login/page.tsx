@@ -15,6 +15,8 @@ export default function AdminLogin() {
   const [error, setError] = useState('')
   const [resetMessage, setResetMessage] = useState('')
   const [loading, setLoading] = useState(false)
+  const [resetLoading, setResetLoading] = useState(false)
+  const [resetCooldownUntil, setResetCooldownUntil] = useState(0)
 
   async function handleSubmit() {
     if (!email || !password) return
@@ -31,12 +33,26 @@ export default function AdminLogin() {
 
   async function handleForgotPassword() {
     setResetMessage('')
-    if (!email) {
+    const trimmedEmail = email.trim().toLowerCase()
+    const now = Date.now()
+    if (!trimmedEmail) {
       setResetMessage('Enter your email address first.')
       return
     }
-    await supabase.auth.resetPasswordForEmail(email)
-    setResetMessage(`Password reset email sent to ${email}.`)
+    if (now < resetCooldownUntil) {
+      setResetMessage('If this email has admin access, a reset link has been sent.')
+      return
+    }
+
+    setResetLoading(true)
+    setResetCooldownUntil(now + 60000)
+    if (trimmedEmail === 'orders@malismeals.com') {
+      await supabase.auth.resetPasswordForEmail(trimmedEmail, {
+        redirectTo: `${window.location.origin}/admin/reset-password`,
+      })
+    }
+    setResetLoading(false)
+    setResetMessage('If this email has admin access, a reset link has been sent.')
   }
 
   return (
@@ -174,17 +190,18 @@ export default function AdminLogin() {
           <button
             type="button"
             onClick={handleForgotPassword}
+            disabled={resetLoading}
             style={{
               background: 'none',
               border: 'none',
               padding: '0',
               fontSize: '13px',
               color: 'var(--text-tertiary)',
-              cursor: 'pointer',
+              cursor: resetLoading ? 'default' : 'pointer',
               textDecoration: 'none',
             }}
           >
-            Forgot password?
+            {resetLoading ? 'Sending reset link...' : 'Forgot password?'}
           </button>
           {resetMessage && (
             <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '4px' }}>

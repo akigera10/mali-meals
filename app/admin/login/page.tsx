@@ -99,7 +99,11 @@ export default function AdminLogin() {
         <input
           type="email"
           value={email}
-          onChange={e => setEmail(e.target.value)}
+          onChange={e => {
+            setEmail(e.target.value)
+            setResetMessage('')
+            setError('')
+          }}
           onKeyDown={e => e.key === 'Enter' && handleSubmit()}
           autoComplete="email"
           style={{
@@ -129,7 +133,10 @@ export default function AdminLogin() {
           <input
             type={showPassword ? 'text' : 'password'}
             value={password}
-            onChange={e => setPassword(e.target.value)}
+            onChange={e => {
+              setPassword(e.target.value)
+              setError('')
+            }}
             onKeyDown={e => e.key === 'Enter' && handleSubmit()}
             autoComplete="current-password"
             style={{

@@ -9,7 +9,7 @@
 | GitHub | https://github.com/akigera10/mali-meals |
 | Supabase project ID | ouolrgndrqsbjkopsdso |
 | Supabase region | eu-west-2 (London) |
-| Local dev | `npm run dev` → http://localhost:3000 (or next available port) |
+| Local dev | `npm run dev` → http://localhost:3000 (or next available port shown in terminal) |
 | Deploy | `git push` to main → Vercel auto-deploys in ~60 seconds |
 | Windows terminal startup | `Remove-Item -Recurse -Force .next; npm run dev` |
 
@@ -21,7 +21,7 @@
 - **Language:** TypeScript
 - **Styling:** Inline `style={}` props using CSS custom properties — NO Tailwind classes in components ever
 - **Database:** Supabase (`@supabase/supabase-js` v2)
-- **Email:** Resend (`resend` package) — domain verified, sending from orders@malismeals.com
+- **Email:** Resend (`resend` package) for order/dispatch emails; Supabase Auth email uses Resend SMTP
 - **Deployment:** Vercel
 
 ---
@@ -33,6 +33,7 @@
 - RLS is fully enabled on all tables — see Security section for policy details
 - `revalidate = 0` on admin pages — forces fresh data on every load
 - Admin auth uses Supabase Auth — not cookie-based password gate
+- Admin password reset uses Supabase Auth recovery links, delivered through Resend SMTP
 - All admin Supabase operations use `createAdminClient()` with service role key
 - All public Supabase operations use `createServerClient()` with anon key
 
@@ -500,14 +501,15 @@ Built and working. See settings section above.
 | Order confirmation email — payment instruction, no wrong reference note | ✅ Working |
 | Dispatch notification email | ✅ Working |
 | Email sender — orders@malismeals.com | ✅ Working |
+| Supabase Auth reset email — no-reply@malismeals.com via Resend SMTP | ✅ Working |
 | Domain — www.malismeals.com live | ✅ Working |
-| Admin login — Supabase Auth, sign out, forgot password | ✅ Working |
+| Admin login — Supabase Auth, sign out, password reset flow | ✅ Working |
 | Admin orders list with delivery date filter | ✅ Working |
 | Order detail — meat type, Wednesday display, Mark paid | ✅ Working |
 | Admin menu — tabbed Weekend/Midweek/Protein Add-ons | ✅ Working |
 | Admin menu — allergen legend | ✅ Working |
-| Admin menu — active cycle indicator | ⚠️ Working but inaccurate after cutoff |
-| Admin menu — card styling | ❌ BROKEN — disappears on tab switch |
+| Admin menu — active cycle indicator | ✅ Working |
+| Admin menu — card styling | ✅ Working |
 | Kitchen tab — delivery date filter | ✅ Working |
 | Deliveries tab — all orders regardless of payment | ✅ Working |
 | Payments page — paid + outstanding sections | ✅ Working |
@@ -519,9 +521,9 @@ Built and working. See settings section above.
 
 ---
 
-## Known issues — priority order
+## Historical known issues — fixed on PR #1
 
-### CRITICAL 1 — Menu page styling disappears (architectural bug)
+### FIXED — Menu page styling disappeared (architectural bug)
 
 All card styling on app/admin/menu/page.tsx disappears whenever the user
 switches tabs, refreshes the page, or saves a dish. This has persisted
@@ -545,9 +547,10 @@ In MenuClient.tsx:
 - Tab switching via useState only — never triggers server re-fetch
 - Save actions update local state immediately after Supabase confirms
 
-This is the most important unfixed bug. Fix before any other menu work.
+Fixed by splitting `/admin/menu/page.tsx` into server-only data loading and
+`/admin/menu/MenuClient.tsx` for all rendering, tab state, and save actions.
 
-### CRITICAL 2 — dish_name snapshot missing (data integrity time bomb)
+### FIXED — dish_name snapshot missing (data integrity time bomb)
 
 Every week Mali overwrites menu_items.name with new dish names. Every historical
 order that references a menu_item_id now shows the CURRENT dish name, not what
@@ -895,6 +898,26 @@ Key observations:
 
 ---
 
+## Admin password reset flow
+
+Admin password reset uses Supabase Auth, not a custom password table and not
+the deprecated `ADMIN_PASSWORD` environment variable.
+
+- `/admin/login` has two modes: sign in and reset request.
+- Reset request mode shows only email + `Send reset link`; it does not show a password field.
+- Reset emails are requested through Supabase Auth with redirect to `/admin/reset-password`.
+- `/admin/reset-password` consumes Supabase recovery tokens and calls `supabase.auth.updateUser({ password })`.
+- Supabase Auth SMTP is configured to send through Resend.
+- Auth reset sender is `Mali's Meals <no-reply@malismeals.com>`.
+- Admin recipient/login email is `orders@malismeals.com`.
+- Do not build a custom app-sent Resend password reset unless Supabase Auth SMTP becomes impossible; Supabase should own recovery tokens.
+
+Important distinction:
+- Order and dispatch emails are sent by app API routes through the Resend package.
+- Password reset emails are sent by Supabase Auth through Resend SMTP.
+
+---
+
 ## Environment variables
 
 ### Vercel (already set)
@@ -904,7 +927,7 @@ NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
 SUPABASE_SERVICE_ROLE_KEY      ← server-side only, never expose to browser
 RESEND_API_KEY
-ADMIN_PASSWORD                 ← deprecated, remove after Supabase Auth confirmed
+ADMIN_PASSWORD                 ← deprecated; Supabase Auth now controls admin login/password reset
 MALI_PHONE                     ← +254708470580
 WHATSAPP_GROUP_LINK            ← https://chat.whatsapp.com/H9LnTAtoJ0w9uJAeNmQ0i7?mode=gi_t
 ```
@@ -916,7 +939,7 @@ NEXT_PUBLIC_SUPABASE_URL=https://ouolrgndrqsbjkopsdso.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<from Supabase dashboard>
 SUPABASE_SERVICE_ROLE_KEY=<from Supabase dashboard — never commit>
 RESEND_API_KEY=<from resend.com>
-ADMIN_PASSWORD=<deprecated>
+ADMIN_PASSWORD=<deprecated; no longer used by admin login>
 MALI_PHONE=+254708470580
 WHATSAPP_GROUP_LINK=https://chat.whatsapp.com/H9LnTAtoJ0w9uJAeNmQ0i7?mode=gi_t
 ```
@@ -937,6 +960,14 @@ in the terminal running npm run dev.
 
 If styling disappears or "Cannot find module" error appears:
 Ctrl+C to stop → run startup command again → Ctrl+Shift+R to hard refresh browser.
+
+Dev/cache note: `npm run build` rewrites `.next`. If a dev server is still
+running while `.next` is rewritten, the browser can request stale CSS asset
+paths such as `/_next/static/css/app/layout.css` and receive a 404. The page
+then renders as plain black text on white because `app/globals.css` did not
+load and CSS variables like `--surface-base` resolve to nothing. Stop the dev
+server, remove `.next`, restart `npm run dev`, use the port printed in the
+terminal, and hard refresh.
 
 ### Claude Code
 
@@ -963,7 +994,7 @@ Best used for: menu page architectural fix, dish_name snapshot, reports page.
 6. Cart items with `special:` prefix are chef's specials — always in their own section
 7. Payment is BEFORE dispatch in the real business — do not change payment flow without explicit instruction
 8. Order status values: 'new', 'confirmed', 'dispatched', 'delivered', 'cancelled' — never 'pending' or 'out_for_delivery'
-9. Email sender is orders@malismeals.com — never revert to onboarding@resend.dev
+9. Order/dispatch email sender is orders@malismeals.com; Supabase Auth reset sender is no-reply@malismeals.com. Never revert either to onboarding@resend.dev
 10. Never hardcode email addresses, phone numbers, or URLs — always environment variables
 11. Admin operations must use `createAdminClient()` — never createServerClient() or browser client for admin data
 12. Public operations (customer menu, checkout) must use `createServerClient()` with anon key — never createAdminClient()
@@ -972,10 +1003,10 @@ Best used for: menu page architectural fix, dish_name snapshot, reports page.
 15. delivery_day valid values: 'sunday', 'monday', 'wednesday'
 16. cycle_type valid values: 'weekend', 'midweek'
 17. settings table controls active cycle and cutoffs — read server-side on customer menu page
-18. dish_name on order_items is NOT yet implemented — when implementing, populate at checkout and use everywhere menu_items.name is currently displayed for order items
+18. dish_name on order_items and special_name on order_specials are implemented — populate at checkout and use snapshot values for historical displays
 19. menu_items.name is NOT a reliable historical record — it changes weekly. Never use it for historical order analysis once dish_name snapshot is live
 20. No currency prefix in displayed text anywhere — numbers only, never "Ksh"
 21. "With meat" is incorrect — use "with protein" in all category headings and displayed text
-22. The menu page has a persistent styling bug (Critical Issue 1) — the only correct fix is the server/client component split described in that issue. Do not attempt to fix it any other way.
+22. The menu page styling bug was fixed with the server/client component split. Preserve that architecture.
 23. The order ref generator uses MAX across all order_refs — never sort by created_at as that caused duplicate ref bugs
 24. specials must check is_active = true before displaying on customer menu — do not show inactive specials

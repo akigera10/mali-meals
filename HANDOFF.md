@@ -969,6 +969,55 @@ load and CSS variables like `--surface-base` resolve to nothing. Stop the dev
 server, remove `.next`, restart `npm run dev`, use the port printed in the
 terminal, and hard refresh.
 
+### Playwright browser verification
+
+Playwright is used for real browser QA on this project. It should be used when code changes affect user-visible flows, auth, admin interactions, styling, or Supabase redirects.
+
+Check whether Playwright is installed before reinstalling:
+
+```powershell
+npm.cmd list @playwright/test
+```
+
+If missing, install it:
+
+```powershell
+npm.cmd install --save-dev @playwright/test
+npx.cmd playwright install chromium
+```
+
+Use Playwright for:
+
+Admin login and password reset flow
+Supabase Auth redirects and protected /admin redirects
+Admin menu tab switching
+Save actions on admin pages
+Customer menu visibility, especially specials and sold-out/active states
+Styling/rendering checks
+Hard refresh/cache checks after dev-server issues
+
+On Windows/Codex, Playwright or Next.js build may need escalation because Chromium or Next workers can fail with:
+
+spawn EPERM
+
+Treat spawn EPERM as a local sandbox/permission issue, not automatically as an app bug.
+
+Always test against the currently running localhost port printed by npm run dev. Do not assume 3000, 3001, or 3002 without checking.
+
+If styling disappears and pages render like plain black text on white, suspect a stale .next or dev-server CSS asset issue. Stop the dev server, remove .next, restart dev, then hard refresh:
+
+```powershell
+Ctrl+C
+Remove-Item -Recurse -Force .next
+npm.cmd run dev
+```
+
+For the new session, just tell it:
+
+```text
+Please add the Playwright browser verification section to HANDOFF.md. Then commit and push it to the current PR branch. Read HANDOFF.md first and preserve the existing project rules.
+```
+
 ### Claude Code
 
 ```bash

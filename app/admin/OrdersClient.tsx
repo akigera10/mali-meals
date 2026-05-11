@@ -1,5 +1,5 @@
 'use client'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 
 type Order = {
@@ -24,33 +24,60 @@ type Order = {
   payment_status: string
   order_status: string
   created_at: string
+  updated_at?: string | null
+  paid_at?: string | null
 }
+
+type Settings = {
+  active_cycle?: string | null
+  weekend_cutoff?: string | null
+  midweek_cutoff?: string | null
+  next_sunday_date?: string | null
+  next_monday_date?: string | null
+  next_wednesday_date?: string | null
+} | null
+
+type Bucket = 'all' | 'new' | 'confirmed' | 'paid' | 'out' | 'delivered' | 'cancelled'
+
+const tabs: { key: Bucket; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'new', label: 'New' },
+  { key: 'confirmed', label: 'Confirmed' },
+  { key: 'paid', label: 'Paid' },
+  { key: 'out', label: 'Out for delivery' },
+  { key: 'delivered', label: 'Delivered' },
+  { key: 'cancelled', label: 'Cancelled' },
+]
 
 function fmt(n: number) {
-  return n.toLocaleString()
+  return n.toLocaleString('en-KE')
 }
 
-function deliveryLabel(order: Order): string {
-  const day = order.delivery_day === 'sunday' ? 'Sunday' : order.delivery_day === 'wednesday' ? 'Wednesday' : 'Monday'
-  const window = order.delivery_window
-  if (window === 'by_5pm') return `${day} · by 5pm`
-  if (window === 'free_5_10pm') return `${day} · 5-10pm (free)`
-  if (window) return `${day} · ${window.replace(/^(\d+)_(\d+pm)$/, '$1-$2')}`
-  if (order.delivery_slot) return `${day} · ${order.delivery_slot.replace(/^(\d+)_(\d+pm)$/, '$1-$2')}`
-  return day
+function todayISO() {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Africa/Nairobi',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date())
+
+  const year = parts.find(part => part.type === 'year')?.value
+  const month = parts.find(part => part.type === 'month')?.value
+  const day = parts.find(part => part.type === 'day')?.value
+  return `${year}-${month}-${day}`
 }
 
-function deliveryDate(order: Order): string {
-  if (!order.delivery_date) return deliveryLabel(order)
-  return new Date(`${order.delivery_date}T12:00:00`).toLocaleDateString('en-GB', {
+function shortDate(date: string) {
+  return new Date(`${date}T12:00:00`).toLocaleDateString('en-GB', {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
   })
 }
 
-function createdAt(order: Order): string {
-  return new Date(order.created_at).toLocaleDateString('en-GB', {
+function timestamp(value: string | null | undefined) {
+  if (!value) return ''
+  return new Date(value).toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'short',
     hour: '2-digit',
@@ -58,366 +85,509 @@ function createdAt(order: Order): string {
   })
 }
 
-function totalAmount(arr: Order[]) {
-  return arr.reduce((sum, order) => sum + order.total_amount, 0)
+function deliveryWindow(order: Order) {
+  if (order.delivery_window === 'by_5pm') return 'by 5pm'
+  if (order.delivery_window === 'free_5_10pm') return '5-10pm (free)'
+  if (order.delivery_window) return order.delivery_window.replace(/^(\d+)_(\d+pm)$/, '$1-$2')
+  if (order.delivery_slot) return order.delivery_slot.replace(/^(\d+)_(\d+pm)$/, '$1-$2')
+  return ''
 }
 
-function StatusCard({
+function bucketFor(order: Order): Bucket {
+  if (order.order_status === 'new') return 'new'
+  if (order.order_status === 'confirmed' && order.payment_status === 'unpaid') return 'confirmed'
+  if (order.order_status === 'confirmed' && order.payment_status === 'paid') return 'paid'
+  if (order.order_status === 'dispatched') return 'out'
+  if (order.order_status === 'delivered') return 'delivered'
+  if (order.order_status === 'cancelled') return 'cancelled'
+  return 'all'
+}
+
+function orderTime(order: Order, fallback: 'created' | 'updated') {
+  if (fallback === 'updated') return new Date(order.updated_at ?? order.created_at).getTime()
+  return new Date(order.created_at).getTime()
+}
+
+function countBucket(orders: Order[], bucket: Bucket) {
+  if (bucket === 'all') return orders.length
+  return orders.filter(order => bucketFor(order) === bucket).length
+}
+
+function defaultTab(orders: Order[]): Bucket {
+  return countBucket(orders, 'new') > 0 ? 'new' : 'all'
+}
+
+function filterByTab(orders: Order[], tab: Bucket) {
+  if (tab === 'all') return orders
+  return orders.filter(order => bucketFor(order) === tab)
+}
+
+function sortForTab(orders: Order[], tab: Bucket) {
+  const next = [...orders]
+  if (tab === 'new') return next.sort((a, b) => orderTime(b, 'created') - orderTime(a, 'created'))
+  if (tab === 'confirmed' || tab === 'paid') return next.sort((a, b) => orderTime(a, 'created') - orderTime(b, 'created'))
+  if (tab === 'out') return next.sort((a, b) => orderTime(a, 'updated') - orderTime(b, 'updated'))
+  if (tab === 'delivered' || tab === 'cancelled') return next.sort((a, b) => orderTime(b, 'updated') - orderTime(a, 'updated'))
+  return next
+}
+
+function searchOrders(orders: Order[], search: string) {
+  const term = search.trim().toLowerCase()
+  if (!term) return orders
+  return orders.filter(order =>
+    order.customer_name.toLowerCase().includes(term) ||
+    order.customer_phone.toLowerCase().includes(term) ||
+    order.order_ref.toLowerCase().includes(term)
+  )
+}
+
+function nearestDeliveryDate(dates: string[], selectedDate: string | null) {
+  if (selectedDate) return selectedDate
+  const today = todayISO()
+  return dates.find(date => date >= today) ?? dates[dates.length - 1] ?? null
+}
+
+function visibleDateOptions(dates: string[], selectedDate: string | null) {
+  const activeDate = nearestDeliveryDate(dates, selectedDate)
+  if (!activeDate) return []
+
+  const allDates = Array.from(new Set([...dates, activeDate]))
+    .sort((a, b) => a.localeCompare(b))
+  const past = allDates.filter(date => date < activeDate).slice(-2)
+  const upcoming = allDates.filter(date => date > activeDate).slice(0, 2)
+
+  return [...past, activeDate, ...upcoming]
+}
+
+function cutoffForDate(date: string | null, settings: Settings) {
+  if (!date || !settings) return null
+  if (date === settings.next_wednesday_date) return settings.midweek_cutoff ?? null
+  if (date === settings.next_sunday_date || date === settings.next_monday_date) return settings.weekend_cutoff ?? null
+  return null
+}
+
+function cutoffText(cutoff: string | null) {
+  if (!cutoff) return null
+  return new Date(cutoff).toLocaleDateString('en-GB', { weekday: 'long' })
+}
+
+function isFutureOrToday(date: string | null) {
+  if (!date) return false
+  return date >= todayISO()
+}
+
+function isCutoffOpen(cutoff: string | null) {
+  if (!cutoff) return false
+  return new Date() <= new Date(cutoff)
+}
+
+function OrderBadge({ order }: { order: Order }) {
+  if (order.order_status === 'new') {
+    return (
+      <span style={{ fontFamily: 'var(--font-inter)', fontSize: '12px', fontWeight: 500, padding: '3px 8px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'var(--surface-sunken)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
+        New
+      </span>
+    )
+  }
+
+  if (order.order_status === 'confirmed' && order.payment_status === 'unpaid') {
+    return (
+      <span style={{ fontFamily: 'var(--font-inter)', fontSize: '12px', fontWeight: 500, padding: '3px 8px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'var(--surface-sunken)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
+        Confirmed · Unpaid
+      </span>
+    )
+  }
+
+  if (order.order_status === 'confirmed' && order.payment_status === 'paid') {
+    return (
+      <span style={{ fontFamily: 'var(--font-inter)', fontSize: '12px', fontWeight: 500, padding: '3px 8px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'rgba(63,90,60,0.1)', color: 'var(--accent-forest)', border: '1px solid var(--accent-forest)' }}>
+        Paid · Ready
+      </span>
+    )
+  }
+
+  if (order.order_status === 'dispatched') {
+    return (
+      <span style={{ fontFamily: 'var(--font-inter)', fontSize: '12px', fontWeight: 500, padding: '3px 8px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'var(--brand-gold-soft)', color: 'var(--brand-gold)', border: '1px solid var(--brand-gold)' }}>
+        Out for delivery
+      </span>
+    )
+  }
+
+  if (order.order_status === 'delivered' && order.payment_status === 'paid') {
+    return (
+      <span style={{ fontFamily: 'var(--font-inter)', fontSize: '12px', fontWeight: 500, padding: '3px 8px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'rgba(63,90,60,0.1)', color: 'var(--accent-forest)', border: '1px solid var(--accent-forest)' }}>
+        Delivered · Paid
+      </span>
+    )
+  }
+
+  if (order.order_status === 'delivered' && order.payment_status === 'unpaid') {
+    return (
+      <span style={{ fontFamily: 'var(--font-inter)', fontSize: '12px', fontWeight: 500, padding: '3px 8px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'rgba(181,83,60,0.1)', color: 'var(--accent-terracotta)', border: '1px solid var(--accent-terracotta)' }}>
+        Delivered · Unpaid
+      </span>
+    )
+  }
+
+  return (
+    <span style={{ fontFamily: 'var(--font-inter)', fontSize: '12px', fontWeight: 500, padding: '3px 8px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'var(--surface-sunken)', color: 'var(--text-tertiary)', border: '1px solid var(--border)', opacity: 0.7 }}>
+      Cancelled
+    </span>
+  )
+}
+
+function DatePill({
+  date,
+  active,
+  onClick,
+}: {
+  date: string
+  active: boolean
+  onClick: () => void
+}) {
+  if (active) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        style={{ minHeight: '42px', padding: '0 14px', borderRadius: '8px', border: '1px solid var(--brand-gold)', backgroundColor: 'var(--brand-gold-soft)', color: 'var(--brand-gold)', fontFamily: 'var(--font-inter)', fontSize: '14px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+      >
+        {shortDate(date)}
+      </button>
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{ minHeight: '42px', padding: '0 14px', borderRadius: '8px', border: '1px solid transparent', backgroundColor: 'var(--surface-sunken)', color: 'var(--text-secondary)', fontFamily: 'var(--font-inter)', fontSize: '14px', fontWeight: 400, cursor: 'pointer', whiteSpace: 'nowrap' }}
+  >
+      {shortDate(date)}
+    </button>
+  )
+}
+
+function TabButton({
   label,
   count,
-  total,
   active,
   onClick,
 }: {
   label: string
   count: number
-  total: number | null
   active: boolean
   onClick: () => void
 }) {
+  if (active) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        style={{ padding: '0 0 10px', border: 'none', borderBottom: '2px solid var(--brand-gold)', backgroundColor: 'transparent', color: 'var(--text-primary)', fontFamily: 'var(--font-inter)', fontSize: '14px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+      >
+        {label} ({count})
+      </button>
+    )
+  }
+
   return (
     <button
       type="button"
       onClick={onClick}
-      style={{
-        backgroundColor: active ? 'var(--brand-gold-soft)' : 'var(--surface-raised)',
-        border: active ? '2px solid var(--brand-gold)' : '2px solid var(--border)',
-        borderRadius: '8px',
-        padding: '16px 18px',
-        cursor: 'pointer',
-        textAlign: 'left',
-        fontFamily: 'var(--font-inter)',
-      }}
+      style={{ padding: '0 0 10px', border: 'none', borderBottom: '2px solid transparent', backgroundColor: 'transparent', color: 'var(--text-tertiary)', fontFamily: 'var(--font-inter)', fontSize: '14px', fontWeight: 400, cursor: 'pointer', whiteSpace: 'nowrap' }}
     >
-      <div style={{
-        fontSize: '11px',
-        fontWeight: '600',
-        color: 'var(--text-tertiary)',
-        textTransform: 'uppercase',
-        letterSpacing: '0.07em',
-        marginBottom: '8px',
-      }}>
-        {label}
-      </div>
-      <div style={{
-        fontFamily: 'var(--font-fraunces)',
-        fontSize: '28px',
-        color: 'var(--brand-gold)',
-        lineHeight: 1,
-        marginBottom: total !== null ? '4px' : '0',
-      }}>
-        {count}
-      </div>
-      {total !== null && (
-        <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-          {fmt(total)}
+      {label} ({count})
+    </button>
+  )
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', color: 'var(--text-tertiary)', textTransform: 'uppercase', padding: '12px 0 6px 0', fontFamily: 'var(--font-inter)' }}>
+      {children}
+    </div>
+  )
+}
+
+function OrderRow({ order }: { order: Order }) {
+  return (
+    <Link
+      href={`/admin/orders/${order.id}`}
+      data-order-row
+      style={{ display: 'grid', gridTemplateColumns: '40% 40% 20%', alignItems: 'center', textDecoration: 'none', backgroundColor: 'var(--surface-raised)', borderBottom: '1px solid var(--border)', padding: '14px 16px', cursor: 'pointer' }}
+    >
+      <div>
+        <span style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--brand-gold)', fontSize: '15px', fontWeight: 600, display: 'inline-block', marginBottom: '3px' }}>
+          {order.order_ref}
+        </span>
+        <div style={{ fontFamily: 'var(--font-inter)', color: 'var(--text-primary)', fontSize: '14px', fontWeight: 500, marginBottom: '2px' }}>
+          {order.customer_name}
         </div>
-      )}
-    </button>
+        <div style={{ fontFamily: 'var(--font-inter)', color: 'var(--text-tertiary)', fontSize: '13px' }}>
+          {order.customer_phone}
+        </div>
+      </div>
+
+      <div>
+        <div style={{ fontFamily: 'var(--font-inter)', color: 'var(--text-secondary)', fontSize: '13px', marginBottom: '7px' }}>
+          {order.delivery_date ? shortDate(order.delivery_date) : 'No date'} · Zone {order.delivery_zone}{deliveryWindow(order) ? ` · ${deliveryWindow(order)}` : ''}
+        </div>
+        <OrderBadge order={order} />
+      </div>
+
+      <div style={{ textAlign: 'right' }}>
+        <div style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--text-primary)', fontSize: '15px', fontWeight: 600, marginBottom: '4px' }}>
+          {fmt(order.total_amount)}
+        </div>
+        <div style={{ fontFamily: 'var(--font-inter)', color: 'var(--text-tertiary)', fontSize: '12px' }}>
+          {timestamp(order.updated_at ?? order.created_at)}
+        </div>
+      </div>
+    </Link>
   )
 }
 
-function MobileFilterButton({
-  label,
-  active,
-  onClick,
+function EmptyState({
+  selectedDate,
+  tab,
+  search,
+  totalOrderCount,
+  settings,
 }: {
-  label: string
-  active: boolean
-  onClick: () => void
+  selectedDate: string | null
+  tab: Bucket
+  search: string
+  totalOrderCount: number
+  settings: Settings
 }) {
+  const cutoff = cutoffForDate(selectedDate, settings)
+  const cutoffDay = cutoffText(cutoff)
+
+  if (totalOrderCount === 0) {
+    return (
+      <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontFamily: 'var(--font-inter)', fontSize: '15px', padding: '42px 20px' }}>
+        <p style={{ margin: '0 0 8px' }}>No orders yet.</p>
+        <p style={{ margin: '0 0 12px' }}>Share your ordering link to start receiving orders.</p>
+        <button
+          type="button"
+          onClick={() => navigator.clipboard?.writeText('https://www.malismeals.com')}
+          style={{ border: 'none', backgroundColor: 'transparent', color: 'var(--brand-gold)', fontFamily: 'var(--font-inter)', fontSize: '15px', cursor: 'pointer', padding: 0 }}
+        >
+          www.malismeals.com
+        </button>
+      </div>
+    )
+  }
+
+  if (search.trim()) {
+    return (
+      <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontFamily: 'var(--font-inter)', fontSize: '15px', padding: '42px 20px' }}>
+        No orders matching &quot;{search.trim()}&quot;
+      </div>
+    )
+  }
+
+  if (tab !== 'all') {
+    const label = tabs.find(item => item.key === tab)?.label.toLowerCase() ?? 'matching'
+    return (
+      <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontFamily: 'var(--font-inter)', fontSize: '15px', padding: '42px 20px' }}>
+        No {label} orders for this date.
+      </div>
+    )
+  }
+
+  if (selectedDate && isFutureOrToday(selectedDate) && isCutoffOpen(cutoff)) {
+    return (
+      <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontFamily: 'var(--font-inter)', fontSize: '15px', padding: '42px 20px' }}>
+        <p style={{ margin: '0 0 8px' }}>No orders for {shortDate(selectedDate)} yet.</p>
+        {cutoffDay && <p style={{ margin: 0 }}>Orders close {cutoffDay} at 2pm.</p>}
+      </div>
+    )
+  }
+
+  if (selectedDate) {
+    return (
+      <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontFamily: 'var(--font-inter)', fontSize: '15px', padding: '42px 20px' }}>
+        No orders were placed for this date.
+      </div>
+    )
+  }
+
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      style={{
-        minHeight: '44px',
-        padding: '0 14px',
-        borderRadius: '8px',
-        border: active ? '1px solid var(--brand-gold)' : '1px solid var(--border)',
-        backgroundColor: active ? 'var(--brand-gold-soft)' : 'var(--surface-raised)',
-        color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
-        fontFamily: 'var(--font-inter)',
-        fontSize: '13px',
-        fontWeight: active ? '700' : '500',
-        whiteSpace: 'nowrap',
-      }}
-    >
-      {label}
-    </button>
+    <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontFamily: 'var(--font-inter)', fontSize: '15px', padding: '42px 20px' }}>
+      No orders yet.
+    </div>
   )
 }
 
-export default function OrdersClient({ initialOrders }: { initialOrders: Order[] }) {
-  const orders = initialOrders
-  const [activeFilter, setActiveFilter] = useState<string | null>(null)
-  const [dateFilter, setDateFilter] = useState('')
+export default function OrdersClient({
+  initialOrders,
+  initialDate,
+  deliveryDates,
+  settings,
+  totalOrderCount,
+}: {
+  initialOrders: Order[]
+  initialDate: string | null
+  deliveryDates: string[]
+  settings: Settings
+  totalOrderCount: number
+}) {
+  const [selectedDate, setSelectedDate] = useState(initialDate)
+  const [orders, setOrders] = useState(initialOrders)
+  const [activeTab, setActiveTab] = useState<Bucket>(defaultTab(initialOrders))
+  const [search, setSearch] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [showDatePicker, setShowDatePicker] = useState(false)
 
-  const newOrders = useMemo(() => orders.filter(order => order.order_status === 'new'), [orders])
-  const confirmedOrders = useMemo(() => orders.filter(order => order.order_status === 'confirmed'), [orders])
-  const dispatchedOrders = useMemo(() => orders.filter(order => order.order_status === 'dispatched'), [orders])
-  const deliveredOrders = useMemo(() => orders.filter(order => order.order_status === 'delivered'), [orders])
+  const counts = useMemo(() => {
+    return tabs.reduce((acc, tab) => {
+      acc[tab.key] = countBucket(orders, tab.key)
+      return acc
+    }, {} as Record<Bucket, number>)
+  }, [orders])
 
-  const visibleOrders = useMemo(() => {
-    let base = orders
-    if (activeFilter === 'new') base = newOrders
-    else if (activeFilter === 'confirmed') base = confirmedOrders
-    else if (activeFilter === 'dispatched') base = dispatchedOrders
-    else if (activeFilter === 'delivered') base = deliveredOrders
-    if (dateFilter) base = base.filter(order => order.delivery_date === dateFilter)
-    return base
-  }, [activeFilter, dateFilter, orders, newOrders, confirmedOrders, dispatchedOrders, deliveredOrders])
+  const searchedOrders = useMemo(() => searchOrders(orders, search), [orders, search])
+  const visibleOrders = useMemo(() => sortForTab(filterByTab(searchedOrders, activeTab), activeTab), [searchedOrders, activeTab])
+  const activeDates = useMemo(() => visibleDateOptions(deliveryDates, selectedDate), [deliveryDates, selectedDate])
+  const showDeliveredTab = counts.delivered > 0
+  const showCancelledTab = counts.cancelled > 0
+  const hasMoreDates = deliveryDates.length > activeDates.length
 
-  function handleStatusFilter(status: string) {
-    setActiveFilter(filter => filter === status ? null : status)
+  useEffect(() => {
+    setActiveTab(defaultTab(orders))
+    setSearch('')
+  }, [selectedDate, orders])
+
+  async function changeDate(date: string) {
+    if (date === selectedDate) return
+    setSelectedDate(date)
+    setLoading(true)
+    const response = await fetch(`/api/admin/orders-by-date?date=${date}`)
+    const body = await response.json()
+    setOrders(body.orders ?? [])
+    setLoading(false)
+  }
+
+  function renderAllGroups() {
+    const readyToGo = sortForTab(searchedOrders.filter(order => bucketFor(order) === 'paid' || bucketFor(order) === 'out'), 'paid')
+    const needsPayment = sortForTab(searchedOrders.filter(order => bucketFor(order) === 'confirmed'), 'confirmed')
+    const newOrders = sortForTab(searchedOrders.filter(order => bucketFor(order) === 'new'), 'new')
+    const completed = [...searchedOrders.filter(order => bucketFor(order) === 'delivered' || bucketFor(order) === 'cancelled')]
+      .sort((a, b) => orderTime(a, 'updated') - orderTime(b, 'updated'))
+
+    return (
+      <>
+        {readyToGo.length > 0 && <SectionLabel>Ready to go</SectionLabel>}
+        {readyToGo.map(order => <OrderRow key={order.id} order={order} />)}
+        {needsPayment.length > 0 && <SectionLabel>Needs payment</SectionLabel>}
+        {needsPayment.map(order => <OrderRow key={order.id} order={order} />)}
+        {newOrders.length > 0 && <SectionLabel>New orders</SectionLabel>}
+        {newOrders.map(order => <OrderRow key={order.id} order={order} />)}
+        {completed.length > 0 && <SectionLabel>Completed</SectionLabel>}
+        {completed.map(order => <OrderRow key={order.id} order={order} />)}
+      </>
+    )
   }
 
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: `
-        [data-status-cards] { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 32px; }
-        [data-mobile-status-filters] { display: none; }
+        [data-order-row]:hover { background: var(--surface-sunken) !important; }
+        [data-date-pills], [data-tabs] { scrollbar-width: none; }
+        [data-date-pills]::-webkit-scrollbar, [data-tabs]::-webkit-scrollbar { display: none; }
         @media (max-width: 720px) {
           [data-orders-shell] { padding: 22px 14px 112px !important; }
-          [data-orders-heading-row] {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            gap: 12px;
-            margin-bottom: 18px;
-          }
-          [data-orders-title] { font-size: 30px !important; margin-bottom: 0 !important; }
-          [data-orders-total] { margin-bottom: 2px !important; white-space: nowrap; }
-          [data-status-cards] { display: none; }
-          [data-mobile-status-filters] {
-            display: flex;
-            gap: 8px;
-            overflow-x: auto;
-            margin: 0 -14px 18px;
-            padding: 0 14px 2px;
-            -webkit-overflow-scrolling: touch;
-          }
-          [data-orders-filter] {
-            align-items: stretch !important;
-            flex-direction: column;
-            gap: 8px !important;
-            margin: 0 0 18px !important;
-          }
-          [data-orders-filter] input { width: 100%; min-height: 44px; box-sizing: border-box; }
-          [data-orders-filter] button { min-height: 44px; align-self: flex-start; }
-          [data-order-list] { gap: 10px !important; }
-          [data-order-card] {
-            padding: 16px !important;
-          }
-          [data-order-card-link] {
-            grid-template-columns: 1fr auto !important;
-            gap: 12px !important;
-          }
-          [data-order-main] { order: 1; }
-          [data-order-total] { order: 2; }
-          [data-order-delivery] {
-            order: 3;
-            grid-column: 1 / -1;
-          }
-          [data-order-ref] { font-size: 19px !important; line-height: 1.1; }
-          [data-order-customer] { font-size: 15px !important; margin-top: 5px; }
-          [data-order-phone] { font-size: 14px !important; }
-          [data-order-amount] { font-size: 19px !important; }
-          [data-order-created] { font-size: 12px !important; }
-          [data-order-delivery] {
-            margin-top: 12px;
-            padding-top: 10px;
-            border-top: 1px solid var(--border);
-          }
-          [data-order-badge] {
-            min-height: 26px;
-            display: inline-flex;
-            align-items: center;
-          }
+          [data-date-pills], [data-tabs] { margin-left: -14px; margin-right: -14px; padding-left: 14px; padding-right: 14px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+          [data-order-row] { grid-template-columns: 1fr auto !important; gap: 12px !important; }
+          [data-order-row] > div:nth-child(2) { grid-column: 1 / -1; grid-row: 2; padding-top: 8px; }
+          [data-order-row] > div:nth-child(3) { grid-column: 2; grid-row: 1; }
         }
       ` }} />
 
-      <div style={{ fontFamily: 'var(--font-inter)' }}>
-        <div data-orders-shell style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 20px' }}>
-          <div data-orders-heading-row>
-            <div>
-              <h1 data-orders-title style={{
-                fontFamily: 'var(--font-fraunces)',
-                fontSize: '28px',
-                color: 'var(--text-primary)',
-                marginBottom: '4px',
-              }}>
-                Orders
-              </h1>
-            </div>
-            <p data-orders-total style={{ fontSize: '14px', color: 'var(--text-tertiary)', marginBottom: '24px' }}>
-              {orders.length} total
-            </p>
-          </div>
+      <div data-orders-shell style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 20px', fontFamily: 'var(--font-inter)' }}>
+        <h1 style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--text-primary)', fontSize: '34px', fontWeight: 400, margin: '0 0 22px' }}>
+          Orders
+        </h1>
 
-          <div data-status-cards>
-            <StatusCard label="New orders" count={newOrders.length} total={totalAmount(newOrders)} active={activeFilter === 'new'} onClick={() => handleStatusFilter('new')} />
-            <StatusCard label="Confirmed" count={confirmedOrders.length} total={totalAmount(confirmedOrders)} active={activeFilter === 'confirmed'} onClick={() => handleStatusFilter('confirmed')} />
-            <StatusCard label="Out for delivery" count={dispatchedOrders.length} total={null} active={activeFilter === 'dispatched'} onClick={() => handleStatusFilter('dispatched')} />
-            <StatusCard label="Delivered" count={deliveredOrders.length} total={totalAmount(deliveredOrders)} active={activeFilter === 'delivered'} onClick={() => handleStatusFilter('delivered')} />
-          </div>
-
-          <div data-mobile-status-filters>
-            <MobileFilterButton label={`All ${orders.length}`} active={activeFilter === null} onClick={() => setActiveFilter(null)} />
-            <MobileFilterButton label={`New ${newOrders.length}`} active={activeFilter === 'new'} onClick={() => handleStatusFilter('new')} />
-            <MobileFilterButton label={`Confirmed ${confirmedOrders.length}`} active={activeFilter === 'confirmed'} onClick={() => handleStatusFilter('confirmed')} />
-            <MobileFilterButton label={`Dispatch ${dispatchedOrders.length}`} active={activeFilter === 'dispatched'} onClick={() => handleStatusFilter('dispatched')} />
-            <MobileFilterButton label={`Delivered ${deliveredOrders.length}`} active={activeFilter === 'delivered'} onClick={() => handleStatusFilter('delivered')} />
-          </div>
-
-          <div data-orders-filter style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', marginTop: '-8px' }}>
-            <label style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>Filter by delivery date:</label>
+        <div data-date-pills style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px', flexWrap: 'nowrap' }}>
+          {activeDates.map(date => (
+            <DatePill
+              key={date}
+              date={date}
+              active={selectedDate === date}
+              onClick={() => changeDate(date)}
+            />
+          ))}
+          {hasMoreDates && (
+            <button
+              type="button"
+              onClick={() => setShowDatePicker(open => !open)}
+              style={{ border: 'none', backgroundColor: 'transparent', color: 'var(--text-tertiary)', fontFamily: 'var(--font-inter)', fontSize: '13px', cursor: 'pointer', padding: '0 4px', whiteSpace: 'nowrap', textDecoration: 'none' }}
+            >
+              Older orders ›
+            </button>
+          )}
+          {showDatePicker && (
             <input
               type="date"
-              value={dateFilter}
-              onChange={event => setDateFilter(event.target.value)}
-              style={{
-                padding: '5px 10px',
-                borderRadius: '6px',
-                border: '1px solid var(--border-strong)',
-                backgroundColor: 'var(--surface-raised)',
-                fontFamily: 'var(--font-inter)',
-                fontSize: '13px',
-                color: 'var(--text-primary)',
-                outline: 'none',
+              max={todayISO()}
+              onChange={event => {
+                if (event.target.value) changeDate(event.target.value)
               }}
+              style={{ minHeight: '38px', borderRadius: '8px', border: '1px solid var(--border)', backgroundColor: 'var(--surface-raised)', color: 'var(--text-primary)', fontFamily: 'var(--font-inter)', fontSize: '13px', padding: '0 10px', outline: 'none' }}
             />
-            {dateFilter && (
-              <button
-                type="button"
-                onClick={() => setDateFilter('')}
-                style={{
-                  fontSize: '12px',
-                  color: 'var(--text-tertiary)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: '4px 8px',
-                }}
-              >
-                Clear
-              </button>
-            )}
-          </div>
-
-          {(activeFilter || dateFilter) && (
-            <p style={{ fontSize: '13px', color: 'var(--text-tertiary)', marginBottom: '16px', marginTop: '-8px' }}>
-              Showing {visibleOrders.length} order{visibleOrders.length !== 1 ? 's' : ''}
-              {activeFilter ? ` · ${activeFilter}` : ''}
-              {dateFilter ? ` · ${dateFilter}` : ''} ·{' '}
-              <button
-                type="button"
-                onClick={() => { setActiveFilter(null); setDateFilter('') }}
-                style={{
-                  color: 'var(--brand-gold)',
-                  cursor: 'pointer',
-                  textDecoration: 'underline',
-                  border: 'none',
-                  background: 'none',
-                  padding: 0,
-                  font: 'inherit',
-                }}
-              >
-                show all
-              </button>
-            </p>
           )}
+        </div>
 
+        {(counts.new > 0 || counts.confirmed > 0 || counts.paid > 0 || counts.out > 0) && (
+          <p style={{ fontFamily: 'var(--font-inter)', fontSize: '14px', color: 'var(--text-secondary)', margin: '0 0 16px' }}>
+            {counts.new > 0 && <><span style={{ color: 'var(--brand-gold)', fontWeight: 700 }}>{counts.new} new</span>{(counts.confirmed > 0 || counts.paid > 0 || counts.out > 0) && '  ·  '}</>}
+            {counts.confirmed > 0 && <>{counts.confirmed} confirmed{(counts.paid > 0 || counts.out > 0) && '  ·  '}</>}
+            {counts.paid > 0 && <>{counts.paid} paid{counts.out > 0 && '  ·  '}</>}
+            {counts.out > 0 && <>{counts.out} out for delivery</>}
+          </p>
+        )}
+
+        <input
+          type="search"
+          value={search}
+          onChange={event => setSearch(event.target.value)}
+          placeholder="Search by name, phone, or order ref..."
+          style={{ width: '100%', boxSizing: 'border-box', minHeight: '44px', backgroundColor: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', padding: '0 14px', fontFamily: 'var(--font-inter)', fontSize: '14px', color: 'var(--text-primary)', outline: 'none', marginBottom: search.trim() ? '8px' : '18px' }}
+        />
+        {search.trim() && (
+          <p style={{ fontFamily: 'var(--font-inter)', fontSize: '13px', color: 'var(--text-tertiary)', margin: '0 0 18px' }}>
+            {visibleOrders.length} order{visibleOrders.length === 1 ? '' : 's'} matching &apos;{search.trim()}&apos;
+          </p>
+        )}
+
+        <div data-tabs style={{ display: 'flex', alignItems: 'flex-end', gap: '22px', borderBottom: '1px solid var(--border)', marginBottom: '16px', overflowX: 'auto' }}>
+          {tabs.filter(tab => (tab.key !== 'delivered' || showDeliveredTab) && (tab.key !== 'cancelled' || showCancelledTab)).map(tab => (
+            <TabButton
+              key={tab.key}
+              label={tab.label}
+              count={counts[tab.key] ?? 0}
+              active={activeTab === tab.key}
+              onClick={() => setActiveTab(tab.key)}
+            />
+          ))}
+        </div>
+
+        <div style={{ opacity: loading ? 0.5 : 1 }}>
           {visibleOrders.length === 0 ? (
-            <p style={{ color: 'var(--text-secondary)', fontSize: '15px' }}>
-              {activeFilter || dateFilter ? 'No orders match this filter.' : 'No orders yet.'}
-            </p>
+            <EmptyState
+              selectedDate={selectedDate}
+              tab={activeTab}
+              search={search}
+              totalOrderCount={totalOrderCount}
+              settings={settings}
+            />
           ) : (
-            <div data-order-list style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {visibleOrders.map(order => (
-                <article
-                  key={order.id}
-                  data-order-card
-                  style={{
-                    backgroundColor: 'var(--surface-raised)',
-                    border: '1px solid var(--border)',
-                    borderRadius: '8px',
-                    padding: '14px 20px',
-                  }}
-                >
-                  <Link
-                    href={`/admin/orders/${order.id}`}
-                    data-order-card-link
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '2fr 2fr 1fr',
-                      gap: '12px',
-                      alignItems: 'center',
-                      textDecoration: 'none',
-                    }}
-                  >
-                    <div data-order-main>
-                      <span data-order-ref style={{
-                        fontFamily: 'var(--font-fraunces)',
-                        fontSize: '15px',
-                        color: 'var(--brand-gold)',
-                        display: 'inline-block',
-                        marginBottom: '2px',
-                      }}>
-                        {order.order_ref}
-                      </span>
-                      <div data-order-customer style={{ fontSize: '13px', color: 'var(--text-primary)' }}>
-                        {order.customer_name}
-                      </div>
-                      <div data-order-phone style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
-                        {order.customer_phone}
-                      </div>
-                    </div>
-
-                    <div data-order-delivery>
-                      <div style={{ fontSize: '13px', color: 'var(--text-primary)', marginBottom: '6px' }}>
-                        {deliveryDate(order)} · Zone {order.delivery_zone}
-                      </div>
-                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                        <span data-order-badge style={{
-                          padding: '2px 8px',
-                          borderRadius: '4px',
-                          fontSize: '11px',
-                          fontWeight: '500',
-                          backgroundColor: order.payment_status === 'paid' ? 'var(--accent-forest)' : 'var(--surface-sunken)',
-                          color: order.payment_status === 'paid' ? 'var(--surface-raised)' : 'var(--text-secondary)',
-                        }}>
-                          {order.payment_status === 'paid' ? 'Paid' : 'Unpaid'}
-                        </span>
-                        <span data-order-badge style={{
-                          padding: '2px 8px',
-                          borderRadius: '4px',
-                          fontSize: '11px',
-                          fontWeight: '500',
-                          backgroundColor: 'var(--surface-sunken)',
-                          color: 'var(--text-secondary)',
-                        }}>
-                          {order.order_status}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div data-order-total style={{ textAlign: 'right' }}>
-                      <div data-order-amount style={{
-                        fontFamily: 'var(--font-fraunces)',
-                        fontSize: '15px',
-                        color: 'var(--text-primary)',
-                        marginBottom: '4px',
-                      }}>
-                        {fmt(order.total_amount)}
-                      </div>
-                      <div data-order-created style={{ fontSize: '11px', color: 'var(--text-tertiary)' }}>
-                        {createdAt(order)}
-                      </div>
-                    </div>
-                  </Link>
-                </article>
-              ))}
+            <div style={{ borderTop: '1px solid var(--border)' }}>
+              {activeTab === 'all' ? renderAllGroups() : visibleOrders.map(order => <OrderRow key={order.id} order={order} />)}
             </div>
           )}
         </div>

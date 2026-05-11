@@ -101,13 +101,13 @@ mali-meals/
 │   │   │   └── page.tsx               ← Active cycle, cutoffs, delivery dates
 │   │   ├── components/
 │   │   │   └── AdminNav.tsx           ← Shared nav: Orders|Menu|Kitchen|Deliveries|Payments|Reports|Settings
-│   │   ├── OrdersClient.tsx           ← Orders list (read-only badges, clickable refs)
-│   │   └── page.tsx                   ← Orders page with status cards
+│   │   ├── OrdersClient.tsx           ← Orders delivery-date queue, search, tabs, grouped rows
+│   │   └── page.tsx                   ← Orders page server load for default delivery date
 │   ├── api/
 │   │   ├── admin/
 │   │   │   ├── deliveries-data/       ← Admin deliveries data API route
-│   │   │   ├── delivery-dates/        ← Fetches distinct delivery dates from orders
-│   │   │   ├── orders-by-date/        ← Orders filtered by delivery_date
+│   │   │   ├── delivery-dates/        ← Admin-auth dates from orders + settings delivery dates
+│   │   │   ├── orders-by-date/        ← Admin-auth full order rows filtered by delivery_date
 │   │   │   ├── payments-data/         ← Payments filtered by delivery_date
 │   │   │   └── update-order/          ← Updates order status/payment
 │   │   ├── generate-order-ref/
@@ -434,11 +434,24 @@ Reports page is built — see item 16 for the intended analytics scope and futur
 
 ### Orders page `/admin`
 
-- Four status cards: New, Confirmed, Dispatched, Delivered
-- Delivery date selector at top — defaults to next upcoming delivery date
-- Old orders hidden by default, accessible via All Orders
-- Order list: ref (gold, clickable), customer, phone, delivery day/zone, total, payment badge, status badge
-- Mobile responsive for order-ops use from phone: status cards stay scannable, filters stack, and order rows become tappable single-column cards
+- Primary organization is delivery_date. Mali works one delivery batch at a time.
+- Default delivery date comes from settings: active midweek uses next_wednesday_date; active weekend uses next_sunday_date. Fallback is nearest upcoming order delivery_date, then most recent past date.
+- Delivery date pills show a maximum of 5 dates: up to 2 recent past dates, selected/current date, and up to 2 upcoming dates. `Older orders ›` reveals an inline date picker for older dates.
+- First render is server-side for the default date. Selecting another date fetches client-side from `/api/admin/orders-by-date`.
+- `/api/admin/orders-by-date` returns the full selected-date order set by default for Orders, including delivered and cancelled rows. Kitchen calls the same route with `scope=kitchen`, which limits results to operational prep statuses: 'new', 'confirmed', and 'dispatched'.
+- `/api/admin/delivery-dates` returns distinct order delivery_dates plus settings next_sunday_date, next_monday_date, and next_wednesday_date. Both `/api/admin/delivery-dates` and `/api/admin/orders-by-date` require a valid admin session before using createAdminClient().
+- Search is client-side within the already loaded selected-date orders. It filters customer_name, customer_phone, and order_ref, case-insensitive, and combines with the active tab.
+- Tabs: All, New, Confirmed, Paid, Out for delivery, Delivered if present, Cancelled if present. Counts are for the selected delivery date.
+- All tab groups orders into Ready to go, Needs payment, New orders, and Completed. Individual tabs show flat rows.
+- Order rows are compact, full-row clickable links to `/admin/orders/[id]`, with ref, customer, phone, delivery date/zone/window, total, timestamp, and one compound status badge.
+- Badge labels are UI-only display labels derived from existing database values. Do not add database statuses:
+  - New = order_status 'new'
+  - Confirmed · Unpaid = order_status 'confirmed' and payment_status 'unpaid'
+  - Paid · Ready = order_status 'confirmed' and payment_status 'paid'
+  - Out for delivery = order_status 'dispatched'
+  - Delivered · Paid/Unpaid = order_status 'delivered' plus payment_status
+  - Cancelled = order_status 'cancelled'
+- Do not use `Ready`, `Awaiting payment`, `Needs review`, or `Open` as database statuses. If used in UI, they must be derived labels only and should be documented clearly.
 
 ### Order detail page `/admin/orders/[id]`
 
@@ -469,6 +482,7 @@ KNOWN BUG: Card styling disappears on tab switch and page refresh. See Critical 
 - Cooking summary with meat type breakdown per dish
 - Chef's special section
 - Protein add-ons section
+- Uses `/api/admin/orders-by-date?scope=kitchen` so delivered/cancelled orders do not inflate cooking prep counts.
 
 ### Deliveries tab `/admin/deliveries`
 

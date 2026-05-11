@@ -204,7 +204,7 @@ export default function KitchenClient() {
     setLoading(true)
 
     async function load() {
-      const res = await fetch(`/api/admin/orders-by-date?date=${selectedDate}`)
+      const res = await fetch(`/api/admin/orders-by-date?date=${selectedDate}&scope=kitchen`)
       if (!active) return
       const { orders: ordersData, items: itemsData, specials: specialsData } = await res.json()
 

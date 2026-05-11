@@ -1,17 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createServerClient as createCookieServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase'
 
+async function requireAdminSession() {
+  const cookieStore = cookies()
+  const supabase = createCookieServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options)
+          })
+        },
+      },
+    }
+  )
+
+  const { data: { user }, error } = await supabase.auth.getUser()
+  return !error && !!user
+}
+
 export async function GET(request: NextRequest) {
+  if (!(await requireAdminSession())) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const date = request.nextUrl.searchParams.get('date')
+  const scope = request.nextUrl.searchParams.get('scope')
   if (!date) return NextResponse.json({ orders: [], items: [], specials: [] })
 
   const db = createAdminClient()
 
-  const { data: ordersData } = await db
+  let ordersQuery = db
     .from('orders')
-    .select('id, order_ref, order_status, delivery_day, delivery_zone, total_amount, customer_name')
+    .select('id, order_ref, customer_name, customer_phone, customer_email, delivery_zone, delivery_day, delivery_window, delivery_slot, delivery_date, notes, address_building, address_street, address_apartment, address_landmark, subtotal, delivery_fee, total_amount, payment_status, order_status, created_at, updated_at, paid_at')
     .eq('delivery_date', date)
-    .in('order_status', ['new', 'confirmed', 'dispatched'])
+    .order('created_at', { ascending: false })
+
+  if (scope === 'kitchen') {
+    ordersQuery = ordersQuery.in('order_status', ['new', 'confirmed', 'dispatched'])
+  }
+
+  const { data: ordersData } = await ordersQuery
 
   const orders = ordersData ?? []
   if (orders.length === 0) return NextResponse.json({ orders: [], items: [], specials: [] })

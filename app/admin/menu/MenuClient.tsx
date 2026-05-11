@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client'
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
 import AdminNav from '../components/AdminNav'
 
 type MenuItem = {
@@ -48,6 +47,7 @@ type Settings = {
 }
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error'
+type AdminMenuTable = 'menu_items' | 'specials' | 'protein_addons'
 
 const ALLERGEN_OPTIONS = [
   { key: 'dairy',   label: 'D' },
@@ -70,6 +70,31 @@ const FLAG_OPTIONS = [
 ]
 
 // ─── DishCard ──────────────────────────────────────────────────────────────────
+
+async function saveAdminMenuRecord(table: AdminMenuTable, id: string, updates: Record<string, unknown>) {
+  const response = await fetch('/api/admin/menu', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ table, id, updates }),
+  })
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => null)
+    throw new Error(body?.error ?? 'Menu save failed')
+  }
+}
+
+async function createSpecialRecord(values: Record<string, unknown>) {
+  const response = await fetch('/api/admin/menu', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ table: 'specials', values }),
+  })
+
+  const body = await response.json().catch(() => null)
+  if (!response.ok) throw new Error(body?.error ?? 'Special create failed')
+  return body?.data as Special | undefined
+}
 
 function DishCard({
   dish,
@@ -414,69 +439,71 @@ export default function MenuClient({
   async function saveDish(id: string) {
     setSave(id, 'saving')
     const dish = dishes.find(d => d.id === id)!
-    const { error } = await (supabase.from('menu_items') as any).update({
-      name:               dish.name,
-      description:        dish.description,
-      meat_upgrade_type:  dish.meat_upgrade_type,
-      meat_upgrade_price: dish.meat_upgrade_type ? 300 : null,
-      allergens:          dish.allergens,
-      is_freezer_friendly: dish.is_freezer_friendly,
-      is_spicy:           dish.is_spicy,
-      is_family_friendly: dish.is_family_friendly,
-      is_active:          dish.is_active,
-      is_sold_out:        dish.is_sold_out,
-      available_weekend:  dish.available_weekend,
-      available_midweek:  dish.available_midweek,
-    }).eq('id', id)
-    if (error) {
-      setSave(id, 'error')
-    } else {
+    try {
+      await saveAdminMenuRecord('menu_items', id, {
+        name:               dish.name,
+        description:        dish.description,
+        meat_upgrade_type:  dish.meat_upgrade_type,
+        meat_upgrade_price: dish.meat_upgrade_type ? 300 : null,
+        allergens:          dish.allergens,
+        is_freezer_friendly: dish.is_freezer_friendly,
+        is_spicy:           dish.is_spicy,
+        is_family_friendly: dish.is_family_friendly,
+        is_active:          dish.is_active,
+        is_sold_out:        dish.is_sold_out,
+        available_weekend:  dish.available_weekend,
+        available_midweek:  dish.available_midweek,
+      })
       setSave(id, 'saved')
       setTimeout(() => setSave(id, 'idle'), 2000)
+    } catch {
+      setSave(id, 'error')
     }
   }
 
   async function addSpecial() {
-    const { data, error } = await (supabase.from('specials') as any).insert({
-      name: '', description: '', price: 0, is_active: false, is_sold_out: false,
-    }).select().single()
-    if (!error && data) {
-      setSpecials(prev => [...prev, data as Special])
+    try {
+      const data = await createSpecialRecord({
+        name: '', description: '', price: 0, is_active: false, is_sold_out: false,
+      })
+      if (data) setSpecials(prev => [...prev, data])
+    } catch {
+      // The empty state has no row-specific save indicator; the next save will surface errors.
     }
   }
 
   async function saveSpecial(id: string) {
     setSave(id, 'saving')
     const special = specials.find(s => s.id === id)!
-    const { error } = await (supabase.from('specials') as any).update({
-      name:        special.name,
-      description: special.description,
-      price:       special.price,
-      is_active:   special.is_active,
-      is_sold_out: special.is_sold_out,
-    }).eq('id', id)
-    if (error) {
-      setSave(id, 'error')
-    } else {
+    try {
+      await saveAdminMenuRecord('specials', id, {
+        name:        special.name,
+        description: special.description,
+        price:       special.price,
+        is_active:   special.is_active,
+        is_sold_out: special.is_sold_out,
+      })
       setSave(id, 'saved')
       setTimeout(() => setSave(id, 'idle'), 2000)
+    } catch {
+      setSave(id, 'error')
     }
   }
 
   async function saveAddon(id: string) {
     setSave(id, 'saving')
     const addon = addons.find(a => a.id === id)!
-    const { error } = await (supabase.from('protein_addons') as any).update({
-      name:        addon.name,
-      price:       addon.price,
-      is_active:   addon.is_active,
-      is_sold_out: addon.is_sold_out,
-    }).eq('id', id)
-    if (error) {
-      setSave(id, 'error')
-    } else {
+    try {
+      await saveAdminMenuRecord('protein_addons', id, {
+        name:        addon.name,
+        price:       addon.price,
+        is_active:   addon.is_active,
+        is_sold_out: addon.is_sold_out,
+      })
       setSave(id, 'saved')
       setTimeout(() => setSave(id, 'idle'), 2000)
+    } catch {
+      setSave(id, 'error')
     }
   }
 

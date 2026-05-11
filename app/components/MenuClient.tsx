@@ -79,6 +79,9 @@ function buildBadges(dish: MenuItem): BadgeSpec[] {
   if (dish.is_spicy) {
     badges.push({ key: 'spicy', short: '🌶', label: 'Mild spice', bg: '#C8872E' })
   }
+  if (dish.is_family_friendly) {
+    badges.push({ key: 'family', short: 'Fam', label: 'Family-friendly', bg: '#C8872E' })
+  }
   return badges
 }
 
@@ -302,20 +305,6 @@ function DishCard({
             </p>
           )}
         </div>
-      )}
-
-      {/* Family friendly line */}
-      {dish.is_family_friendly && (
-        <p style={{
-          fontFamily: 'var(--font-inter), sans-serif',
-          fontSize: 13,
-          color: 'var(--text-tertiary)',
-          fontStyle: 'italic',
-          margin: '6px 0 0',
-          lineHeight: 1.4,
-        }}>
-          Great for families
-        </p>
       )}
 
       {/* Price rows + quantity controls */}

@@ -3,8 +3,6 @@ import { Resend } from 'resend'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 function fmt(n: number) {
   return n.toLocaleString('en-KE')
 }
@@ -50,6 +48,7 @@ function sectionHeading(label: string): string {
 
 export async function POST(req: NextRequest) {
   try {
+    const resend = new Resend(process.env.RESEND_API_KEY)
     const { orderId } = await req.json()
     console.log('[send-dispatch] POST received — orderId:', orderId)
 

@@ -2,8 +2,6 @@ import { Resend } from 'resend'
 import { NextRequest, NextResponse } from 'next/server'
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 type CartEntry = {
   id: string
   name: string
@@ -53,6 +51,7 @@ function variantLabel(e: CartEntry): string {
 
 export async function POST(req: NextRequest) {
   try {
+    const resend = new Resend(process.env.RESEND_API_KEY)
     const {
       order_ref,
       customer_name,
@@ -147,7 +146,7 @@ export async function POST(req: NextRequest) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Your Mali's Meals order — ${order_ref}</title>
+  <title>Your Mali's Meals order received — ${order_ref}</title>
 </head>
 <body style="margin: 0; padding: 0; background: #FBF7F0; -webkit-text-size-adjust: 100%;">
   <div style="max-width: 560px; margin: 0 auto; padding: 40px 20px;">
@@ -159,10 +158,10 @@ export async function POST(req: NextRequest) {
 
     <!-- Heading -->
     <h1 style="font-family: Georgia, serif; font-size: 34px; font-weight: 400; color: #1F1B16; text-align: center; margin: 0 0 10px;">
-      Order confirmed!
+      Order received!
     </h1>
     <p style="font-family: Arial, sans-serif; font-size: 15px; color: #5C554A; text-align: center; margin: 0 0 32px; line-height: 1.6;">
-      Hi ${customer_first_name}, your order is confirmed.
+      Hi ${customer_first_name}, we received your order.
     </p>
 
     <!-- Order ref -->
@@ -277,7 +276,7 @@ export async function POST(req: NextRequest) {
       from: "Mali's Meals <orders@malismeals.com>",
       to: customer_email,
       replyTo: 'orders@malismeals.com',
-      subject: `Your Mali's Meals order — ${order_ref}`,
+      subject: `Your Mali's Meals order received — ${order_ref}`,
       html,
     })
 

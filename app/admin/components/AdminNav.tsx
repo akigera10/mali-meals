@@ -23,19 +23,46 @@ export default function AdminNav() {
   }
 
   return (
-    <nav style={{
-      borderBottom: '1px solid var(--border)',
-      backgroundColor: 'var(--surface-raised)',
-      padding: '0 20px',
-    }}>
-      <div style={{
+    <>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media (max-width: 720px) {
+          [data-admin-nav] {
+            padding: 0 !important;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+          }
+          [data-admin-nav-inner] {
+            width: max-content;
+            min-width: 100%;
+            padding: 0 14px;
+          }
+          [data-admin-nav-brand] {
+            margin-right: 16px !important;
+          }
+          [data-admin-nav-link] {
+            padding: 0 12px !important;
+            min-width: 44px;
+          }
+          [data-admin-nav-signout] {
+            margin-left: 18px !important;
+            padding: 0 10px !important;
+            min-width: 64px;
+          }
+        }
+      ` }} />
+      <nav data-admin-nav style={{
+        borderBottom: '1px solid var(--border)',
+        backgroundColor: 'var(--surface-raised)',
+        padding: '0 20px',
+      }}>
+      <div data-admin-nav-inner style={{
         maxWidth: '960px',
         margin: '0 auto',
         display: 'flex',
         alignItems: 'center',
         height: '52px',
       }}>
-        <span style={{
+        <span data-admin-nav-brand style={{
           fontFamily: 'var(--font-fraunces)',
           fontSize: '16px',
           color: 'var(--text-primary)',
@@ -50,6 +77,7 @@ export default function AdminNav() {
             <Link
               key={link.href}
               href={link.href}
+              data-admin-nav-link
               style={{
                 padding: '0 16px',
                 height: '52px',
@@ -69,6 +97,7 @@ export default function AdminNav() {
         })}
         <button
           onClick={handleSignOut}
+          data-admin-nav-signout
           style={{
             marginLeft: 'auto',
             padding: '0 8px',
@@ -86,6 +115,7 @@ export default function AdminNav() {
           Sign out
         </button>
       </div>
-    </nav>
+      </nav>
+    </>
   )
 }

@@ -113,7 +113,9 @@ mali-meals/
 │   │   ├── generate-order-ref/
 │   │   │   └── route.ts               ← Server-side order ref generation (MAX-based, not created_at)
 │   │   ├── send-confirmation/
-│   │   │   └── route.ts               ← Resend confirmation email with payment instruction
+│   │   │   └── route.ts               ← Resend customer order received email with payment instruction
+│   │   ├── send-admin-order-notification/
+│   │   │   └── route.ts               ← Resend admin new order notification to Mali
 │   │   └── send-dispatch/
 │   │       └── route.ts               ← Resend dispatch notification email
 │   ├── checkout/
@@ -307,8 +309,16 @@ customer directly (currently WhatsApp/iMessage) to request payment. Customer sen
 money via M-Pesa to Godrick's personal number 0708470580 (from MALI_PHONE env var).
 Mali marks order as paid and dispatches. M-Pesa code captured when marking as paid.
 
-Confirmation email payment instruction:
+Customer order received email payment instruction:
 "To pay for your order, send [total] to 0708470580 (Godrick Mali Luta) via M-Pesa."
+
+New order notification email is sent to orders@malismeals.com after checkout.
+It uses the same visual system as the customer email, includes customer,
+delivery, item, total, notes, and payment status details, and links Mali to
+the admin order detail page to review/confirm the order. The email is sent from
+`Mali's Meals <orders@malismeals.com>` to `orders@malismeals.com` with `replyTo`
+set to the customer email, so replying from the notification should address the
+customer.
 
 The order reference MAL-XXXX is for customer service inquiries ONLY — not a payment
 reference. Do not tell customers to use it as a payment note.
@@ -420,7 +430,7 @@ Active cycle indicator on menu page must dynamically check cutoff:
 
 Top nav bar: **Orders | Menu | Kitchen | Deliveries | Payments | Reports | Settings**
 
-Reports page not yet built — see item 16 in builds in progress.
+Reports page is built — see item 16 for the intended analytics scope and future refinements.
 
 ### Orders page `/admin`
 
@@ -428,6 +438,7 @@ Reports page not yet built — see item 16 in builds in progress.
 - Delivery date selector at top — defaults to next upcoming delivery date
 - Old orders hidden by default, accessible via All Orders
 - Order list: ref (gold, clickable), customer, phone, delivery day/zone, total, payment badge, status badge
+- Mobile responsive for order-ops use from phone: status cards stay scannable, filters stack, and order rows become tappable single-column cards
 
 ### Order detail page `/admin/orders/[id]`
 
@@ -438,12 +449,13 @@ Reports page not yet built — see item 16 in builds in progress.
 - Print slip button
 - Mark paid button — captures M-Pesa code
 - Confirm, Dispatch, Deliver, Cancel workflow buttons
+- Mobile responsive for email Review order flow: action buttons stack into large tap targets, customer/delivery cards stack, customer phone/email are tappable, and item/totals rows avoid horizontal overflow
 
 ### Menu page `/admin/menu` — TABBED
 
 Three tabs: Weekend Menu | Midweek Menu | Protein Add-ons
 
-Active cycle indicator at top (CURRENTLY BUGGED — does not check cutoff accurately).
+Active cycle indicator at top checks the active cycle cutoff.
 
 Each dish card: name, description, meat option, allergens + legend, flags, is_active, is_sold_out, save button.
 Allergen legend: D = Dairy · N = Nuts · S = Soy · C = Coconut
@@ -498,7 +510,8 @@ Built and working. See settings section above.
 | Order submission — delivery_date and cycle_type stamped | ✅ Working |
 | Wednesday delivery option in checkout | ✅ Working |
 | Order ref — server-side MAX-based generation | ✅ Working |
-| Order confirmation email — payment instruction, no wrong reference note | ✅ Working |
+| Customer order received email — payment instruction, no wrong reference note | ✅ Working |
+| Admin new order email to Mali — review link and full order summary | ✅ Working |
 | Dispatch notification email | ✅ Working |
 | Email sender — orders@malismeals.com | ✅ Working |
 | Supabase Auth reset email — no-reply@malismeals.com via Resend SMTP | ✅ Working |
@@ -506,6 +519,7 @@ Built and working. See settings section above.
 | Admin login — Supabase Auth, sign out, password reset flow | ✅ Working |
 | Admin orders list with delivery date filter | ✅ Working |
 | Order detail — meat type, Wednesday display, Mark paid | ✅ Working |
+| Mobile order ops — `/admin`, order detail, AdminNav | ✅ Working |
 | Admin menu — tabbed Weekend/Midweek/Protein Add-ons | ✅ Working |
 | Admin menu — allergen legend | ✅ Working |
 | Admin menu — active cycle indicator | ✅ Working |
@@ -761,8 +775,9 @@ Not built. Query distinct customers from orders:
 
 ### 5. Email to Mali on new order
 
-When customer places order send Mali email at orders@malismeals.com
-with full order summary. Third email template. Not yet built.
+Built. When customer places order, send Mali email at orders@malismeals.com
+with full order summary and Review order link to `/admin/orders/[id]`.
+This is an admin-facing sibling of the customer order received email.
 
 ### 6. Supabase Auth ✅ COMPLETE
 

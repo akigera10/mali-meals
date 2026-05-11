@@ -533,6 +533,16 @@ export default function CheckoutClient() {
           address_landmark: form.addrLandmark || null,
           notes: form.notes || null,
         }),
+      }).catch(err => {
+        console.error('Confirmation email request failed:', err)
+      })
+
+      fetch('/api/send-admin-order-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId }),
+      }).catch(err => {
+        console.error('Admin order notification request failed:', err)
       })
 
       clearCart()

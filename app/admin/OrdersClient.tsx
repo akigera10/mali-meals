@@ -141,11 +141,34 @@ export default function OrdersClient({ initialOrders }: { initialOrders: Order[]
     <>
       <style dangerouslySetInnerHTML={{ __html: `
         #status-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 32px; }
-        @media (max-width: 600px) { #status-cards { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 720px) {
+          [data-orders-shell] { padding: 28px 14px 40px !important; }
+          [data-orders-filter] { align-items: flex-start !important; flex-direction: column; gap: 8px !important; }
+          [data-orders-filter] input { width: 100%; min-height: 40px; }
+          [data-order-card] {
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+            padding: 16px !important;
+          }
+          [data-order-card-total] {
+            text-align: left !important;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 12px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border);
+          }
+          [data-order-ref] {
+            font-size: 20px !important;
+            min-height: 32px;
+          }
+        }
+        @media (max-width: 600px) { #status-cards { grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 24px; } }
       ` }} />
 
       <div style={{ fontFamily: 'var(--font-inter)' }}>
-        <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 20px' }}>
+        <div data-orders-shell style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 20px' }}>
           <h1 style={{
             fontFamily: 'var(--font-fraunces)',
             fontSize: '28px',
@@ -191,7 +214,7 @@ export default function OrdersClient({ initialOrders }: { initialOrders: Order[]
           </div>
 
           {/* ── Date filter ── */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', marginTop: '-8px' }}>
+          <div data-orders-filter style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', marginTop: '-8px' }}>
             <label style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>Filter by delivery date:</label>
             <input
               type="date"
@@ -251,6 +274,7 @@ export default function OrdersClient({ initialOrders }: { initialOrders: Order[]
               {visibleOrders.map(order => (
                 <div
                   key={order.id}
+                  data-order-card
                   style={{
                     backgroundColor: 'var(--surface-raised)',
                     border: '1px solid var(--border)',
@@ -266,6 +290,7 @@ export default function OrdersClient({ initialOrders }: { initialOrders: Order[]
                   <div>
                     <Link
                       href={`/admin/orders/${order.id}`}
+                      data-order-ref
                       style={{
                         fontFamily: 'var(--font-fraunces)',
                         fontSize: '15px',
@@ -318,7 +343,7 @@ export default function OrdersClient({ initialOrders }: { initialOrders: Order[]
                   </div>
 
                   {/* Col 3: amount + date */}
-                  <div style={{ textAlign: 'right' }}>
+                  <div data-order-card-total style={{ textAlign: 'right' }}>
                     <div style={{
                       fontFamily: 'var(--font-fraunces)',
                       fontSize: '15px',

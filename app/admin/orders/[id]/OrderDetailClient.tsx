@@ -112,7 +112,7 @@ function ItemRows({ items }: {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       {items.map(item => (
-        <div key={item.id} style={{
+        <div key={item.id} data-order-item-row style={{
           display: 'grid',
           gridTemplateColumns: '1fr auto auto auto',
           gap: '16px',
@@ -277,8 +277,55 @@ export default function OrderDetailClient({
   const hasItems = mainItems.length > 0 || saladItems.length > 0 || specials.length > 0 || allAddons.length > 0
 
   return (
-    <div style={{ fontFamily: 'var(--font-inter)' }}>
-      <div style={{ maxWidth: '960px', margin: '0 auto', padding: '32px 20px' }}>
+    <>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media (max-width: 760px) {
+          [data-order-detail-shell] { padding: 24px 14px 40px !important; }
+          [data-order-detail-header] { display: block !important; margin-bottom: 20px !important; }
+          [data-order-detail-title] { font-size: 36px !important; margin-bottom: 12px !important; }
+          [data-order-detail-actions] {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px !important;
+            margin-top: 18px;
+            width: 100%;
+          }
+          [data-order-detail-actions] a,
+          [data-order-detail-actions] button {
+            justify-content: center;
+            min-height: 44px;
+            width: 100%;
+            box-sizing: border-box;
+          }
+          [data-order-detail-two-column] { grid-template-columns: 1fr !important; gap: 12px !important; }
+          [data-mpesa-row] { display: grid !important; grid-template-columns: 1fr !important; gap: 10px !important; }
+          [data-mpesa-row] input,
+          [data-mpesa-row] button {
+            width: 100%;
+            min-width: 0 !important;
+            min-height: 44px;
+            box-sizing: border-box;
+          }
+          [data-order-item-row] {
+            grid-template-columns: 1fr auto !important;
+            gap: 4px 12px !important;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+          }
+          [data-order-item-row] > span:first-child {
+            grid-column: 1 / -1;
+          }
+          [data-order-detail-totals] {
+            max-width: none !important;
+            margin-left: 0 !important;
+          }
+        }
+        @media (max-width: 420px) {
+          [data-order-detail-actions] { grid-template-columns: 1fr !important; }
+        }
+      ` }} />
+      <div style={{ fontFamily: 'var(--font-inter)' }}>
+      <div data-order-detail-shell style={{ maxWidth: '960px', margin: '0 auto', padding: '32px 20px' }}>
 
         <Link href="/admin" style={{
           fontSize: '13px',
@@ -291,7 +338,7 @@ export default function OrderDetailClient({
         </Link>
 
         {/* Header */}
-        <div style={{
+        <div data-order-detail-header style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'flex-start',
@@ -300,7 +347,7 @@ export default function OrderDetailClient({
           gap: '16px',
         }}>
           <div>
-            <h1 style={{
+            <h1 data-order-detail-title style={{
               fontFamily: 'var(--font-fraunces)',
               fontSize: '32px',
               color: 'var(--text-primary)',
@@ -325,7 +372,7 @@ export default function OrderDetailClient({
           </div>
 
           {/* Action buttons */}
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <div data-order-detail-actions style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
             <Link
               href={`/admin/packing-slips?order=${order.id}`}
               style={{
@@ -381,7 +428,7 @@ export default function OrderDetailClient({
             <div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)', marginBottom: '12px' }}>
               M-Pesa confirmation code
             </div>
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div data-mpesa-row style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
               <input
                 type="text"
                 value={mpesaCode}
@@ -427,7 +474,7 @@ export default function OrderDetailClient({
         )}
 
         {/* Customer + Delivery two-column */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+        <div data-order-detail-two-column style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
 
           {/* Customer */}
           <div style={card}>
@@ -444,9 +491,9 @@ export default function OrderDetailClient({
             }}>
               {order.customer_phone}
             </a>
-            <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
+            <a href={`mailto:${order.customer_email}`} style={{ fontSize: '14px', color: 'var(--text-secondary)', textDecoration: 'none', display: 'block', overflowWrap: 'anywhere' }}>
               {order.customer_email}
-            </div>
+            </a>
             {order.mpesa_code && (
               <div style={{ marginTop: '14px', paddingTop: '14px', borderTop: '1px solid var(--border)' }}>
                 <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>M-Pesa code: </span>
@@ -562,7 +609,7 @@ export default function OrderDetailClient({
 
             {/* Totals */}
             <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxWidth: '260px', marginLeft: 'auto' }}>
+              <div data-order-detail-totals style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxWidth: '260px', marginLeft: 'auto' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--text-secondary)' }}>
                   <span>Subtotal</span>
                   <span>{fmt(order.subtotal)}</span>
@@ -614,5 +661,6 @@ export default function OrderDetailClient({
 
       </div>
     </div>
+    </>
   )
 }

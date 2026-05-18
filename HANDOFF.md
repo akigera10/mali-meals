@@ -39,6 +39,37 @@
 
 ---
 
+## Current status - end of May 18, 2026 work session
+
+Latest completed app-work commit before this handoff update:
+
+`a17c66e polish: cart, zones, copy, success-screen, reassurance-line`
+
+GitHub `main` and Vercel Production were verified up to date after that
+customer-polish commit. This handoff update may be a docs-only commit after it.
+
+### Completed in the Fresh Green Kitchen rollout
+
+- Phase 0 docs/design direction: completed in `DESIGN.md`.
+- Phase 1 foundation: `globals.css` tokens, `layout.tsx` fonts, and green token rename completed.
+- Phase 2 customer menu component pass: completed. Dish card dividers removed, prices use dark text, delivery info card is white/raised, chips use full words, protein add-ons are compact rows.
+- Phase 3 checkout visual polish: completed. Stepper removed, back navigation simplified, form state persists through menu/checkout navigation, review and success screens polished, reassurance copy added above Place order.
+- Phase 4 admin UI pass: completed. Admin active navigation and primary operational actions lean forest, rows are denser, and admin screens read more like an operations tool.
+- Phase 5 email restyle: completed. Confirmation, dispatch, and admin notification emails use green/sage/forest direct hex values instead of old gold/cream styling.
+- iOS Safari checkout input zoom fix: completed with 16px input sizing in checkout and globals.
+- Local/mobile verification: customer menu, cart bar, checkout step 1, review step, and success screen were tested with mobile Playwright screenshots.
+
+### Key learnings from this session
+
+- `npm run build` rewrites `.next`. If a dev server is still running, localhost can serve stale `_next/static` asset paths and CSS may disappear. Fix by stopping the stale server, removing `.next`, restarting dev, and hard-refreshing the printed port.
+- Always trust the port printed by Next. Port 3000 may be occupied; this project often runs on 3001 during local work.
+- Vercel deployment is not instant at push time. After `git push origin main`, verify the latest Production deployment reaches `Ready` before assuming the live site has the change.
+- Email changes only appear in newly sent emails after the new Vercel deployment finishes. An email sent before the deployment completes can still look old.
+- Checkout form state now lives in `CartContext` with cart state, so customer details persist when navigating back to menu and returning to checkout.
+- Browser/mobile QA is important for this app. Mobile screenshots caught the real cart, zone, delivery option, review, and success-screen states.
+
+---
+
 ## Design system (non-negotiable)
 
 **Fonts** — loaded via `next/font/google` in `app/layout.tsx`:
@@ -97,7 +128,7 @@ mali-meals/
 │   │   │   ├── page.tsx               ← Server component, data fetching
 │   │   │   └── PackingSlipsClient.tsx ← Client component, print layout
 │   │   ├── reports/
-│   │   │   └── page.tsx               ← Business intelligence page (TO BE BUILT)
+│   │   │   └── page.tsx               ← Business intelligence page
 │   │   ├── settings/
 │   │   │   └── page.tsx               ← Active cycle, cutoffs, delivery dates
 │   │   ├── components/
@@ -431,7 +462,8 @@ Active cycle indicator on menu page must dynamically check cutoff:
 
 Top nav bar: **Orders | Menu | Kitchen | Deliveries | Payments | Reports | Settings**
 
-Reports page is built — see item 16 for the intended analytics scope and future refinements.
+Reports page is built as a first business intelligence pass. See the pending
+roadmap for future refinements.
 
 ### Orders page `/admin`
 
@@ -475,7 +507,7 @@ Each dish card: name, description, meat option, allergens + legend, flags, is_ac
 Allergen legend: D = Dairy · N = Nuts · S = Soy · C = Coconut
 Category headings: "Mains · 995 · with protein 1,295" and "Salads · 580 · with protein 880"
 
-KNOWN BUG: Card styling disappears on tab switch and page refresh. See Critical Issue 1.
+Former card styling disappearance bug is fixed by the server/client split. Preserve that architecture.
 
 ### Kitchen tab `/admin/kitchen`
 
@@ -521,13 +553,21 @@ Built and working. See settings section above.
 | Customer menu — ordering closed message with WhatsApp link | ✅ Working |
 | Chef's special — respects is_active flag | ✅ Working |
 | Family friendly / spicy badges on customer menu | ✅ Working |
+| Fresh Green Kitchen design system | ✅ Working |
+| Customer menu visual pass | ✅ Working |
+| Sticky cart bar polish | ✅ Working |
 | Two-step checkout — form, validation, review | ✅ Working |
+| Checkout form state persistence across menu/checkout navigation | ✅ Working |
+| Checkout visual polish — stepper removed, plain back nav, review reassurance | ✅ Working |
+| Success screen — plain wordmark and plain Back to menu link | ✅ Working |
+| iOS Safari input zoom prevention | ✅ Working |
 | Order submission — delivery_date and cycle_type stamped | ✅ Working |
 | Wednesday delivery option in checkout | ✅ Working |
 | Order ref — server-side MAX-based generation | ✅ Working |
 | Customer order received email — payment instruction, no wrong reference note | ✅ Working |
 | Admin new order email to Mali — review link and full order summary | ✅ Working |
 | Dispatch notification email | ✅ Working |
+| Transactional emails — Fresh Green Kitchen colors | ✅ Working |
 | Email sender — orders@malismeals.com | ✅ Working |
 | Supabase Auth reset email — no-reply@malismeals.com via Resend SMTP | ✅ Working |
 | Domain — www.malismeals.com live | ✅ Working |
@@ -544,6 +584,7 @@ Built and working. See settings section above.
 | Payments page — paid + outstanding sections | ✅ Working |
 | Packing slips — batch and single, no prices, B&W safe | ✅ Working |
 | Settings page — active cycle, cutoffs, delivery dates | ✅ Working |
+| Reports page — first business intelligence pass | ✅ Working |
 | RLS — all tables fully configured | ✅ Complete |
 | Admin client — service role key | ✅ Complete |
 | Meat type (beef/chicken) throughout admin | ✅ Working |
@@ -616,29 +657,40 @@ falling back to menu_items.name for pre-fix orders:
 After this fix, historical order data becomes permanently accurate regardless
 of future menu changes.
 
-### HIGH 3 — Active cycle indicator inaccurate after cutoff
+### FIXED — Active cycle indicator inaccurate after cutoff
 
 "Midweek menu is live · customers are ordering now" shows even after Tuesday 2pm
 when ordering is closed. Must compare current Africa/Nairobi time against cutoff.
 
-### HIGH 4 — Ksh prefix still on customer menu
+Fixed. Customer menu reads settings server-side and displays the correct ordering
+state against the active cycle cutoff.
+
+### FIXED — Ksh prefix still on customer menu
 
 "Ksh 995", "Ksh 1,295" still appearing in MenuClient.tsx and possibly other files.
 Do a complete codebase search for "Ksh" in displayed text and remove all instances.
 Leave "Price (Ksh)" admin input labels intact.
 
-### HIGH 5 — "With meat" copy incorrect
+Fixed on customer-facing surfaces. No currency prefix is used in displayed customer
+prices; admin field labels may still say Price (Ksh).
+
+### FIXED — "With meat" copy incorrect
 
 "Mains · 995 · with meat 1,295" should be "Mains · 995 · with protein 1,295"
 "Salads · 580 · with meat 880" should be "Salads · 580 · with protein 880"
 "With meat" appears elsewhere — audit and replace with "with protein" throughout.
 
-### MEDIUM 6 — Customer menu subtitle hardcoded
+Fixed. Customer-facing category and add-on copy now uses protein language.
+
+### FIXED — Customer menu subtitle hardcoded
 
 "Home-cooked meals, delivered Sunday evenings in Nairobi" is hardcoded.
 Change to: "Home-cooked meals, delivered in Nairobi"
 
-### MEDIUM 7 — Server-side validation missing on order submission
+Fixed as part of the customer menu header pass. The header now uses active cycle
+delivery information and broader Nairobi delivery copy.
+
+### OPEN — Server-side validation missing on order submission
 
 All checkout validation is browser-only (CheckoutClient.tsx). A malicious user
 can bypass the browser entirely and POST directly to Supabase with garbage data.
@@ -652,7 +704,7 @@ Required before public launch:
 - Prices must match database values — never trust client-submitted prices
 - delivery_date must match a real upcoming date from settings
 
-### MEDIUM 8 — Rate limiting on order submission
+### OPEN — Rate limiting on order submission
 
 No protection against fake order floods. After public launch: upstash/ratelimit,
 10 orders per IP per hour.
@@ -747,165 +799,115 @@ settings          — public SELECT only
 
 ## Builds in progress / next to build
 
-Priority order — fix critical issues before building new features.
+Current priority order as of May 18, 2026. Do not assume older issue labels in this file are still open without verifying current `main`.
 
-### PRIORITY 1 — Fix menu page styling (Critical Issue 1)
-Architectural fix. See Critical Issue 1 above. Must be first.
+### 1. Server-side checkout submission and validation
 
-### FIXED — dish_name and special_name snapshots
-New checkout orders populate order_items.dish_name and order_specials.special_name.
-Display surfaces read snapshots first, with menu table fallbacks for old dev rows.
+Highest remaining launch-safety item. Checkout currently validates in the browser and inserts directly into Supabase from `CheckoutClient.tsx` using the public client. Move order creation into a server API route.
 
-### PRIORITY 3 — Ksh removal + "with protein" copy (Issues 4 and 5)
-Quick wins, high visibility fixes.
+Requirements:
+- Required fields: first name, last name, phone, email, building, street, apartment/house, zone, delivery option
+- Zone must be integer 1-4
+- delivery_day must be 'sunday', 'monday', or 'wednesday'
+- delivery window/slot must match the active cycle rules
+- Items must exist in the database, be active, and not sold out
+- Quantities must be positive integers
+- Prices must be recalculated server-side from database values; never trust submitted client prices
+- delivery_date and cycle_type must come from current settings, not from client trust
+- Generate/order ref flow must remain MAX-based and server-side
+- Keep dish_name and special_name snapshots populated at order time
+- Keep confirmation/admin notification emails working after the API route succeeds
 
-### PRIORITY 4 — Active cycle indicator accuracy (Issue 3)
-Quick fix, important for Mali's daily workflow.
+### 2. Order status / communication layer
 
-### 1. Kitchen tab redesign
+Goal: customer never wonders what happened after placing an order.
 
-Full redesign with delivery date cards and cooking summary:
-```
-MAINS — 12 portions total
-━━━━━━━━━━━━━━━━━━━━━━━━
-Spinach and mushroom lasagna
-  Vegetarian     ●●●○○  3
-  With beef      ●●○○○  2
-                 ───────
-                 Total  5
-```
-Dots in --brand-green up to 5, then show number.
-Unconfirmed orders section with inline confirm buttons.
-Print button for cooking prep sheet.
+Potential next work:
+- Add an admin action/email for "Order confirmed" once Mali reviews a new order
+- Keep dispatch email as the rider-left communication
+- Consider a simple customer order status page later, using order_ref plus a private lookup token rather than exposing raw UUIDs
+- Clarify success-screen and email copy around "received" vs "confirmed" vs "dispatched"
 
-### 2. Packing slips ✅ BUILT
+Do not invent new database statuses casually. Current database values remain:
+`new`, `confirmed`, `dispatched`, `delivered`, `cancelled`.
 
-### 3. Customer tab `/admin/customers`
+### 3. Customer journey polish - next pass
+
+The first visual rollout is complete, but there is room to push the customer journey from good to excellent.
+
+Candidate work:
+- Homepage/menu header: make ordering deadline, delivery date, and what-happens-next even clearer
+- Cart clarity: keep add-ons grouped and totals obvious on mobile
+- Checkout copy: warmer labels and helper text without changing logic
+- Success screen: continue aligning with email language and post-order expectations
+- Mobile polish: verify on narrow viewports after every visible change
+- Food/brand imagery: only if it supports real food inspection and the boutique food-business feel
+
+### 4. Admin ops pipeline refinement
+
+Phase 4 admin visual polish is complete. The next admin work is workflow depth, not decoration.
+
+Operational model:
+- Orders = review/control tower
+- Kitchen = what to cook
+- Payments = who owes
+- Deliveries = what leaves
+- Reports = business insight
+
+Potential work:
+- Refine Kitchen cooking-summary density and print prep sheet
+- Add inline confirm actions for new orders where useful
+- Keep rows compact and operational; avoid decorative customer cards
+- Review Reports page against real Mali questions after more orders exist
+
+### 5. Customer tab `/admin/customers`
 
 Not built. Query distinct customers from orders:
 - Name, phone, email, total orders, total spent, last order date, zone
-- Click customer → full order history
+- Click customer -> full order history
+- Use phone as the practical dedupe key unless a better customer identity model is added
 
-### 4. Logout ✅ RESOLVED
+### 6. Payment flow rework
 
-### 5. Email to Mali on new order
+Future operational improvement. Real flow should become:
 
-Built. When customer places order, send Mali email at orders@malismeals.com
-with full order summary and Review order link to `/admin/orders/[id]`.
-This is an admin-facing sibling of the customer order received email.
-
-### 6. Supabase Auth ✅ COMPLETE
-
-### 7. RLS ✅ COMPLETE
-
-### 8. Rate limiting on admin login ✅ NOT NEEDED
-
-### 9. Server-side validation on order submission
-See Issue 7 above. Required before public launch.
-
-### 10. Rate limiting on order submission
-After public launch. upstash/ratelimit, 10 orders/IP/hour.
-
-### 11. Domain ✅ COMPLETE
-
-### 12. M-Pesa STK Push — IntaSend (FUTURE PHASE)
-
-Prerequisites: Mali needs M-Pesa till number (not personal number).
-What to build:
-- /api/request-payment — STK Push to customer phone
-- Request payment button on confirmed unpaid orders
-- /api/intasend-webhook — confirms payment, updates order status
-- New status: payment_requested between confirmed and dispatched
-
-Environment variables to add:
+```text
+NEW -> CONFIRMED -> PAYMENT REQUESTED -> PAID -> DISPATCHED -> DELIVERED
 ```
+
+Possible changes:
+- Add `payment_requested` order status or a separate payment-request timestamp/state
+- Capture M-Pesa code when marking paid, not delivered
+- Prevent dispatch unless paid, unless Mali explicitly overrides
+- Pair with STK Push if/when IntaSend is adopted
+
+### 7. Rate limiting on order submission
+
+After moving checkout to a server route, add rate limiting before broad public traffic.
+Suggested guard: about 10 orders per IP per hour, using Upstash or similar.
+
+### 8. M-Pesa STK Push - IntaSend future phase
+
+Prerequisite: Mali needs an M-Pesa till/paybill setup suitable for business payments, not only a personal number.
+
+What to build later:
+- `/api/request-payment` - STK Push to customer phone
+- Request payment button on confirmed unpaid orders
+- `/api/intasend-webhook` - confirms payment and updates order payment state
+- New payment-request state between confirmed and paid
+
+Environment variables to add later:
+
+```text
 INTASEND_PUBLISHABLE_KEY=
 INTASEND_SECRET_KEY=
 ```
 
-### 13. Delivery date model ✅ COMPLETE
+### 9. Menu history archive - future phase
 
-### 14. Wednesday delivery ✅ COMPLETE
-
-### 15. Payment flow rework
-
-Properly reflect real business:
-```
-NEW → CONFIRMED → PAYMENT REQUESTED → PAID → DISPATCHED → DELIVERED
-```
-Add payment_requested to order_status values.
-M-Pesa captured at paid not delivered.
-Dispatch only available after paid.
-Pairs with STK Push (item 12).
-
-### 16. Reports / Business intelligence — `/admin/reports`
-
-**High priority strategic build.** Mali needs to understand her business
-over time, not just manage the current week. This is what separates an
-operational tool from a business tool.
-
-Add to AdminNav after Payments.
-
-NOTE: Section 1 (dish performance) uses dish_name snapshots, with fallback to
-menu_items.name for old dev rows that predate the snapshot fix.
-
-**Date range selector** — from/to delivery_date.
-Presets: This week, Last week, This month, Last month, Last 3 months, All time.
-
-**Section 1 — Dish performance**
-Rank all dishes by units sold in date range.
-Show: dish_name (from order_items.dish_name with fallback to menu_items.name),
-total portions sold, vegetarian count, meat count, revenue generated.
-Sort by: units (default), revenue, vegetarian ratio.
-Filter by: cycle_type (weekend / midweek / all).
-This answers: what is my best selling dish, what do customers prefer.
-
-**Section 2 — Revenue by delivery date**
-Table: delivery_date, day of week, cycle_type, order count, total revenue,
-paid revenue, unpaid revenue.
-Ordered by date descending.
-This answers: how did each week perform, which was best.
-
-**Section 3 — Monthly summary**
-Group by month: order count, revenue, unique customers, new customers,
-average order value.
-Month on month comparison as % change.
-This answers: is the business growing month by month.
-
-**Section 4 — Revenue by zone**
-Total revenue per zone in date range with order count and average order value.
-This answers: which zones are most valuable, where to focus delivery expansion.
-
-**Section 5 — Protein upgrade performance**
-Which upgrades (beef, chicken, halloumi etc) are ordered most.
-Count, revenue, attach rate (% of orders with an upgrade).
-This answers: are upgrades worth promoting, which is most popular.
-
-**Section 6 — Repeat customers**
-Total unique customers (by phone).
-Customers with 2+ orders: count and % of total customer base.
-Top 10 by order count: name, phone, orders, total spent, last order date.
-This answers: how loyal is the customer base, who are the VIPs.
-
-**Section 7 — Weekend vs midweek comparison**
-Side by side: order count, revenue, average order value per cycle.
-Tracks Wednesday pilot growth over time.
-This answers: is midweek worth continuing, is it growing.
-
-**Implementation:**
-All queries use createAdminClient().
-All data from orders, order_items, order_item_addons, order_specials.
-No new tables required.
-All styling inline style={{}} — no Tailwind.
-
-### 17. Menu history archive (FUTURE PHASE)
-
-Since dish_name snapshot is live, past menus can be reconstructed from
-order_items.dish_name grouped by delivery_date. No new tables needed.
-Read-only archive showing what was served each week.
+Since dish_name snapshots are live, past menus can be reconstructed from order_items grouped by delivery_date. No new tables required for a first read-only archive.
 
 ---
-
 ## Real-world context
 
 The developer placed a real order via Google Form to understand the
@@ -981,15 +983,16 @@ WHATSAPP_GROUP_LINK=https://chat.whatsapp.com/H9LnTAtoJ0w9uJAeNmQ0i7?mode=gi_t
 ### Windows terminal startup
 
 ```powershell
-Remove-Item -Recurse -Force .next; npm run dev
+Remove-Item -Recurse -Force .next
+npm.cmd run dev
 ```
 
-Wait for `✓ Ready on http://localhost:3000`. Then open a SECOND terminal
-with the + button for Claude Code and git commands. Never type commands
-in the terminal running npm run dev.
+Use the exact localhost port printed by Next. Do not assume 3000; if 3000 is
+occupied, the app may run on 3001 or another nearby port.
 
 If styling disappears or "Cannot find module" error appears:
-Ctrl+C to stop → run startup command again → Ctrl+Shift+R to hard refresh browser.
+stop the stale dev server, remove `.next`, restart with `npm.cmd run dev`, then
+hard refresh the browser.
 
 Dev/cache note: `npm run build` rewrites `.next`. If a dev server is still
 running while `.next` is rewritten, the browser can request stale CSS asset
@@ -1040,12 +1043,6 @@ If styling disappears and pages render like plain black text on white, suspect a
 Ctrl+C
 Remove-Item -Recurse -Force .next
 npm.cmd run dev
-```
-
-For the new session, just tell it:
-
-```text
-Please add the Playwright browser verification section to HANDOFF.md. Then commit and push it to the current PR branch. Read HANDOFF.md first and preserve the existing project rules.
 ```
 
 ### Claude Code

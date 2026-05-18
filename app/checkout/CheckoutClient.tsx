@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useCart } from '@/app/context/CartContext'
 import { supabase } from '@/lib/supabase'
 
@@ -170,6 +171,7 @@ function Field({ label, error, hint, children }: {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function CheckoutClient() {
+  const router = useRouter()
   const { cart, clearCart, savedForm, saveForm, cycleInfo } = useCart()
   const [step, setStep] = useState<1 | 2>(1)
   const [isSuccess, setIsSuccess] = useState(false)
@@ -496,7 +498,7 @@ export default function CheckoutClient() {
 
   function handleBack() {
     if (step === 1) {
-      window.location.href = '/'
+      router.push('/')
       return
     }
     setStep(1)

@@ -167,48 +167,6 @@ function Field({ label, error, hint, children }: {
   )
 }
 
-function StepIndicator({ step }: { step: 1 | 2 }) {
-  return (
-    <div style={{
-      position: 'relative',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: 32,
-    }}>
-      <Link href="/" className="mali-menu-link" style={{
-        position: 'absolute',
-        left: 0,
-        fontFamily: 'var(--font-ui), sans-serif',
-        fontSize: 13,
-        color: 'var(--text-tertiary)',
-        textDecoration: 'none',
-      }}>
-        ← Menu
-      </Link>
-      <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-        <span style={{
-          fontFamily: 'var(--font-ui), sans-serif',
-          fontSize: 13,
-          fontWeight: step === 1 ? 600 : 400,
-          color: step === 1 ? 'var(--brand-green)' : 'var(--text-tertiary)',
-        }}>
-          1 — Details
-        </span>
-        <span style={{ color: 'var(--text-tertiary)', fontSize: 13 }}>·</span>
-        <span style={{
-          fontFamily: 'var(--font-ui), sans-serif',
-          fontSize: 13,
-          fontWeight: step === 2 ? 600 : 400,
-          color: step === 2 ? 'var(--brand-green)' : 'var(--text-tertiary)',
-        }}>
-          2 — Review
-        </span>
-      </div>
-    </div>
-  )
-}
-
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function CheckoutClient() {
@@ -536,6 +494,15 @@ export default function CheckoutClient() {
     window.scrollTo(0, 0)
   }
 
+  function handleBack() {
+    if (step === 1) {
+      window.location.href = '/'
+      return
+    }
+    setStep(1)
+    window.scrollTo(0, 0)
+  }
+
   async function handlePlaceOrder() {
     setIsSubmitting(true)
     setSubmitError(null)
@@ -706,11 +673,11 @@ export default function CheckoutClient() {
 
   const sectionTitle = (text: string) => (
     <h2 style={{
-      fontFamily: 'var(--font-instrument-serif), serif',
-      fontSize: 22,
+      fontFamily: 'var(--font-display), serif',
+      fontSize: 28,
       fontWeight: 400,
       color: 'var(--text-primary)',
-      margin: 0,
+      margin: '0 0 24px',
     }}>
       {text}
     </h2>
@@ -722,7 +689,6 @@ export default function CheckoutClient() {
         @media (max-width: 480px) {
           .mali-name-grid { grid-template-columns: 1fr !important; }
         }
-        .mali-menu-link:hover { text-decoration: underline; }
       `}</style>
 
       <div style={{ maxWidth: 600, margin: '0 auto', padding: '40px 20px 60px' }}>
@@ -731,17 +697,39 @@ export default function CheckoutClient() {
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <Link href="/" style={{ textDecoration: 'none' }}>
             <span style={{
-              fontFamily: 'var(--font-instrument-serif), serif',
+              fontFamily: 'var(--font-display), serif',
               fontSize: 26,
               fontWeight: 400,
               color: 'var(--text-primary)',
+              textAlign: 'center',
             }}>
               Mali&apos;s Meals
             </span>
           </Link>
         </div>
 
-        <StepIndicator step={step} />
+        <button
+          onClick={handleBack}
+          onMouseEnter={event => { event.currentTarget.style.color = 'var(--text-secondary)' }}
+          onMouseLeave={event => { event.currentTarget.style.color = 'var(--text-tertiary)' }}
+          style={{
+            color: 'var(--text-tertiary)',
+            fontFamily: 'var(--font-ui), sans-serif',
+            fontSize: 13,
+            fontWeight: 400,
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            padding: 0,
+            textDecoration: 'none',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 4,
+            marginBottom: 24,
+          }}
+        >
+          ← Back
+        </button>
 
         {/* ── STEP 1 — Details ────────────────────────────────────────────── */}
         {step === 1 && (
@@ -1065,16 +1053,6 @@ export default function CheckoutClient() {
               Continue to review →
             </button>
 
-            <Link href="/" style={{
-              fontFamily: 'var(--font-ui), sans-serif',
-              fontSize: 13,
-              color: 'var(--text-tertiary)',
-              textDecoration: 'none',
-              textAlign: 'center',
-            }}>
-              ← Back to menu
-            </Link>
-
           </div>
         )}
 
@@ -1083,11 +1061,11 @@ export default function CheckoutClient() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
             <h2 style={{
-              fontFamily: 'var(--font-instrument-serif), serif',
-              fontSize: 22,
+              fontFamily: 'var(--font-display), serif',
+              fontSize: 28,
               fontWeight: 400,
               color: 'var(--text-primary)',
-              margin: 0,
+              margin: '0 0 24px',
             }}>
               Review your order
             </h2>
@@ -1480,23 +1458,6 @@ export default function CheckoutClient() {
               }}
             >
               {isSubmitting ? 'Placing order…' : 'Place order'}
-            </button>
-
-            <button
-              onClick={() => { setStep(1); window.scrollTo(0, 0) }}
-              disabled={isSubmitting}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                fontFamily: 'var(--font-ui), sans-serif',
-                fontSize: 13,
-                color: 'var(--text-tertiary)',
-                padding: 0,
-                textAlign: 'center',
-              }}
-            >
-              ← Back to details
             </button>
 
           </div>

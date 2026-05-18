@@ -55,12 +55,12 @@ function variantLabel(variant: string, meatType: string | null, meatUpgradeType:
 function dishRow(name: string, variant: string | null, quantity: number, unitPrice: number): string {
   return `
     <tr>
-      <td style="padding: 10px 0; border-bottom: 1px solid #EDE8DF;">
-        <span style="font-family: Georgia, serif; font-size: 15px; color: #1F1B16;">${escapeHtml(name)}</span>
-        ${variant ? `<br><span style="font-family: Arial, sans-serif; font-size: 12px; color: #8B8375;">${escapeHtml(variant)}</span>` : ''}
+      <td style="padding: 10px 0; border-bottom: 1px solid #D4E8CF;">
+        <span style="font-family: Georgia, serif; font-size: 15px; color: #102015;">${escapeHtml(name)}</span>
+        ${variant ? `<br><span style="font-family: Arial, sans-serif; font-size: 12px; color: #6B7D6E;">${escapeHtml(variant)}</span>` : ''}
       </td>
-      <td style="padding: 10px 0; border-bottom: 1px solid #EDE8DF; text-align: right; font-family: Arial, sans-serif; font-size: 13px; color: #5C554A; white-space: nowrap;">${quantity} &times; ${fmt(unitPrice)}</td>
-      <td style="padding: 10px 0; border-bottom: 1px solid #EDE8DF; text-align: right; font-family: Georgia, serif; font-size: 15px; color: #1F1B16; white-space: nowrap;">${fmt(unitPrice * quantity)}</td>
+      <td style="padding: 10px 0; border-bottom: 1px solid #D4E8CF; text-align: right; font-family: Arial, sans-serif; font-size: 13px; color: #3A4F3E; white-space: nowrap;">${quantity} &times; ${fmt(unitPrice)}</td>
+      <td style="padding: 10px 0; border-bottom: 1px solid #D4E8CF; text-align: right; font-family: Georgia, serif; font-size: 15px; color: #102015; white-space: nowrap;">${fmt(unitPrice * quantity)}</td>
     </tr>
   `
 }
@@ -68,7 +68,7 @@ function dishRow(name: string, variant: string | null, quantity: number, unitPri
 function sectionHeading(label: string): string {
   return `
     <tr>
-      <td colspan="3" style="padding: 10px 0 6px; font-family: Arial, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #8B8375;">
+      <td colspan="3" style="padding: 10px 0 6px; font-family: Arial, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #6B7D6E;">
         ${escapeHtml(label)}
       </td>
     </tr>
@@ -155,10 +155,10 @@ export async function POST(req: NextRequest) {
     const paymentStatusLabel = order.payment_status === 'paid' ? 'Paid' : 'Unpaid'
 
     const notesBlock = order.notes ? `
-      <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #EDE8DF;">
-        <div style="background: #F5E3C0; border-left: 3px solid #C8872E; border-radius: 4px; padding: 12px 16px;">
-          <p style="font-family: Arial, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #A26B1E; margin: 0 0 6px;">Allergy &amp; special instructions</p>
-          <p style="font-family: Arial, sans-serif; font-size: 14px; color: #1F1B16; margin: 0; line-height: 1.6;">${escapeHtml(order.notes)}</p>
+      <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #D4E8CF;">
+        <div style="background: #FFFFFF; border: 1px solid #B5533C; border-radius: 8px; padding: 12px 16px;">
+          <p style="font-family: Arial, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #B5533C; margin: 0 0 6px;">Allergy &amp; special instructions</p>
+          <p style="font-family: Arial, sans-serif; font-size: 14px; color: #102015; margin: 0; line-height: 1.6;">${escapeHtml(order.notes)}</p>
         </div>
       </div>
     ` : ''
@@ -171,80 +171,80 @@ export async function POST(req: NextRequest) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>New Mali's Meals order - ${escapeHtml(order.order_ref)}</title>
 </head>
-<body style="margin: 0; padding: 0; background: #FBF7F0; -webkit-text-size-adjust: 100%;">
+<body style="margin: 0; padding: 0; background: #EEF3EC; -webkit-text-size-adjust: 100%;">
   <div style="max-width: 560px; margin: 0 auto; padding: 40px 20px;">
 
-    <p style="font-family: Georgia, serif; font-size: 22px; font-weight: 400; color: #1F1B16; text-align: center; margin: 0 0 32px;">
+    <p style="font-family: Georgia, serif; font-size: 22px; font-weight: 400; color: #102015; text-align: center; margin: 0 0 32px;">
       Mali's Meals
     </p>
 
-    <h1 style="font-family: Georgia, serif; font-size: 34px; font-weight: 400; color: #1F1B16; text-align: center; margin: 0 0 10px;">
+    <h1 style="font-family: Georgia, serif; font-size: 34px; font-weight: 400; color: #102015; text-align: center; margin: 0 0 10px;">
       New order received
     </h1>
-    <p style="font-family: Arial, sans-serif; font-size: 15px; color: #5C554A; text-align: center; margin: 0 0 32px; line-height: 1.6;">
+    <p style="font-family: Arial, sans-serif; font-size: 15px; color: #3A4F3E; text-align: center; margin: 0 0 32px; line-height: 1.6;">
       ${escapeHtml(order.customer_name)} placed an order for ${escapeHtml(deliveryLabel)}.
     </p>
 
-    <div style="background: #F5E3C0; border-radius: 8px; padding: 20px 24px; text-align: center; margin-bottom: 20px;">
-      <p style="font-family: Arial, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #8B8375; margin: 0 0 6px;">
+    <div style="background: #D4EDD4; border-radius: 8px; padding: 20px 24px; text-align: center; margin-bottom: 20px;">
+      <p style="font-family: Arial, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #6B7D6E; margin: 0 0 6px;">
         Order reference
       </p>
-      <p style="font-family: Georgia, serif; font-size: 32px; font-weight: 400; color: #1F1B16; margin: 0 0 8px;">
+      <p style="font-family: Georgia, serif; font-size: 32px; font-weight: 400; color: #102015; margin: 0 0 8px;">
         ${escapeHtml(order.order_ref)}
       </p>
-      <p style="font-family: Arial, sans-serif; font-size: 14px; color: #5C554A; margin: 0 0 16px; line-height: 1.5;">
+      <p style="font-family: Arial, sans-serif; font-size: 14px; color: #3A4F3E; margin: 0 0 16px; line-height: 1.5;">
         ${dateLabel ? `${escapeHtml(dateLabel)} - ` : ''}Zone ${escapeHtml(order.delivery_zone)} - ${escapeHtml(zoneName)}
       </p>
-      <a href="${escapeHtml(reviewUrl)}" style="display: inline-block; background: #C8872E; color: #FFFFFF; text-decoration: none; font-family: Arial, sans-serif; font-size: 14px; font-weight: 700; border-radius: 8px; padding: 12px 24px;">
+      <a href="${escapeHtml(reviewUrl)}" style="display: inline-block; background: #1F6B3A; color: #FFFFFF; text-decoration: none; font-family: Arial, sans-serif; font-size: 14px; font-weight: 700; border-radius: 8px; padding: 12px 24px;">
         Review order
       </a>
     </div>
 
     <div style="background: #FFFFFF; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-      <p style="font-family: Georgia, serif; font-size: 17px; color: #1F1B16; margin: 0 0 12px;">Customer</p>
+      <p style="font-family: Georgia, serif; font-size: 17px; color: #102015; margin: 0 0 12px;">Customer</p>
       <table style="width: 100%; border-collapse: collapse;">
         <tr>
-          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #8B8375; padding: 4px 0; width: 90px;">Name</td>
-          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #1F1B16; padding: 4px 0;">${escapeHtml(order.customer_name)}</td>
+          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #6B7D6E; padding: 4px 0; width: 90px;">Name</td>
+          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #102015; padding: 4px 0;">${escapeHtml(order.customer_name)}</td>
         </tr>
         <tr>
-          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #8B8375; padding: 4px 0;">Phone</td>
-          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #1F1B16; padding: 4px 0;">${escapeHtml(order.customer_phone)}</td>
+          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #6B7D6E; padding: 4px 0;">Phone</td>
+          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #102015; padding: 4px 0;">${escapeHtml(order.customer_phone)}</td>
         </tr>
         <tr>
-          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #8B8375; padding: 4px 0;">Email</td>
-          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #1F1B16; padding: 4px 0;">${escapeHtml(order.customer_email)}</td>
+          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #6B7D6E; padding: 4px 0;">Email</td>
+          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #102015; padding: 4px 0;">${escapeHtml(order.customer_email)}</td>
         </tr>
       </table>
     </div>
 
     <div style="background: #FFFFFF; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-      <p style="font-family: Georgia, serif; font-size: 17px; color: #1F1B16; margin: 0 0 12px;">Delivery</p>
+      <p style="font-family: Georgia, serif; font-size: 17px; color: #102015; margin: 0 0 12px;">Delivery</p>
       <table style="width: 100%; border-collapse: collapse;">
         <tr>
-          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #8B8375; padding: 4px 0; width: 90px;">When</td>
-          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #1F1B16; padding: 4px 0;">${escapeHtml(deliveryLabel)}</td>
+          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #6B7D6E; padding: 4px 0; width: 90px;">When</td>
+          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #102015; padding: 4px 0;">${escapeHtml(deliveryLabel)}</td>
         </tr>
         <tr>
-          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #8B8375; padding: 4px 0;">Zone</td>
-          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #1F1B16; padding: 4px 0;">Zone ${escapeHtml(order.delivery_zone)} - ${escapeHtml(zoneName)}</td>
+          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #6B7D6E; padding: 4px 0;">Zone</td>
+          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #102015; padding: 4px 0;">Zone ${escapeHtml(order.delivery_zone)} - ${escapeHtml(zoneName)}</td>
         </tr>
         <tr>
-          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #8B8375; padding: 4px 0;">Building</td>
-          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #1F1B16; padding: 4px 0;">${escapeHtml(order.address_building)}</td>
+          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #6B7D6E; padding: 4px 0;">Building</td>
+          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #102015; padding: 4px 0;">${escapeHtml(order.address_building)}</td>
         </tr>
         <tr>
-          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #8B8375; padding: 4px 0;">Street</td>
-          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #1F1B16; padding: 4px 0;">${escapeHtml(order.address_street)}</td>
+          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #6B7D6E; padding: 4px 0;">Street</td>
+          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #102015; padding: 4px 0;">${escapeHtml(order.address_street)}</td>
         </tr>
         <tr>
-          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #8B8375; padding: 4px 0;">Apt/House</td>
-          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #1F1B16; padding: 4px 0;">${escapeHtml(order.address_apartment)}</td>
+          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #6B7D6E; padding: 4px 0;">Apt/House</td>
+          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #102015; padding: 4px 0;">${escapeHtml(order.address_apartment)}</td>
         </tr>
         ${order.address_landmark ? `
         <tr>
-          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #8B8375; padding: 4px 0;">Landmark</td>
-          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #1F1B16; padding: 4px 0;">${escapeHtml(order.address_landmark)}</td>
+          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #6B7D6E; padding: 4px 0;">Landmark</td>
+          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #102015; padding: 4px 0;">${escapeHtml(order.address_landmark)}</td>
         </tr>` : ''}
       </table>
       ${notesBlock}
@@ -254,9 +254,9 @@ export async function POST(req: NextRequest) {
       <table style="width: 100%; border-collapse: collapse;">
         <thead>
           <tr>
-            <th style="font-family: Arial, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #8B8375; text-align: left; padding-bottom: 10px; border-bottom: 1px solid #EDE8DF;">Item</th>
-            <th style="font-family: Arial, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #8B8375; text-align: right; padding-bottom: 10px; border-bottom: 1px solid #EDE8DF; white-space: nowrap;">Qty &amp; price</th>
-            <th style="font-family: Arial, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #8B8375; text-align: right; padding-bottom: 10px; border-bottom: 1px solid #EDE8DF;">Total</th>
+            <th style="font-family: Arial, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #6B7D6E; text-align: left; padding-bottom: 10px; border-bottom: 1px solid #D4E8CF;">Item</th>
+            <th style="font-family: Arial, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #6B7D6E; text-align: right; padding-bottom: 10px; border-bottom: 1px solid #D4E8CF; white-space: nowrap;">Qty &amp; price</th>
+            <th style="font-family: Arial, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #6B7D6E; text-align: right; padding-bottom: 10px; border-bottom: 1px solid #D4E8CF;">Total</th>
           </tr>
         </thead>
         <tbody>
@@ -269,37 +269,37 @@ export async function POST(req: NextRequest) {
 
       <table style="width: 100%; border-collapse: collapse; margin-top: 12px;">
         <tr>
-          <td style="font-family: Arial, sans-serif; font-size: 14px; color: #5C554A; padding: 5px 0;">Subtotal</td>
-          <td style="font-family: Georgia, serif; font-size: 16px; color: #1F1B16; text-align: right; padding: 5px 0;">${fmt(order.subtotal)}</td>
+          <td style="font-family: Arial, sans-serif; font-size: 14px; color: #3A4F3E; padding: 5px 0;">Subtotal</td>
+          <td style="font-family: Georgia, serif; font-size: 16px; color: #102015; text-align: right; padding: 5px 0;">${fmt(order.subtotal)}</td>
         </tr>
         <tr>
-          <td style="font-family: Arial, sans-serif; font-size: 14px; color: #5C554A; padding: 5px 0;">
-            Delivery${freeDelivery ? ' <span style="color: #C8872E; font-size: 13px;">(free!)</span>' : ''}
+          <td style="font-family: Arial, sans-serif; font-size: 14px; color: #3A4F3E; padding: 5px 0;">
+            Delivery${freeDelivery ? ' <span style="color: #1F6B3A; font-size: 13px;">(free!)</span>' : ''}
           </td>
-          <td style="font-family: Georgia, serif; font-size: 16px; color: ${freeDelivery ? '#C8872E' : '#1F1B16'}; text-align: right; padding: 5px 0;">
+          <td style="font-family: Georgia, serif; font-size: 16px; color: ${freeDelivery ? '#1F6B3A' : '#102015'}; text-align: right; padding: 5px 0;">
             ${freeDelivery ? 'Free' : fmt(order.delivery_fee)}
           </td>
         </tr>
         <tr>
-          <td style="font-family: Arial, sans-serif; font-size: 15px; font-weight: 600; color: #1F1B16; padding: 14px 0 5px; border-top: 1px solid #EDE8DF;">Total</td>
-          <td style="font-family: Georgia, serif; font-size: 24px; color: #1F1B16; text-align: right; padding: 14px 0 5px; border-top: 1px solid #EDE8DF;">${fmt(order.total_amount)}</td>
+          <td style="font-family: Arial, sans-serif; font-size: 15px; font-weight: 600; color: #102015; padding: 14px 0 5px; border-top: 1px solid #D4E8CF;">Total</td>
+          <td style="font-family: Georgia, serif; font-size: 24px; color: #102015; text-align: right; padding: 14px 0 5px; border-top: 1px solid #D4E8CF;">${fmt(order.total_amount)}</td>
         </tr>
       </table>
     </div>
 
-    <div style="background: #F5E3C0; border-radius: 8px; padding: 18px 20px; margin-bottom: 28px; border: 1px solid #C8872E;">
-      <p style="font-family: Arial, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #A26B1E; margin: 0 0 8px;">
+    <div style="background: #D4EDD4; border-radius: 8px; padding: 18px 20px; margin-bottom: 28px; border: 1px solid #1F6B3A;">
+      <p style="font-family: Arial, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #1F6B3A; margin: 0 0 8px;">
         Payment status
       </p>
-      <p style="font-family: Arial, sans-serif; font-size: 15px; color: #1F1B16; margin: 0 0 4px; line-height: 1.6;">
+      <p style="font-family: Arial, sans-serif; font-size: 15px; color: #102015; margin: 0 0 4px; line-height: 1.6;">
         <strong>${escapeHtml(paymentStatusLabel)}</strong>
       </p>
-      <p style="font-family: Arial, sans-serif; font-size: 14px; color: #5C554A; margin: 0; line-height: 1.6;">
-        Total due: <strong style="color: #1F1B16;">${fmt(order.total_amount)}</strong>
+      <p style="font-family: Arial, sans-serif; font-size: 14px; color: #3A4F3E; margin: 0; line-height: 1.6;">
+        Total due: <strong style="color: #102015;">${fmt(order.total_amount)}</strong>
       </p>
     </div>
 
-    <p style="font-family: Arial, sans-serif; font-size: 13px; color: #8B8375; text-align: center; margin: 0; line-height: 1.6;">
+    <p style="font-family: Arial, sans-serif; font-size: 13px; color: #6B7D6E; text-align: center; margin: 0; line-height: 1.6;">
       This notification was sent because a customer placed a new order.
     </p>
 

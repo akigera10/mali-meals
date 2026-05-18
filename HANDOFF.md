@@ -1089,3 +1089,6 @@ Best used for: menu page architectural fixes, checkout validation, reports refin
 22. The menu page styling bug was fixed with the server/client component split. Preserve that architecture.
 23. The order ref generator uses MAX across all order_refs — never sort by created_at as that caused duplicate ref bugs
 24. specials must check is_active = true before displaying on customer menu — do not show inactive specials
+25. No `<hr>`, `borderTop`, or `borderBottom` dividers as section separators in customer UI — use margin spacing only. Row borders are allowed only where the pattern explicitly requires list rows, such as protein add-ons.
+26. Prices always use `--text-primary` — never use green tokens such as `--brand-green`, `--brand-green-soft`, `--brand-green-hover`, or `--accent-forest` for prices.
+27. Allergen and feature chips must spell out full words — no abbreviations, single-letter chips, or icon-only chips. Allergen and spicy chips use terracotta outline; non-risk feature chips use `--surface-sunken` and `--text-secondary`.

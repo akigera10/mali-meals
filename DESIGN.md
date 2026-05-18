@@ -306,7 +306,7 @@ Deadline/delivery info card:
 - No shadow
 - Labels: `--text-tertiary`, uppercase, `--font-ui`, 11px, 600
 - Values: `--font-display`, `--text-primary`
-- Deadline/delivery info card background is `--surface-raised`. Do not apply `--brand-green-soft` tint.
+- Deadline/delivery info card background is `--surface-raised`. Never apply `--brand-green-soft` tint.
 
 ### Customer Menu Card
 
@@ -323,12 +323,38 @@ Rules:
 
 - Dish name uses `--font-display`.
 - Description uses `--font-ui`.
-- Price uses `--font-display` and `--text-primary`. Do not use `--accent-forest` for prices.
+- Price uses `--font-display` and `--text-primary`. Never use `--brand-green`, `--brand-green-soft`, `--brand-green-hover`, `--accent-forest`, or any green token for prices.
 - Add button uses primary customer button spec.
-- Feature/allergen chips use compact badge specs.
+- Allergen chips use a terracotta outline: transparent background, `--accent-terracotta` text, `1px solid var(--accent-terracotta)`, and full words such as Soy, Dairy, Nuts, or Coconut. No single letters, abbreviations, or icons.
+- Feature chips use `--surface-sunken`, `--text-secondary`, `1px solid var(--border)`, and full words such as Freezer or Family. No icons or abbreviations.
+- Spicy is a mild warning and uses the allergen terracotta treatment.
+- Do not use `<hr>`, `borderTop`, or `borderBottom` as section or option-row dividers inside dish cards. Use margin spacing between option rows instead.
 - Sold-out dims the relevant option and disables Add.
 
 Do not use random colored square badges. Prefer readable chips.
+
+### Protein Add-ons
+
+Purpose: keep lower-hierarchy add-ons compact and easy to scan.
+
+Outer container:
+
+- Background: `--surface-raised`
+- Border: `1px solid var(--border)`
+- Radius: 8px
+- Overflow: hidden
+
+Rows:
+
+- Each add-on is one row inside the container.
+- Row layout uses `display: flex`, `align-items: center`, `gap: 12px`.
+- Row padding is `12px 16px`.
+- Minimum row height is 48px.
+- Use `border-bottom: 1px solid var(--border)` between rows only.
+- The final row has no `border-bottom`.
+- Name sits left in `--font-ui`, 14px, 500, `--text-primary`.
+- Price sits middle-right or right-aligned before the Add button, uses `--font-display`, 15px, 400, `--text-primary`, with `margin-left: auto` where needed.
+- Add button uses the primary customer button spec with compact padding: `8px 14px`.
 
 ### Cart Bar
 
@@ -354,6 +380,30 @@ Style:
 - Sections grouped by customer, delivery, order summary, payment note
 - Totals prominent
 - Payment copy plain and specific
+
+Do not use a stepper or progress indicator for the two-step checkout. The page headings `Your details` and `Review your order` carry the progress context.
+
+Back navigation:
+
+- Plain text `← Back`
+- Color: `--text-tertiary`
+- Font: `--font-ui`, 13px, 400
+- No underline
+- Background: none
+- Border: none
+- Padding: 0
+- Display: inline-flex, aligned center
+- Hover changes color only to `--text-secondary`
+- On step 1, Back navigates to the menu page.
+- On step 2, Back returns to step 1 and preserves cart and form state.
+
+Checkout step headings:
+
+- Font: `--font-display`
+- Size: 28px
+- Weight: 400
+- Color: `--text-primary`
+- Margin-bottom: 24px
 
 ### Success Screen
 

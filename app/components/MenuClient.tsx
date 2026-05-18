@@ -497,10 +497,18 @@ function AddonRow({
           <span style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 14, fontWeight: 500, color: 'var(--text-primary)' }}>
             {addon.name}
           </span>
-          <span style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 14, fontWeight: 400, color: 'var(--text-tertiary)', marginLeft: 8 }}>
-            {fmt(addon.price)}
-          </span>
         </div>
+        <span style={{
+          fontFamily: 'var(--font-display), serif',
+          fontSize: 15,
+          fontWeight: 400,
+          color: 'var(--text-primary)',
+          marginLeft: 'auto',
+          textAlign: 'right',
+          flexShrink: 0,
+        }}>
+          {fmt(addon.price)}
+        </span>
         {soldOut ? (
           <span style={{
             fontFamily: 'var(--font-ui), sans-serif',
@@ -543,10 +551,18 @@ function AddonRow({
         <span style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 14, fontWeight: 500, color: 'var(--text-primary)' }}>
           {addon.name}
         </span>
-        <span style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 14, fontWeight: 400, color: 'var(--text-tertiary)', marginLeft: 8 }}>
-          {fmt(addon.price)}
-        </span>
       </div>
+      <span style={{
+        fontFamily: 'var(--font-display), serif',
+        fontSize: 15,
+        fontWeight: 400,
+        color: 'var(--text-primary)',
+        marginLeft: 'auto',
+        textAlign: 'right',
+        flexShrink: 0,
+      }}>
+        {fmt(addon.price)}
+      </span>
       {soldOut ? (
         <span style={{
           fontFamily: 'var(--font-ui), sans-serif',
@@ -647,8 +663,19 @@ function SpecialCard({
           justifyContent: 'space-between',
           gap: 8,
         }}>
-          <span style={{ fontFamily: 'var(--font-instrument-serif), serif', fontSize: 18, color: 'var(--text-primary)' }}>
-            {fmt(special.price)}
+          <span>
+            <span style={{ fontFamily: 'var(--font-instrument-serif), serif', fontSize: 18, color: 'var(--text-primary)' }}>
+              {fmt(special.price)}
+            </span>
+            <span style={{
+              color: 'var(--text-tertiary)',
+              fontFamily: 'var(--font-ui), sans-serif',
+              fontSize: 13,
+              fontWeight: 400,
+              marginLeft: 6,
+            }}>
+              one serving
+            </span>
           </span>
           <Qty
             qty={getQty(key)}
@@ -659,6 +686,15 @@ function SpecialCard({
       ) : (
         <p style={{ fontFamily: 'var(--font-instrument-serif), serif', fontSize: 18, color: 'var(--text-tertiary)', margin: '12px 0 0' }}>
           {fmt(special.price)}
+          <span style={{
+            color: 'var(--text-tertiary)',
+            fontFamily: 'var(--font-ui), sans-serif',
+            fontSize: 13,
+            fontWeight: 400,
+            marginLeft: 6,
+          }}>
+            one serving
+          </span>
         </p>
       )}
     </article>
@@ -740,12 +776,16 @@ export default function MenuClient({
           <div style={{
             display: 'inline-flex',
             alignItems: 'center',
-            gap: 8,
+            gap: 6,
             background: 'var(--surface-sunken)',
             border: '1px solid var(--border)',
-            borderRadius: 999,
-            padding: '6px 12px',
+            borderRadius: 20,
+            padding: '5px 12px',
             marginBottom: 18,
+            fontFamily: 'var(--font-ui), sans-serif',
+            fontSize: 13,
+            fontWeight: 500,
+            color: 'var(--text-secondary)',
           }}>
             <span style={{
               width: 7,
@@ -756,8 +796,8 @@ export default function MenuClient({
             }} />
             <span style={{
               fontFamily: 'var(--font-ui), sans-serif',
-              fontSize: 12,
-              fontWeight: 600,
+              fontSize: 13,
+              fontWeight: 500,
               color: 'var(--text-secondary)',
               letterSpacing: '0.01em',
             }}>
@@ -798,17 +838,18 @@ export default function MenuClient({
               <p style={{
                 fontFamily: 'var(--font-ui), sans-serif',
                 fontSize: 11,
-                fontWeight: 700,
+                fontWeight: 600,
                 color: 'var(--text-tertiary)',
                 margin: '0 0 4px',
                 textTransform: 'uppercase',
-                letterSpacing: '0.08em',
+                letterSpacing: '0.06em',
               }}>
                 Order by
               </p>
               <p style={{
-                fontFamily: 'var(--font-instrument-serif), serif',
-                fontSize: 24,
+                fontFamily: 'var(--font-display), serif',
+                fontSize: 22,
+                fontWeight: 400,
                 color: 'var(--text-primary)',
                 margin: 0,
                 lineHeight: 1.1,
@@ -820,17 +861,18 @@ export default function MenuClient({
               <p style={{
                 fontFamily: 'var(--font-ui), sans-serif',
                 fontSize: 11,
-                fontWeight: 700,
+                fontWeight: 600,
                 color: 'var(--text-tertiary)',
                 margin: '0 0 4px',
                 textTransform: 'uppercase',
-                letterSpacing: '0.08em',
+                letterSpacing: '0.06em',
               }}>
                 Delivery
               </p>
               <p style={{
-                fontFamily: 'var(--font-instrument-serif), serif',
-                fontSize: 24,
+                fontFamily: 'var(--font-display), serif',
+                fontSize: 22,
+                fontWeight: 400,
                 color: 'var(--text-primary)',
                 margin: 0,
                 lineHeight: 1.1,
@@ -871,7 +913,7 @@ export default function MenuClient({
         </section>
 
         {/* Salads */}
-        <section style={{ marginBottom: 52 }}>
+        <section style={{ marginBottom: 52, marginTop: 48 }}>
           <SectionHeading>Salads</SectionHeading>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {salads.map(dish => (
@@ -882,7 +924,7 @@ export default function MenuClient({
 
         {/* Chef's special */}
         {visibleSpecials.length > 0 && (
-          <section style={{ marginBottom: 52 }}>
+          <section style={{ marginBottom: 52, marginTop: 48 }}>
             <SectionHeading>Chef&apos;s special</SectionHeading>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {visibleSpecials.map(special => (
@@ -894,7 +936,7 @@ export default function MenuClient({
 
         {/* Protein add-ons */}
         {addons.length > 0 && (
-          <section>
+          <section style={{ marginTop: 48 }}>
             <SectionHeading>Protein add-ons</SectionHeading>
             <p style={{
               fontFamily: 'var(--font-ui), sans-serif',

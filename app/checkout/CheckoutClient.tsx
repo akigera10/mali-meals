@@ -724,7 +724,7 @@ export default function CheckoutClient() {
                   onBlur={blur}
                   style={{
                     fontFamily: 'var(--font-ui), sans-serif',
-                    fontSize: 14,
+                    fontSize: 16,
                     color: 'var(--text-primary)',
                     background: 'var(--surface-raised)',
                     border: `1px solid ${errors.firstName ? 'var(--accent-terracotta)' : isFocused('firstName') ? 'var(--brand-green-hover)' : 'var(--border-strong)'}`,
@@ -748,7 +748,7 @@ export default function CheckoutClient() {
                   onBlur={blur}
                   style={{
                     fontFamily: 'var(--font-ui), sans-serif',
-                    fontSize: 14,
+                    fontSize: 16,
                     color: 'var(--text-primary)',
                     background: 'var(--surface-raised)',
                     border: `1px solid ${errors.lastName ? 'var(--accent-terracotta)' : isFocused('lastName') ? 'var(--brand-green-hover)' : 'var(--border-strong)'}`,
@@ -774,7 +774,7 @@ export default function CheckoutClient() {
                 onBlur={blur}
                 style={{
                   fontFamily: 'var(--font-ui), sans-serif',
-                  fontSize: 14,
+                  fontSize: 16,
                   color: 'var(--text-primary)',
                   background: 'var(--surface-raised)',
                   border: `1px solid ${errors.email ? 'var(--accent-terracotta)' : isFocused('email') ? 'var(--brand-green-hover)' : 'var(--border-strong)'}`,
@@ -803,7 +803,7 @@ export default function CheckoutClient() {
                 onBlur={blur}
                 style={{
                   fontFamily: 'var(--font-ui), sans-serif',
-                  fontSize: 14,
+                  fontSize: 16,
                   color: 'var(--text-primary)',
                   background: 'var(--surface-raised)',
                   border: `1px solid ${errors.phone ? 'var(--accent-terracotta)' : isFocused('phone') ? 'var(--brand-green-hover)' : 'var(--border-strong)'}`,
@@ -840,7 +840,7 @@ export default function CheckoutClient() {
                 onBlur={blur}
                 style={{
                   fontFamily: 'var(--font-ui), sans-serif',
-                  fontSize: 14,
+                  fontSize: 16,
                   color: 'var(--text-primary)',
                   background: 'var(--surface-raised)',
                   border: `1px solid ${errors.addrBuilding ? 'var(--accent-terracotta)' : isFocused('addrBuilding') ? 'var(--brand-green-hover)' : 'var(--border-strong)'}`,
@@ -865,7 +865,7 @@ export default function CheckoutClient() {
                 onBlur={blur}
                 style={{
                   fontFamily: 'var(--font-ui), sans-serif',
-                  fontSize: 14,
+                  fontSize: 16,
                   color: 'var(--text-primary)',
                   background: 'var(--surface-raised)',
                   border: `1px solid ${errors.addrStreet ? 'var(--accent-terracotta)' : isFocused('addrStreet') ? 'var(--brand-green-hover)' : 'var(--border-strong)'}`,
@@ -890,7 +890,7 @@ export default function CheckoutClient() {
                 onBlur={blur}
                 style={{
                   fontFamily: 'var(--font-ui), sans-serif',
-                  fontSize: 14,
+                  fontSize: 16,
                   color: 'var(--text-primary)',
                   background: 'var(--surface-raised)',
                   border: `1px solid ${errors.addrApartment ? 'var(--accent-terracotta)' : isFocused('addrApartment') ? 'var(--brand-green-hover)' : 'var(--border-strong)'}`,
@@ -919,7 +919,7 @@ export default function CheckoutClient() {
                 placeholder="e.g. Next to Chandarana, opposite Total petrol station"
                 style={{
                   fontFamily: 'var(--font-ui), sans-serif',
-                  fontSize: 14,
+                  fontSize: 16,
                   color: 'var(--text-primary)',
                   background: 'var(--surface-raised)',
                   border: `1px solid ${isFocused('addrLandmark') ? 'var(--brand-green-hover)' : 'var(--border-strong)'}`,
@@ -1129,7 +1129,7 @@ export default function CheckoutClient() {
                 rows={3}
                 style={{
                   fontFamily: 'var(--font-ui), sans-serif',
-                  fontSize: 14,
+                  fontSize: 16,
                   color: 'var(--text-primary)',
                   background: 'var(--surface-raised)',
                   border: `1px solid ${isFocused('notes') ? 'var(--brand-green-hover)' : 'var(--border-strong)'}`,

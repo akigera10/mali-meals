@@ -111,21 +111,6 @@ function validate(data: FormData): FormErrors {
   return errors
 }
 
-function inputStyle(hasError: boolean, focused = false): React.CSSProperties {
-  return {
-    fontFamily: 'var(--font-ui), sans-serif',
-    fontSize: 14,
-    color: 'var(--text-primary)',
-    background: 'var(--surface-raised)',
-    border: `1px solid ${hasError ? '#B5533C' : focused ? 'var(--brand-green)' : 'var(--border-strong)'}`,
-    borderRadius: 8,
-    padding: '12px 14px',
-    outline: 'none',
-    width: '100%',
-    boxSizing: 'border-box',
-  }
-}
-
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function Field({ label, error, hint, children }: {
@@ -140,7 +125,7 @@ function Field({ label, error, hint, children }: {
         fontFamily: 'var(--font-ui), sans-serif',
         fontSize: 13,
         fontWeight: 500,
-        color: error ? '#B5533C' : 'var(--text-secondary)',
+        color: error ? 'var(--accent-terracotta)' : 'var(--text-secondary)',
       }}>
         {label}
       </label>
@@ -159,7 +144,7 @@ function Field({ label, error, hint, children }: {
         <span style={{
           fontFamily: 'var(--font-ui), sans-serif',
           fontSize: 12,
-          color: '#B5533C',
+          color: 'var(--accent-terracotta)',
         }}>
           {error}
         </span>
@@ -198,7 +183,7 @@ export default function CheckoutClient() {
     return (
       <div style={{ maxWidth: 600, margin: '0 auto', padding: '80px 20px', textAlign: 'center' }}>
         <p style={{
-          fontFamily: 'var(--font-instrument-serif), serif',
+          fontFamily: 'var(--font-display), serif',
           fontSize: 26,
           fontWeight: 400,
           color: 'var(--text-primary)',
@@ -260,7 +245,7 @@ export default function CheckoutClient() {
           </span>
         </div>
         <p style={{
-          fontFamily: 'var(--font-instrument-serif), serif',
+          fontFamily: 'var(--font-display), serif',
           fontSize: 40,
           fontWeight: 400,
           color: 'var(--text-primary)',
@@ -280,8 +265,8 @@ export default function CheckoutClient() {
           Your order is safely in Mali&apos;s queue. Keep the reference below for any questions about this order.
         </p>
         <div style={{
-          background: 'var(--brand-green-soft)',
-          border: '1px solid var(--brand-green)',
+          background: 'var(--surface-raised)',
+          border: '1px solid var(--brand-green-hover)',
           borderRadius: 8,
           padding: '22px 24px',
           marginBottom: 18,
@@ -297,7 +282,7 @@ export default function CheckoutClient() {
             Your order reference
           </p>
           <p style={{
-            fontFamily: 'var(--font-instrument-serif), serif',
+            fontFamily: 'var(--font-display), serif',
             fontSize: 42,
             fontWeight: 400,
             color: 'var(--text-primary)',
@@ -323,7 +308,7 @@ export default function CheckoutClient() {
           marginBottom: 28,
         }}>
           <p style={{
-            fontFamily: 'var(--font-instrument-serif), serif',
+            fontFamily: 'var(--font-display), serif',
             fontSize: 20,
             color: 'var(--text-primary)',
             margin: '0 0 14px',
@@ -673,26 +658,8 @@ export default function CheckoutClient() {
     }
   }
 
-  const sectionTitle = (text: string) => (
-    <h2 style={{
-      fontFamily: 'var(--font-display), serif',
-      fontSize: 28,
-      fontWeight: 400,
-      color: 'var(--text-primary)',
-      margin: '0 0 24px',
-    }}>
-      {text}
-    </h2>
-  )
-
   return (
     <>
-      <style>{`
-        @media (max-width: 480px) {
-          .mali-name-grid { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
-
       <div style={{ maxWidth: 600, margin: '0 auto', padding: '40px 20px 60px' }}>
 
         {/* Page header */}
@@ -737,12 +704,17 @@ export default function CheckoutClient() {
         {step === 1 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-            {sectionTitle('Your details')}
+            <h2 style={{
+              fontFamily: 'var(--font-display), serif',
+              fontSize: 28,
+              fontWeight: 400,
+              color: 'var(--text-primary)',
+              margin: '0 0 24px',
+            }}>
+              Your details
+            </h2>
 
-            <div
-              className="mali-name-grid"
-              style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}
-            >
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
               <Field label="First name" error={errors.firstName}>
                 <input
                   type="text"
@@ -750,7 +722,21 @@ export default function CheckoutClient() {
                   onChange={e => setField('firstName', e.target.value)}
                   onFocus={() => focus('firstName')}
                   onBlur={blur}
-                  style={inputStyle(!!errors.firstName, isFocused('firstName'))}
+                  style={{
+                    fontFamily: 'var(--font-ui), sans-serif',
+                    fontSize: 14,
+                    color: 'var(--text-primary)',
+                    background: 'var(--surface-raised)',
+                    border: `1px solid ${errors.firstName ? 'var(--accent-terracotta)' : isFocused('firstName') ? 'var(--brand-green-hover)' : 'var(--border-strong)'}`,
+                    borderRadius: 8,
+                    padding: '12px 14px',
+                    minHeight: 44,
+                    outline: isFocused('firstName') ? '2px solid var(--brand-green)' : 'none',
+                    outlineOffset: 2,
+                    width: '100%',
+                    boxSizing: 'border-box',
+                    lineHeight: 1.5,
+                  }}
                 />
               </Field>
               <Field label="Last name" error={errors.lastName}>
@@ -760,7 +746,21 @@ export default function CheckoutClient() {
                   onChange={e => setField('lastName', e.target.value)}
                   onFocus={() => focus('lastName')}
                   onBlur={blur}
-                  style={inputStyle(!!errors.lastName, isFocused('lastName'))}
+                  style={{
+                    fontFamily: 'var(--font-ui), sans-serif',
+                    fontSize: 14,
+                    color: 'var(--text-primary)',
+                    background: 'var(--surface-raised)',
+                    border: `1px solid ${errors.lastName ? 'var(--accent-terracotta)' : isFocused('lastName') ? 'var(--brand-green-hover)' : 'var(--border-strong)'}`,
+                    borderRadius: 8,
+                    padding: '12px 14px',
+                    minHeight: 44,
+                    outline: isFocused('lastName') ? '2px solid var(--brand-green)' : 'none',
+                    outlineOffset: 2,
+                    width: '100%',
+                    boxSizing: 'border-box',
+                    lineHeight: 1.5,
+                  }}
                 />
               </Field>
             </div>
@@ -772,7 +772,21 @@ export default function CheckoutClient() {
                 onChange={e => setField('email', e.target.value)}
                 onFocus={() => focus('email')}
                 onBlur={blur}
-                style={inputStyle(!!errors.email, isFocused('email'))}
+                style={{
+                  fontFamily: 'var(--font-ui), sans-serif',
+                  fontSize: 14,
+                  color: 'var(--text-primary)',
+                  background: 'var(--surface-raised)',
+                  border: `1px solid ${errors.email ? 'var(--accent-terracotta)' : isFocused('email') ? 'var(--brand-green-hover)' : 'var(--border-strong)'}`,
+                  borderRadius: 8,
+                  padding: '12px 14px',
+                  minHeight: 44,
+                  outline: isFocused('email') ? '2px solid var(--brand-green)' : 'none',
+                  outlineOffset: 2,
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  lineHeight: 1.5,
+                }}
               />
             </Field>
 
@@ -787,13 +801,35 @@ export default function CheckoutClient() {
                 onChange={e => setField('phone', e.target.value)}
                 onFocus={() => focus('phone')}
                 onBlur={blur}
-                style={inputStyle(!!errors.phone, isFocused('phone'))}
+                style={{
+                  fontFamily: 'var(--font-ui), sans-serif',
+                  fontSize: 14,
+                  color: 'var(--text-primary)',
+                  background: 'var(--surface-raised)',
+                  border: `1px solid ${errors.phone ? 'var(--accent-terracotta)' : isFocused('phone') ? 'var(--brand-green-hover)' : 'var(--border-strong)'}`,
+                  borderRadius: 8,
+                  padding: '12px 14px',
+                  minHeight: 44,
+                  outline: isFocused('phone') ? '2px solid var(--brand-green)' : 'none',
+                  outlineOffset: 2,
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  lineHeight: 1.5,
+                }}
               />
             </Field>
 
-            <hr style={{ border: 'none', borderTop: '1px solid var(--border)', margin: '8px 0' }} />
+            <div style={{ height: 12 }} />
 
-            {sectionTitle('Delivery address')}
+            <h2 style={{
+              fontFamily: 'var(--font-display), serif',
+              fontSize: 28,
+              fontWeight: 400,
+              color: 'var(--text-primary)',
+              margin: '0 0 24px',
+            }}>
+              Delivery address
+            </h2>
 
             <Field label="Building / Estate name" error={errors.addrBuilding}>
               <input
@@ -802,7 +838,21 @@ export default function CheckoutClient() {
                 onChange={e => setField('addrBuilding', e.target.value)}
                 onFocus={() => focus('addrBuilding')}
                 onBlur={blur}
-                style={inputStyle(!!errors.addrBuilding, isFocused('addrBuilding'))}
+                style={{
+                  fontFamily: 'var(--font-ui), sans-serif',
+                  fontSize: 14,
+                  color: 'var(--text-primary)',
+                  background: 'var(--surface-raised)',
+                  border: `1px solid ${errors.addrBuilding ? 'var(--accent-terracotta)' : isFocused('addrBuilding') ? 'var(--brand-green-hover)' : 'var(--border-strong)'}`,
+                  borderRadius: 8,
+                  padding: '12px 14px',
+                  minHeight: 44,
+                  outline: isFocused('addrBuilding') ? '2px solid var(--brand-green)' : 'none',
+                  outlineOffset: 2,
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  lineHeight: 1.5,
+                }}
               />
             </Field>
 
@@ -813,7 +863,21 @@ export default function CheckoutClient() {
                 onChange={e => setField('addrStreet', e.target.value)}
                 onFocus={() => focus('addrStreet')}
                 onBlur={blur}
-                style={inputStyle(!!errors.addrStreet, isFocused('addrStreet'))}
+                style={{
+                  fontFamily: 'var(--font-ui), sans-serif',
+                  fontSize: 14,
+                  color: 'var(--text-primary)',
+                  background: 'var(--surface-raised)',
+                  border: `1px solid ${errors.addrStreet ? 'var(--accent-terracotta)' : isFocused('addrStreet') ? 'var(--brand-green-hover)' : 'var(--border-strong)'}`,
+                  borderRadius: 8,
+                  padding: '12px 14px',
+                  minHeight: 44,
+                  outline: isFocused('addrStreet') ? '2px solid var(--brand-green)' : 'none',
+                  outlineOffset: 2,
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  lineHeight: 1.5,
+                }}
               />
             </Field>
 
@@ -824,7 +888,21 @@ export default function CheckoutClient() {
                 onChange={e => setField('addrApartment', e.target.value)}
                 onFocus={() => focus('addrApartment')}
                 onBlur={blur}
-                style={inputStyle(!!errors.addrApartment, isFocused('addrApartment'))}
+                style={{
+                  fontFamily: 'var(--font-ui), sans-serif',
+                  fontSize: 14,
+                  color: 'var(--text-primary)',
+                  background: 'var(--surface-raised)',
+                  border: `1px solid ${errors.addrApartment ? 'var(--accent-terracotta)' : isFocused('addrApartment') ? 'var(--brand-green-hover)' : 'var(--border-strong)'}`,
+                  borderRadius: 8,
+                  padding: '12px 14px',
+                  minHeight: 44,
+                  outline: isFocused('addrApartment') ? '2px solid var(--brand-green)' : 'none',
+                  outlineOffset: 2,
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  lineHeight: 1.5,
+                }}
               />
             </Field>
 
@@ -839,7 +917,21 @@ export default function CheckoutClient() {
                 onFocus={() => focus('addrLandmark')}
                 onBlur={blur}
                 placeholder="e.g. Next to Chandarana, opposite Total petrol station"
-                style={inputStyle(false, isFocused('addrLandmark'))}
+                style={{
+                  fontFamily: 'var(--font-ui), sans-serif',
+                  fontSize: 14,
+                  color: 'var(--text-primary)',
+                  background: 'var(--surface-raised)',
+                  border: `1px solid ${isFocused('addrLandmark') ? 'var(--brand-green-hover)' : 'var(--border-strong)'}`,
+                  borderRadius: 8,
+                  padding: '12px 14px',
+                  minHeight: 44,
+                  outline: isFocused('addrLandmark') ? '2px solid var(--brand-green)' : 'none',
+                  outlineOffset: 2,
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  lineHeight: 1.5,
+                }}
               />
             </Field>
 
@@ -854,10 +946,12 @@ export default function CheckoutClient() {
                       style={{
                         display: 'block',
                         background: selected ? 'var(--brand-green-soft)' : 'var(--surface-raised)',
-                        border: `1px solid ${selected ? 'var(--brand-green)' : errors.zone ? '#B5533C' : 'var(--border-strong)'}`,
+                        border: `1px solid ${selected ? 'var(--brand-green-hover)' : errors.zone ? 'var(--accent-terracotta)' : 'var(--border-strong)'}`,
                         borderRadius: 8,
                         padding: '12px 14px',
                         cursor: 'pointer',
+                        outline: selected ? '2px solid var(--brand-green)' : 'none',
+                        outlineOffset: 2,
                       }}
                     >
                       <input
@@ -870,7 +964,7 @@ export default function CheckoutClient() {
                       />
                       <div style={{ marginBottom: 3 }}>
                         <span style={{
-                          fontFamily: 'var(--font-instrument-serif), serif',
+                          fontFamily: 'var(--font-display), serif',
                           fontSize: 16,
                           color: 'var(--text-primary)',
                         }}>
@@ -902,10 +996,12 @@ export default function CheckoutClient() {
                       style={{
                         display: 'block',
                         background: selected ? 'var(--brand-green-soft)' : 'var(--surface-raised)',
-                        border: `1px solid ${selected ? 'var(--brand-green)' : errors.deliveryDay ? '#B5533C' : 'var(--border-strong)'}`,
+                        border: `1px solid ${selected ? 'var(--brand-green-hover)' : errors.deliveryDay ? 'var(--accent-terracotta)' : 'var(--border-strong)'}`,
                         borderRadius: 8,
                         padding: '12px 14px',
                         cursor: 'pointer',
+                        outline: selected ? '2px solid var(--brand-green)' : 'none',
+                        outlineOffset: 2,
                       }}
                     >
                       <input
@@ -923,7 +1019,7 @@ export default function CheckoutClient() {
                       }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <span style={{
-                            fontFamily: 'var(--font-instrument-serif), serif',
+                            fontFamily: 'var(--font-display), serif',
                             fontSize: 15,
                             color: 'var(--text-primary)',
                           }}>
@@ -936,7 +1032,7 @@ export default function CheckoutClient() {
                               fontWeight: 600,
                               color: 'var(--brand-green-hover)',
                               background: 'var(--brand-green-soft)',
-                              border: '1px solid var(--brand-green)',
+                              border: '1px solid var(--brand-green-hover)',
                               borderRadius: 4,
                               padding: '1px 6px',
                               letterSpacing: '0.04em',
@@ -956,9 +1052,9 @@ export default function CheckoutClient() {
                           </span>
                         ) : opt.key === 'sunday_free' ? (
                           <span style={{
-                            fontFamily: 'var(--font-instrument-serif), serif',
+                            fontFamily: 'var(--font-display), serif',
                             fontSize: 15,
-                            color: 'var(--brand-green)',
+                            color: 'var(--text-primary)',
                             flexShrink: 0,
                             marginLeft: 12,
                           }}>
@@ -966,9 +1062,9 @@ export default function CheckoutClient() {
                           </span>
                         ) : (
                           <span style={{
-                            fontFamily: 'var(--font-instrument-serif), serif',
+                            fontFamily: 'var(--font-display), serif',
                             fontSize: 15,
-                            color: selected ? 'var(--brand-green-hover)' : 'var(--brand-green)',
+                            color: 'var(--text-primary)',
                             flexShrink: 0,
                             marginLeft: 12,
                           }}>
@@ -979,7 +1075,7 @@ export default function CheckoutClient() {
 
                       {/* Monday time slot pills */}
                       {opt.key === 'monday' && selected && (
-                        <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--border)' }}>
+                        <div style={{ marginTop: 12 }}>
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                             {SLOT_OPTIONS.map(slot => (
                               <button
@@ -987,13 +1083,16 @@ export default function CheckoutClient() {
                                 type="button"
                                 onClick={e => { e.preventDefault(); setDeliverySlot(slot.value) }}
                                 style={{
-                                  background: form.deliverySlot === slot.value ? 'var(--brand-green)' : '#fff',
-                                  color: form.deliverySlot === slot.value ? '#fff' : 'var(--text-primary)',
-                                  border: `1px solid ${form.deliverySlot === slot.value ? 'var(--brand-green)' : 'var(--border-strong)'}`,
+                                  background: form.deliverySlot === slot.value ? 'var(--brand-green-soft)' : 'var(--surface-raised)',
+                                  color: 'var(--text-primary)',
+                                  border: `1px solid ${form.deliverySlot === slot.value ? 'var(--brand-green-hover)' : 'var(--border-strong)'}`,
                                   borderRadius: 8,
                                   padding: '6px 14px',
                                   fontFamily: 'var(--font-ui), sans-serif',
                                   fontSize: 13,
+                                  fontWeight: form.deliverySlot === slot.value ? 600 : 500,
+                                  outline: form.deliverySlot === slot.value ? '2px solid var(--brand-green)' : 'none',
+                                  outlineOffset: 2,
                                   cursor: 'pointer',
                                 }}
                               >
@@ -1005,7 +1104,7 @@ export default function CheckoutClient() {
                             <span style={{
                               fontFamily: 'var(--font-ui), sans-serif',
                               fontSize: 12,
-                              color: '#B5533C',
+                              color: 'var(--accent-terracotta)',
                               display: 'block',
                               marginTop: 6,
                             }}>
@@ -1029,9 +1128,20 @@ export default function CheckoutClient() {
                 onBlur={blur}
                 rows={3}
                 style={{
-                  ...inputStyle(false, isFocused('notes')),
+                  fontFamily: 'var(--font-ui), sans-serif',
+                  fontSize: 14,
+                  color: 'var(--text-primary)',
+                  background: 'var(--surface-raised)',
+                  border: `1px solid ${isFocused('notes') ? 'var(--brand-green-hover)' : 'var(--border-strong)'}`,
+                  borderRadius: 8,
+                  padding: '12px 14px',
+                  minHeight: 92,
+                  outline: isFocused('notes') ? '2px solid var(--brand-green)' : 'none',
+                  outlineOffset: 2,
+                  width: '100%',
+                  boxSizing: 'border-box',
                   resize: 'vertical',
-                  lineHeight: '1.5',
+                  lineHeight: 1.5,
                 }}
               />
             </Field>
@@ -1040,10 +1150,11 @@ export default function CheckoutClient() {
               onClick={handleContinue}
               style={{
                 background: 'var(--brand-green)',
-                color: '#fff',
+                color: 'var(--text-primary)',
                 border: 'none',
                 borderRadius: 8,
                 padding: '14px 24px',
+                minHeight: 48,
                 fontFamily: 'var(--font-ui), sans-serif',
                 fontSize: 15,
                 fontWeight: 600,
@@ -1105,7 +1216,7 @@ export default function CheckoutClient() {
                       borderBottom: '1px solid var(--border)',
                     }}>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontFamily: 'var(--font-instrument-serif), serif', fontSize: 16, color: 'var(--text-primary)', lineHeight: 1.3 }}>
+                        <div style={{ fontFamily: 'var(--font-display), serif', fontSize: 16, color: 'var(--text-primary)', lineHeight: 1.3 }}>
                           {entry.name}
                         </div>
                         <div style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>
@@ -1116,7 +1227,7 @@ export default function CheckoutClient() {
                         <div style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 12, color: 'var(--text-tertiary)' }}>
                           {entry.quantity} × {fmt(entry.unitPrice)}
                         </div>
-                        <div style={{ fontFamily: 'var(--font-instrument-serif), serif', fontSize: 16, color: 'var(--text-primary)', marginTop: 2 }}>
+                        <div style={{ fontFamily: 'var(--font-display), serif', fontSize: 16, color: 'var(--text-primary)', marginTop: 2 }}>
                           {fmt(entry.unitPrice * entry.quantity)}
                         </div>
                       </div>
@@ -1150,7 +1261,7 @@ export default function CheckoutClient() {
                       borderBottom: '1px solid var(--border)',
                     }}>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontFamily: 'var(--font-instrument-serif), serif', fontSize: 16, color: 'var(--text-primary)', lineHeight: 1.3 }}>
+                        <div style={{ fontFamily: 'var(--font-display), serif', fontSize: 16, color: 'var(--text-primary)', lineHeight: 1.3 }}>
                           {entry.name}
                         </div>
                         <div style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>
@@ -1161,7 +1272,7 @@ export default function CheckoutClient() {
                         <div style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 12, color: 'var(--text-tertiary)' }}>
                           {entry.quantity} × {fmt(entry.unitPrice)}
                         </div>
-                        <div style={{ fontFamily: 'var(--font-instrument-serif), serif', fontSize: 16, color: 'var(--text-primary)', marginTop: 2 }}>
+                        <div style={{ fontFamily: 'var(--font-display), serif', fontSize: 16, color: 'var(--text-primary)', marginTop: 2 }}>
                           {fmt(entry.unitPrice * entry.quantity)}
                         </div>
                       </div>
@@ -1195,7 +1306,7 @@ export default function CheckoutClient() {
                       borderBottom: '1px solid var(--border)',
                     }}>
                       <div style={{
-                        fontFamily: 'var(--font-instrument-serif), serif',
+                        fontFamily: 'var(--font-display), serif',
                         fontSize: 16,
                         color: 'var(--text-primary)',
                         flex: 1,
@@ -1206,7 +1317,7 @@ export default function CheckoutClient() {
                         <div style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 12, color: 'var(--text-tertiary)' }}>
                           {entry.quantity} × {fmt(entry.unitPrice)}
                         </div>
-                        <div style={{ fontFamily: 'var(--font-instrument-serif), serif', fontSize: 16, color: 'var(--text-primary)', marginTop: 2 }}>
+                        <div style={{ fontFamily: 'var(--font-display), serif', fontSize: 16, color: 'var(--text-primary)', marginTop: 2 }}>
                           {fmt(entry.unitPrice * entry.quantity)}
                         </div>
                       </div>
@@ -1240,7 +1351,7 @@ export default function CheckoutClient() {
                       borderBottom: '1px solid var(--border)',
                     }}>
                       <div style={{
-                        fontFamily: 'var(--font-instrument-serif), serif',
+                        fontFamily: 'var(--font-display), serif',
                         fontSize: 16,
                         color: 'var(--text-primary)',
                         flex: 1,
@@ -1256,7 +1367,7 @@ export default function CheckoutClient() {
                           {entry.quantity} × {fmt(entry.unitPrice)}
                         </div>
                         <div style={{
-                          fontFamily: 'var(--font-instrument-serif), serif',
+                          fontFamily: 'var(--font-display), serif',
                           fontSize: 16,
                           color: 'var(--text-primary)',
                           marginTop: 2,
@@ -1280,7 +1391,7 @@ export default function CheckoutClient() {
                     Subtotal
                   </span>
                   <span style={{
-                    fontFamily: 'var(--font-instrument-serif), serif',
+                    fontFamily: 'var(--font-display), serif',
                     fontSize: 16,
                     color: 'var(--text-primary)',
                   }}>
@@ -1301,7 +1412,7 @@ export default function CheckoutClient() {
                       <span style={{
                         fontFamily: 'var(--font-ui), sans-serif',
                         fontSize: 12,
-                        color: 'var(--brand-green)',
+                        color: 'var(--accent-forest)',
                         marginLeft: 8,
                       }}>
                         Free delivery applied ✓
@@ -1309,7 +1420,7 @@ export default function CheckoutClient() {
                     )}
                   </div>
                   <span style={{
-                    fontFamily: 'var(--font-instrument-serif), serif',
+                    fontFamily: 'var(--font-display), serif',
                     fontSize: 16,
                     color: isFreeWindow ? 'var(--text-tertiary)' : 'var(--text-primary)',
                     textDecoration: isFreeWindow ? 'line-through' : 'none',
@@ -1322,9 +1433,9 @@ export default function CheckoutClient() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                     <span />
                     <span style={{
-                      fontFamily: 'var(--font-instrument-serif), serif',
+                      fontFamily: 'var(--font-display), serif',
                       fontSize: 16,
-                      color: 'var(--brand-green)',
+                      color: 'var(--text-primary)',
                     }}>
                       {fmt(0)}
                     </span>
@@ -1348,7 +1459,7 @@ export default function CheckoutClient() {
                     Total
                   </span>
                   <span style={{
-                    fontFamily: 'var(--font-instrument-serif), serif',
+                    fontFamily: 'var(--font-display), serif',
                     fontSize: 24,
                     color: 'var(--text-primary)',
                   }}>
@@ -1372,7 +1483,7 @@ export default function CheckoutClient() {
                 marginBottom: 16,
               }}>
                 <span style={{
-                  fontFamily: 'var(--font-instrument-serif), serif',
+                  fontFamily: 'var(--font-display), serif',
                   fontSize: 17,
                   color: 'var(--text-primary)',
                 }}>
@@ -1383,7 +1494,7 @@ export default function CheckoutClient() {
                   style={{
                     fontFamily: 'var(--font-ui), sans-serif',
                     fontSize: 13,
-                    color: 'var(--brand-green)',
+                    color: 'var(--brand-green-hover)',
                     background: 'none',
                     border: 'none',
                     cursor: 'pointer',
@@ -1429,12 +1540,37 @@ export default function CheckoutClient() {
               </div>
             </div>
 
+            <div style={{
+              background: 'var(--surface-raised)',
+              border: '1px solid var(--border)',
+              borderRadius: 8,
+              padding: '18px 20px',
+            }}>
+              <p style={{
+                fontFamily: 'var(--font-display), serif',
+                fontSize: 18,
+                color: 'var(--text-primary)',
+                margin: '0 0 8px',
+              }}>
+                Payment
+              </p>
+              <p style={{
+                fontFamily: 'var(--font-ui), sans-serif',
+                fontSize: 14,
+                color: 'var(--text-secondary)',
+                lineHeight: 1.6,
+                margin: 0,
+              }}>
+                After you place the order, your confirmation email will include the M-Pesa payment instructions for {fmt(total)}. Payment is completed before dispatch.
+              </p>
+            </div>
+
             {/* Submit error */}
             {submitError && (
               <p style={{
                 fontFamily: 'var(--font-ui), sans-serif',
                 fontSize: 13,
-                color: '#B5533C',
+                color: 'var(--accent-terracotta)',
                 margin: 0,
                 textAlign: 'center',
               }}>
@@ -1447,7 +1583,8 @@ export default function CheckoutClient() {
               disabled={isSubmitting}
               style={{
                 background: isSubmitting ? 'var(--text-tertiary)' : 'var(--brand-green)',
-                color: '#fff',
+                color: 'var(--text-primary)',
+                minHeight: 48,
                 border: 'none',
                 borderRadius: 8,
                 padding: '16px 24px',

@@ -141,13 +141,18 @@ function Qty({
         onClick={onDec}
         aria-label="Remove one"
         style={{
-          width: 28, height: 28, borderRadius: '50%',
+          width: 32,
+          height: 32,
+          borderRadius: '50%',
           border: '1.5px solid var(--border-strong)',
           background: 'transparent',
-          cursor: 'pointer',
           color: 'var(--text-primary)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 18, lineHeight: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 16,
+          cursor: 'pointer',
+          lineHeight: 1,
         }}
       >−</button>
       <span style={{
@@ -163,13 +168,18 @@ function Qty({
         onClick={onInc}
         aria-label="Add one"
         style={{
-          width: 28, height: 28, borderRadius: '50%',
-          border: 'none',
-          background: 'var(--brand-green)',
+          width: 32,
+          height: 32,
+          borderRadius: '50%',
+          border: '1.5px solid var(--border-strong)',
+          background: 'transparent',
           cursor: 'pointer',
-          color: '#102015',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 18, lineHeight: 1,
+          color: 'var(--text-primary)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 16,
+          lineHeight: 1,
         }}
       >+</button>
     </div>
@@ -989,10 +999,10 @@ export default function MenuClient({
           }}
         >
           <div>
-            <span style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 13, color: 'var(--text-secondary)' }}>
+            <span style={{ color: 'var(--text-tertiary)', fontFamily: 'var(--font-ui), sans-serif', fontSize: 13, fontWeight: 400 }}>
               {cartCount} {cartCount === 1 ? 'item' : 'items'}
             </span>
-            <span style={{ fontFamily: 'var(--font-instrument-serif), serif', fontSize: 22, color: 'var(--text-primary)', marginLeft: 12 }}>
+            <span style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 400, marginLeft: 12 }}>
               {fmt(cartTotal)}
             </span>
           </div>
@@ -1011,7 +1021,7 @@ export default function MenuClient({
               letterSpacing: '0.01em',
             }}
           >
-            Checkout →
+            Checkout
           </button>
         </div>
       )}

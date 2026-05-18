@@ -217,33 +217,17 @@ export default function CheckoutClient() {
   if (isSuccess) {
     return (
       <div style={{ maxWidth: 600, margin: '0 auto', padding: '72px 20px 88px', textAlign: 'left' }}>
-        <div style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 8,
-          background: 'var(--surface-sunken)',
-          border: '1px solid var(--border)',
-          borderRadius: 999,
-          padding: '6px 12px',
-          marginBottom: 18,
+        <span style={{
+          fontFamily: 'var(--font-display)',
+          fontSize: 24,
+          fontWeight: 400,
+          color: 'var(--text-primary)',
+          textAlign: 'center',
+          display: 'block',
+          marginBottom: 32,
         }}>
-          <span style={{
-            width: 7,
-            height: 7,
-            borderRadius: '50%',
-            background: 'var(--accent-forest)',
-            flexShrink: 0,
-          }} />
-          <span style={{
-            fontFamily: 'var(--font-ui), sans-serif',
-            fontSize: 12,
-            fontWeight: 600,
-            color: 'var(--text-secondary)',
-            letterSpacing: '0.01em',
-          }}>
-            Mali&apos;s Meals
-          </span>
-        </div>
+          Mali&apos;s Meals
+        </span>
         <p style={{
           fontFamily: 'var(--font-display), serif',
           fontSize: 40,
@@ -400,20 +384,17 @@ export default function CheckoutClient() {
           </div>
         </div>
         <Link href="/" style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          minHeight: 44,
+          color: 'var(--text-tertiary)',
           fontFamily: 'var(--font-ui), sans-serif',
           fontSize: 14,
-          fontWeight: 600,
-          color: 'var(--text-primary)',
+          fontWeight: 400,
           textDecoration: 'none',
-          border: '1px solid var(--border-strong)',
-          borderRadius: 8,
-          padding: '0 18px',
-          background: 'var(--surface-raised)',
+          textAlign: 'center',
+          display: 'block',
+          marginTop: 24,
+          cursor: 'pointer',
         }}>
-          ← Back to menu
+          Back to menu
         </Link>
       </div>
     )
@@ -972,9 +953,11 @@ export default function CheckoutClient() {
                         </span>
                       </div>
                       <span style={{
+                        color: 'var(--text-tertiary)',
                         fontFamily: 'var(--font-ui), sans-serif',
                         fontSize: 12,
-                        color: 'var(--text-tertiary)',
+                        fontWeight: 400,
+                        marginTop: 2,
                         lineHeight: 1.4,
                       }}>
                         {z.areas}
@@ -1069,6 +1052,15 @@ export default function CheckoutClient() {
                             marginLeft: 12,
                           }}>
                             {fmt(rawFee)}
+                            <span style={{
+                              color: 'var(--text-tertiary)',
+                              fontFamily: 'var(--font-ui), sans-serif',
+                              fontSize: 12,
+                              fontWeight: 400,
+                              marginLeft: 4,
+                            }}>
+                              fee
+                            </span>
                           </span>
                         )}
                       </div>
@@ -1163,7 +1155,7 @@ export default function CheckoutClient() {
                 marginTop: 4,
               }}
             >
-              Continue to review →
+              Continue to review
             </button>
 
           </div>
@@ -1577,6 +1569,18 @@ export default function CheckoutClient() {
                 {submitError}
               </p>
             )}
+
+            <span style={{
+              color: 'var(--text-tertiary)',
+              fontFamily: 'var(--font-ui), sans-serif',
+              fontSize: 12,
+              fontWeight: 400,
+              textAlign: 'center',
+              display: 'block',
+              marginBottom: 12,
+            }}>
+              You won&apos;t be charged until Mali confirms your order
+            </span>
 
             <button
               onClick={handlePlaceOrder}

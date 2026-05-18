@@ -40,47 +40,39 @@ type Special = {
 
 // ─── Badge config ─────────────────────────────────────────────────────────────
 
-const ALLERGEN_SHORT: Record<string, string> = {
-  dairy:   'D',
-  nuts:    'N',
-  soy:     'S',
-  coconut: 'C',
-}
-
 const ALLERGEN_LABEL: Record<string, string> = {
-  dairy:   'Contains dairy',
-  nuts:    'Contains nuts',
-  soy:     'Contains soy',
-  coconut: 'Contains coconut',
+  dairy:   'Dairy',
+  nuts:    'Nuts',
+  soy:     'Soy',
+  coconut: 'Coconut',
+  gluten:  'Gluten',
 }
 
 type BadgeSpec = {
   key: string
-  short: string
   label: string
-  bg: string
+  tone: 'allergen' | 'feature' | 'warning'
 }
 
 function buildBadges(dish: MenuItem): BadgeSpec[] {
   const badges: BadgeSpec[] = []
   for (const a of dish.allergens) {
-    if (ALLERGEN_SHORT[a]) {
+    if (ALLERGEN_LABEL[a]) {
       badges.push({
         key: `allergen-${a}`,
-        short: ALLERGEN_SHORT[a],
-        label: ALLERGEN_LABEL[a] ?? `Contains ${a}`,
-        bg: '#B5533C',
+        label: ALLERGEN_LABEL[a],
+        tone: 'allergen',
       })
     }
   }
   if (dish.is_freezer_friendly) {
-    badges.push({ key: 'freezer', short: '❄', label: 'Freezer-friendly', bg: 'var(--brand-green)' })
+    badges.push({ key: 'freezer', label: 'Freezer', tone: 'feature' })
   }
   if (dish.is_spicy) {
-    badges.push({ key: 'spicy', short: '🌶', label: 'Mild spice', bg: 'var(--brand-green)' })
+    badges.push({ key: 'spicy', label: 'Spicy', tone: 'warning' })
   }
   if (dish.is_family_friendly) {
-    badges.push({ key: 'family', short: 'Fam', label: 'Family-friendly', bg: 'var(--brand-green)' })
+    badges.push({ key: 'family', label: 'Family', tone: 'feature' })
   }
   return badges
 }
@@ -113,10 +105,12 @@ function Qty({
   qty,
   onInc,
   onDec,
+  compact = false,
 }: {
   qty: number
   onInc: () => void
   onDec: () => void
+  compact?: boolean
 }) {
   if (qty === 0) {
     return (
@@ -124,15 +118,16 @@ function Qty({
         onClick={onInc}
         style={{
           background: 'var(--brand-green)',
-          color: '#fff',
+          color: '#102015',
           border: 'none',
-          borderRadius: 6,
-          padding: '7px 18px',
+          borderRadius: 8,
+          padding: compact ? '8px 14px' : '10px 20px',
+          minHeight: compact ? 40 : 44,
           fontFamily: 'var(--font-ui), sans-serif',
-          fontSize: 13,
-          fontWeight: 500,
+          fontSize: 14,
+          fontWeight: 600,
           cursor: 'pointer',
-          letterSpacing: '0.02em',
+          lineHeight: 1,
           flexShrink: 0,
         }}
       >
@@ -172,7 +167,7 @@ function Qty({
           border: 'none',
           background: 'var(--brand-green)',
           cursor: 'pointer',
-          color: '#fff',
+          color: '#102015',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 18, lineHeight: 1,
         }}
@@ -277,29 +272,50 @@ function DishCard({
 
       {/* Allergen / property badges */}
       {badges.length > 0 && (
-        <div style={{ marginTop: 8 }}>
+        <div style={{ marginTop: 10 }}>
           <div style={{ display: 'flex', flexWrap: 'wrap' as const, gap: 5 }}>
             {badges.map(b => (
-              <button
-                key={b.key}
-                onClick={() => toggleTooltip(b.key)}
-                aria-pressed={activeTooltip === b.key}
-                style={{
-                  background: b.bg,
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: 4,
-                  padding: '3px 7px',
-                  fontFamily: 'var(--font-ui), sans-serif',
-                  fontSize: 11,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  letterSpacing: '0.03em',
-                  lineHeight: 1.6,
-                }}
-              >
-                {b.short}
-              </button>
+              b.tone === 'feature' ? (
+                <button
+                  key={b.key}
+                  onClick={() => toggleTooltip(b.key)}
+                  aria-pressed={activeTooltip === b.key}
+                  style={{
+                    background: 'var(--surface-sunken)',
+                    color: 'var(--text-secondary)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 4,
+                    padding: '3px 8px',
+                    fontFamily: 'var(--font-ui), sans-serif',
+                    fontSize: 11,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    lineHeight: 1.4,
+                  }}
+                >
+                  {b.label}
+                </button>
+              ) : (
+                <button
+                  key={b.key}
+                  onClick={() => toggleTooltip(b.key)}
+                  aria-pressed={activeTooltip === b.key}
+                  style={{
+                    background: 'transparent',
+                    color: 'var(--accent-terracotta)',
+                    border: '1px solid var(--accent-terracotta)',
+                    borderRadius: 4,
+                    padding: '3px 8px',
+                    fontFamily: 'var(--font-ui), sans-serif',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    lineHeight: 1.4,
+                  }}
+                >
+                  {b.label}
+                </button>
+              )
             ))}
           </div>
           {activeTooltip && (
@@ -320,16 +336,14 @@ function DishCard({
       {!soldOut && (
         <div style={{
           marginTop: 14,
-          borderTop: '1px solid var(--border)',
-          paddingTop: 12,
           display: 'flex',
           flexDirection: 'column' as const,
-          gap: 10,
+          gap: 0,
         }}>
           {/* Vegetarian row */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-              <span style={{ fontFamily: 'var(--font-instrument-serif), serif', fontSize: 18, color: 'var(--brand-green)' }}>
+              <span style={{ fontFamily: 'var(--font-instrument-serif), serif', fontSize: 18, color: 'var(--text-primary)' }}>
                 {fmt(dish.base_price)}
               </span>
               {hasMeat && (
@@ -347,7 +361,7 @@ function DishCard({
 
           {/* Meat row — shows full price (base + upgrade), not the upgrade cost */}
           {hasMeat && (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 10 }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
                 <span style={{ fontFamily: 'var(--font-instrument-serif), serif', fontSize: 18, color: 'var(--text-primary)' }}>
                   {fmt(meatPrice)}
@@ -375,15 +389,16 @@ function DishCard({
                         onClick={() => setShowMeatSelector(true)}
                         style={{
                           background: 'var(--brand-green)',
-                          color: '#fff',
+                          color: '#102015',
                           border: 'none',
-                          borderRadius: 6,
-                          padding: '7px 18px',
+                          borderRadius: 8,
+                          padding: '10px 20px',
+                          minHeight: 44,
                           fontFamily: 'var(--font-ui), sans-serif',
-                          fontSize: 13,
-                          fontWeight: 500,
+                          fontSize: 14,
+                          fontWeight: 600,
                           cursor: 'pointer',
-                          letterSpacing: '0.02em',
+                          lineHeight: 1,
                           flexShrink: 0,
                         }}
                       >
@@ -453,35 +468,82 @@ function DishCard({
 
 // ─── Addon card ────────────────────────────────────────────────────────────────
 
-function AddonCard({
+function AddonRow({
   addon,
+  isLast,
   getQty,
   adjust,
 }: {
   addon: ProteinAddon
+  isLast: boolean
   getQty: (key: string) => number
   adjust: (entry: Omit<CartEntry, 'quantity'>, delta: number) => void
 }) {
   const key = `addon:${addon.id}`
   const soldOut = addon.is_sold_out
 
+  if (isLast) {
+    return (
+      <div style={{
+        padding: '12px 16px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 12,
+        minHeight: 48,
+        opacity: soldOut ? 0.5 : 1,
+      }}>
+        <div>
+          <span style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 14, fontWeight: 500, color: 'var(--text-primary)' }}>
+            {addon.name}
+          </span>
+          <span style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 14, fontWeight: 400, color: 'var(--text-tertiary)', marginLeft: 8 }}>
+            {fmt(addon.price)}
+          </span>
+        </div>
+        {soldOut ? (
+          <span style={{
+            fontFamily: 'var(--font-ui), sans-serif',
+            fontSize: 10,
+            fontWeight: 600,
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase' as const,
+            color: 'var(--text-tertiary)',
+            background: 'var(--surface-sunken)',
+            borderRadius: 4,
+            padding: '3px 7px',
+            flexShrink: 0,
+          }}>
+            Sold out
+          </span>
+        ) : (
+          <Qty
+            qty={getQty(key)}
+            onInc={() => adjust({ id: key, name: addon.name, variant: 'addon', unitPrice: addon.price }, 1)}
+            onDec={() => adjust({ id: key, name: addon.name, variant: 'addon', unitPrice: addon.price }, -1)}
+            compact
+          />
+        )}
+      </div>
+    )
+  }
+
   return (
     <div style={{
-      background: 'var(--surface-raised)',
-      border: '1px solid var(--border)',
-      borderRadius: 8,
-      padding: '14px 20px',
+      padding: '12px 16px',
+      borderBottom: '1px solid var(--border)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: 12,
+      minHeight: 48,
       opacity: soldOut ? 0.5 : 1,
     }}>
       <div>
-        <span style={{ fontFamily: 'var(--font-instrument-serif), serif', fontSize: 16, color: 'var(--text-primary)' }}>
+        <span style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 14, fontWeight: 500, color: 'var(--text-primary)' }}>
           {addon.name}
         </span>
-        <span style={{ fontFamily: 'var(--font-instrument-serif), serif', fontSize: 15, color: 'var(--brand-green)', marginLeft: 12 }}>
+        <span style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 14, fontWeight: 400, color: 'var(--text-tertiary)', marginLeft: 8 }}>
           {fmt(addon.price)}
         </span>
       </div>
@@ -505,6 +567,7 @@ function AddonCard({
           qty={getQty(key)}
           onInc={() => adjust({ id: key, name: addon.name, variant: 'addon', unitPrice: addon.price }, 1)}
           onDec={() => adjust({ id: key, name: addon.name, variant: 'addon', unitPrice: addon.price }, -1)}
+          compact
         />
       )}
     </div>
@@ -579,14 +642,12 @@ function SpecialCard({
       {!soldOut ? (
         <div style={{
           marginTop: 14,
-          borderTop: '1px solid var(--border)',
-          paddingTop: 12,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: 8,
         }}>
-          <span style={{ fontFamily: 'var(--font-instrument-serif), serif', fontSize: 18, color: 'var(--brand-green)' }}>
+          <span style={{ fontFamily: 'var(--font-instrument-serif), serif', fontSize: 18, color: 'var(--text-primary)' }}>
             {fmt(special.price)}
           </span>
           <Qty
@@ -614,8 +675,6 @@ function SectionHeading({ children }: { children: React.ReactNode }) {
       fontWeight: 400,
       color: 'var(--text-primary)',
       margin: '0 0 20px',
-      paddingBottom: 12,
-      borderBottom: '1px solid var(--border)',
     }}>
       {children}
     </h2>
@@ -727,8 +786,8 @@ export default function MenuClient({
           </p>
           <div style={{
             marginTop: 22,
-            background: 'var(--brand-green-soft)',
-            border: '1px solid var(--brand-green)',
+            background: 'var(--surface-raised)',
+            border: '1px solid var(--border-strong)',
             borderRadius: 8,
             padding: '16px 18px',
             display: 'grid',
@@ -846,9 +905,20 @@ export default function MenuClient({
             }}>
               Add to any dish, or order on their own.
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {addons.map(addon => (
-                <AddonCard key={addon.id} addon={addon} getQty={getQty} adjust={adjust} />
+            <div style={{
+              background: 'var(--surface-raised)',
+              border: '1px solid var(--border)',
+              borderRadius: 8,
+              overflow: 'hidden',
+            }}>
+              {addons.map((addon, index) => (
+                <AddonRow
+                  key={addon.id}
+                  addon={addon}
+                  isLast={index === addons.length - 1}
+                  getQty={getQty}
+                  adjust={adjust}
+                />
               ))}
             </div>
           </section>

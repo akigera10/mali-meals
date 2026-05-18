@@ -208,7 +208,7 @@ function OrderBadge({ order }: { order: Order }) {
 
   if (order.order_status === 'dispatched') {
     return (
-      <span style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', fontWeight: 500, padding: '3px 8px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'var(--brand-green-soft)', color: 'var(--brand-green)', border: '1px solid var(--brand-green)' }}>
+      <span style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', fontWeight: 600, padding: '3px 8px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'var(--brand-green-soft)', color: 'var(--accent-forest)', border: '1px solid var(--brand-green-hover)', letterSpacing: '0.04em' }}>
         Out for delivery
       </span>
     )
@@ -251,7 +251,7 @@ function DatePill({
       <button
         type="button"
         onClick={onClick}
-        style={{ minHeight: '42px', padding: '0 14px', borderRadius: '8px', border: '1px solid var(--brand-green)', backgroundColor: 'var(--brand-green-soft)', color: 'var(--brand-green)', fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+        style={{ minHeight: '40px', padding: '0 14px', borderRadius: '8px', border: '1px solid var(--accent-forest)', backgroundColor: 'var(--brand-green-soft)', color: 'var(--accent-forest)', fontFamily: 'var(--font-ui)', fontSize: '13px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
       >
         {shortDate(date)}
       </button>
@@ -262,7 +262,7 @@ function DatePill({
     <button
       type="button"
       onClick={onClick}
-      style={{ minHeight: '42px', padding: '0 14px', borderRadius: '8px', border: '1px solid transparent', backgroundColor: 'var(--surface-sunken)', color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: 400, cursor: 'pointer', whiteSpace: 'nowrap' }}
+      style={{ minHeight: '40px', padding: '0 14px', borderRadius: '8px', border: '1px solid var(--border)', backgroundColor: 'var(--surface-sunken)', color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)', fontSize: '13px', fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' }}
   >
       {shortDate(date)}
     </button>
@@ -285,7 +285,7 @@ function TabButton({
       <button
         type="button"
         onClick={onClick}
-        style={{ padding: '0 0 10px', border: 'none', borderBottom: '2px solid var(--brand-green)', backgroundColor: 'transparent', color: 'var(--text-primary)', fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+        style={{ padding: '0 0 10px', border: 'none', borderBottom: '2px solid var(--accent-forest)', backgroundColor: 'transparent', color: 'var(--accent-forest)', fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
       >
         {label} ({count})
       </button>
@@ -316,13 +316,13 @@ function OrderRow({ order }: { order: Order }) {
     <Link
       href={`/admin/orders/${order.id}`}
       data-order-row
-      style={{ display: 'grid', gridTemplateColumns: '40% 40% 20%', alignItems: 'center', textDecoration: 'none', backgroundColor: 'var(--surface-raised)', borderBottom: '1px solid var(--border)', padding: '14px 16px', cursor: 'pointer' }}
+      style={{ display: 'grid', gridTemplateColumns: '34% 42% 24%', alignItems: 'center', textDecoration: 'none', backgroundColor: 'var(--surface-raised)', borderBottom: '1px solid var(--border)', padding: '12px 16px', minHeight: '56px', cursor: 'pointer' }}
     >
       <div>
-        <span style={{ fontFamily: 'var(--font-instrument-serif)', color: 'var(--brand-green)', fontSize: '15px', fontWeight: 600, display: 'inline-block', marginBottom: '3px' }}>
+        <span style={{ fontFamily: 'var(--font-display)', color: 'var(--accent-forest)', fontSize: '15px', fontWeight: 600, display: 'inline-block', marginBottom: '2px' }}>
           {order.order_ref}
         </span>
-        <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--text-primary)', fontSize: '14px', fontWeight: 500, marginBottom: '2px' }}>
+        <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--text-primary)', fontSize: '14px', fontWeight: 600, marginBottom: '1px' }}>
           {order.customer_name}
         </div>
         <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--text-tertiary)', fontSize: '13px' }}>
@@ -331,14 +331,14 @@ function OrderRow({ order }: { order: Order }) {
       </div>
 
       <div>
-        <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--text-secondary)', fontSize: '13px', marginBottom: '7px' }}>
+        <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--text-secondary)', fontSize: '13px', marginBottom: '6px' }}>
           {order.delivery_date ? shortDate(order.delivery_date) : 'No date'} · Zone {order.delivery_zone}{deliveryWindow(order) ? ` · ${deliveryWindow(order)}` : ''}
         </div>
         <OrderBadge order={order} />
       </div>
 
       <div style={{ textAlign: 'right' }}>
-        <div style={{ fontFamily: 'var(--font-instrument-serif)', color: 'var(--text-primary)', fontSize: '15px', fontWeight: 600, marginBottom: '4px' }}>
+        <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--text-primary)', fontSize: '14px', fontWeight: 700, marginBottom: '3px' }}>
           {fmt(order.total_amount)}
         </div>
         <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--text-tertiary)', fontSize: '12px' }}>
@@ -373,7 +373,7 @@ function EmptyState({
         <button
           type="button"
           onClick={() => navigator.clipboard?.writeText('https://www.malismeals.com')}
-          style={{ border: 'none', backgroundColor: 'transparent', color: 'var(--brand-green)', fontFamily: 'var(--font-ui)', fontSize: '15px', cursor: 'pointer', padding: 0 }}
+          style={{ border: 'none', backgroundColor: 'transparent', color: 'var(--accent-forest)', fontFamily: 'var(--font-ui)', fontSize: '15px', cursor: 'pointer', padding: 0 }}
         >
           www.malismeals.com
         </button>
@@ -508,7 +508,7 @@ export default function OrdersClient({
       ` }} />
 
       <div data-orders-shell style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 20px', fontFamily: 'var(--font-ui)' }}>
-        <h1 style={{ fontFamily: 'var(--font-instrument-serif)', color: 'var(--text-primary)', fontSize: '34px', fontWeight: 400, margin: '0 0 22px' }}>
+        <h1 style={{ fontFamily: 'var(--font-ui)', color: 'var(--text-primary)', fontSize: '28px', fontWeight: 700, margin: '0 0 18px' }}>
           Orders
         </h1>
 
@@ -544,7 +544,7 @@ export default function OrdersClient({
 
         {(counts.new > 0 || counts.confirmed > 0 || counts.paid > 0 || counts.out > 0) && (
           <p style={{ fontFamily: 'var(--font-ui)', fontSize: '14px', color: 'var(--text-secondary)', margin: '0 0 16px' }}>
-            {counts.new > 0 && <><span style={{ color: 'var(--brand-green)', fontWeight: 700 }}>{counts.new} new</span>{(counts.confirmed > 0 || counts.paid > 0 || counts.out > 0) && '  ·  '}</>}
+            {counts.new > 0 && <><span style={{ color: 'var(--accent-forest)', fontWeight: 700 }}>{counts.new} new</span>{(counts.confirmed > 0 || counts.paid > 0 || counts.out > 0) && '  ·  '}</>}
             {counts.confirmed > 0 && <>{counts.confirmed} confirmed{(counts.paid > 0 || counts.out > 0) && '  ·  '}</>}
             {counts.paid > 0 && <>{counts.paid} paid{counts.out > 0 && '  ·  '}</>}
             {counts.out > 0 && <>{counts.out} out for delivery</>}

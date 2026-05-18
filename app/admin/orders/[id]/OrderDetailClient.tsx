@@ -114,7 +114,7 @@ function ItemRows({ items }: {
           <span style={{ color: 'var(--text-tertiary)', whiteSpace: 'nowrap' }}>x {item.quantity}</span>
           <span style={{ color: 'var(--text-tertiary)', whiteSpace: 'nowrap' }}>{fmt(item.unit_price)}</span>
           <span style={{
-            fontFamily: 'var(--font-instrument-serif)',
+            fontFamily: 'var(--font-display)',
             fontSize: '14px',
             color: 'var(--text-primary)',
             textAlign: 'right',
@@ -284,7 +284,7 @@ export default function OrderDetailClient({
             <div>
               <div data-order-detail-title-row>
                 <h1 data-order-detail-title style={{
-                  fontFamily: 'var(--font-instrument-serif)',
+                  fontFamily: 'var(--font-display)',
                   fontSize: '32px',
                   color: 'var(--text-primary)',
                   margin: '0 0 10px 0',
@@ -293,7 +293,7 @@ export default function OrderDetailClient({
                 </h1>
                 <div data-order-detail-mobile-total style={{
                   display: 'none',
-                  fontFamily: 'var(--font-instrument-serif)',
+                  fontFamily: 'var(--font-ui)',
                   fontSize: '24px',
                   color: 'var(--text-primary)',
                   textAlign: 'right',
@@ -310,8 +310,9 @@ export default function OrderDetailClient({
                   fontSize: '12px',
                   fontFamily: 'var(--font-ui)',
                   fontWeight: '500',
-                  backgroundColor: order.payment_status === 'paid' ? 'var(--accent-forest)' : 'var(--surface-sunken)',
-                  color: order.payment_status === 'paid' ? 'var(--surface-raised)' : 'var(--text-secondary)',
+                  backgroundColor: order.payment_status === 'paid' ? 'var(--brand-green-soft)' : 'var(--surface-sunken)',
+                  color: order.payment_status === 'paid' ? 'var(--accent-forest)' : 'var(--text-secondary)',
+                  border: order.payment_status === 'paid' ? '1px solid var(--accent-forest)' : '1px solid var(--border)',
                 }}>
                   {order.payment_status === 'paid' ? 'Paid' : 'Unpaid'}
                 </span>
@@ -341,8 +342,9 @@ export default function OrderDetailClient({
 
             <div data-order-detail-actions style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
               <a href={`tel:${order.customer_phone}`} style={{
-                padding: '8px 16px',
-                borderRadius: '6px',
+                minHeight: '40px',
+                padding: '0 16px',
+                borderRadius: '8px',
                 border: '1px solid var(--border-strong)',
                 cursor: 'pointer',
                 fontSize: '13px',
@@ -356,8 +358,9 @@ export default function OrderDetailClient({
                 Call customer
               </a>
               <a href={`mailto:${order.customer_email}`} style={{
-                padding: '8px 16px',
-                borderRadius: '6px',
+                minHeight: '40px',
+                padding: '0 16px',
+                borderRadius: '8px',
                 border: '1px solid var(--border-strong)',
                 cursor: 'pointer',
                 fontSize: '13px',
@@ -374,14 +377,15 @@ export default function OrderDetailClient({
                 <button
                   data-order-detail-primary-action
                   style={{
-                    padding: '8px 16px',
-                    borderRadius: '6px',
+                    minHeight: '40px',
+                    padding: '0 18px',
+                    borderRadius: '8px',
                     border: 'none',
                     cursor: 'pointer',
                     fontSize: '13px',
                     fontFamily: 'var(--font-ui)',
-                    fontWeight: '500',
-                    backgroundColor: 'var(--brand-green)',
+                    fontWeight: '600',
+                    backgroundColor: 'var(--accent-forest)',
                     color: 'var(--surface-raised)',
                   }}
                   onClick={() => setShowMpesaForm(value => !value)}
@@ -394,14 +398,15 @@ export default function OrderDetailClient({
                 <button
                   data-order-detail-primary-action
                   style={{
-                    padding: '8px 16px',
-                    borderRadius: '6px',
-                    border: '1px solid var(--border-strong)',
+                    minHeight: '40px',
+                    padding: '0 18px',
+                    borderRadius: '8px',
+                    border: 'none',
                     cursor: 'pointer',
                     fontSize: '13px',
                     fontFamily: 'var(--font-ui)',
-                    backgroundColor: 'var(--surface-raised)',
-                    color: 'var(--text-secondary)',
+                    backgroundColor: 'var(--accent-forest)',
+                    color: 'var(--surface-raised)',
                   }}
                   onClick={() => handleStatusUpdate('confirmed')}
                   disabled={saving}
@@ -413,14 +418,15 @@ export default function OrderDetailClient({
                 <button
                   data-order-detail-primary-action
                   style={{
-                    padding: '8px 16px',
-                    borderRadius: '6px',
-                    border: '1px solid var(--border-strong)',
+                    minHeight: '40px',
+                    padding: '0 18px',
+                    borderRadius: '8px',
+                    border: 'none',
                     cursor: 'pointer',
                     fontSize: '13px',
                     fontFamily: 'var(--font-ui)',
-                    backgroundColor: 'var(--surface-raised)',
-                    color: 'var(--text-secondary)',
+                    backgroundColor: 'var(--accent-forest)',
+                    color: 'var(--surface-raised)',
                   }}
                   onClick={handleMarkDispatched}
                   disabled={saving}
@@ -432,14 +438,15 @@ export default function OrderDetailClient({
                 <button
                   data-order-detail-primary-action
                   style={{
-                    padding: '8px 16px',
-                    borderRadius: '6px',
-                    border: '1px solid var(--border-strong)',
+                    minHeight: '40px',
+                    padding: '0 18px',
+                    borderRadius: '8px',
+                    border: 'none',
                     cursor: 'pointer',
                     fontSize: '13px',
                     fontFamily: 'var(--font-ui)',
-                    backgroundColor: 'var(--surface-raised)',
-                    color: 'var(--text-secondary)',
+                    backgroundColor: 'var(--accent-forest)',
+                    color: 'var(--surface-raised)',
                   }}
                   onClick={() => handleStatusUpdate('delivered')}
                   disabled={saving}
@@ -448,8 +455,9 @@ export default function OrderDetailClient({
                 </button>
               )}
               <Link href={`/admin/packing-slips?order=${order.id}`} style={{
-                padding: '8px 16px',
-                borderRadius: '6px',
+                minHeight: '40px',
+                padding: '0 16px',
+                borderRadius: '8px',
                 border: '1px solid var(--border-strong)',
                 cursor: 'pointer',
                 fontSize: '13px',
@@ -465,8 +473,9 @@ export default function OrderDetailClient({
               {order.order_status !== 'delivered' && order.order_status !== 'cancelled' && (
                 <button
                   style={{
-                    padding: '8px 16px',
-                    borderRadius: '6px',
+                    minHeight: '40px',
+                    padding: '0 16px',
+                    borderRadius: '8px',
                     border: '1px solid var(--accent-terracotta)',
                     cursor: 'pointer',
                     fontSize: '13px',
@@ -485,8 +494,8 @@ export default function OrderDetailClient({
 
           {showMpesaForm && (
             <div data-order-detail-section style={{
-              backgroundColor: 'var(--brand-green-soft)',
-              border: '1px solid var(--brand-green)',
+              backgroundColor: 'var(--surface-raised)',
+              border: '1px solid var(--accent-forest)',
               borderRadius: '8px',
               padding: '20px',
               marginBottom: '20px',
@@ -502,7 +511,7 @@ export default function OrderDetailClient({
                   placeholder="e.g. QHX1234XY5"
                   style={{
                     padding: '8px 12px',
-                    borderRadius: '6px',
+                    borderRadius: '8px',
                     border: '1px solid var(--border-strong)',
                     fontSize: '14px',
                     fontFamily: 'var(--font-ui)',
@@ -514,14 +523,15 @@ export default function OrderDetailClient({
                 />
                 <button
                   style={{
-                    padding: '8px 16px',
-                    borderRadius: '6px',
+                    minHeight: '40px',
+                    padding: '0 16px',
+                    borderRadius: '8px',
                     border: 'none',
                     cursor: mpesaCode.trim().length < 6 ? 'not-allowed' : 'pointer',
                     fontSize: '13px',
                     fontFamily: 'var(--font-ui)',
-                    fontWeight: '500',
-                    backgroundColor: 'var(--brand-green)',
+                    fontWeight: '600',
+                    backgroundColor: 'var(--accent-forest)',
                     color: 'var(--surface-raised)',
                     opacity: mpesaCode.trim().length < 6 || saving ? 0.5 : 1,
                   }}
@@ -532,8 +542,9 @@ export default function OrderDetailClient({
                 </button>
                 <button
                   style={{
-                    padding: '8px 16px',
-                    borderRadius: '6px',
+                    minHeight: '40px',
+                    padding: '0 16px',
+                    borderRadius: '8px',
                     border: '1px solid var(--border-strong)',
                     cursor: 'pointer',
                     fontSize: '13px',
@@ -581,7 +592,7 @@ export default function OrderDetailClient({
               </div>
               <a href={`tel:${order.customer_phone}`} style={{
                 fontSize: '14px',
-                color: 'var(--brand-green)',
+                color: 'var(--accent-forest)',
                 textDecoration: 'none',
                 display: 'block',
                 marginBottom: '4px',
@@ -773,7 +784,7 @@ export default function OrderDetailClient({
                     display: 'flex',
                     justifyContent: 'space-between',
                     fontSize: '16px',
-                    fontFamily: 'var(--font-instrument-serif)',
+                    fontFamily: 'var(--font-display)',
                     color: 'var(--text-primary)',
                     paddingTop: '8px',
                     borderTop: '1px solid var(--border)',
@@ -811,7 +822,7 @@ export default function OrderDetailClient({
               style={{
                 width: '100%',
                 padding: '10px 12px',
-                borderRadius: '6px',
+                borderRadius: '8px',
                 border: '1px solid var(--border-strong)',
                 fontSize: '14px',
                 fontFamily: 'var(--font-ui)',

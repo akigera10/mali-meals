@@ -34,7 +34,7 @@ const inputStyle: React.CSSProperties = {
   borderRadius: '8px',
   border: '1px solid var(--border-strong)',
   backgroundColor: 'var(--surface-raised)',
-  fontFamily: 'var(--font-inter)',
+  fontFamily: 'var(--font-ui)',
   fontSize: '14px',
   color: 'var(--text-primary)',
   outline: 'none',
@@ -100,8 +100,8 @@ export default function SettingsClient({ initialSettings }: { initialSettings: S
   }
 
   return (
-    <div style={{ maxWidth: '640px', margin: '0 auto', padding: '40px 20px', fontFamily: 'var(--font-inter)' }}>
-      <h1 style={{ fontFamily: 'var(--font-fraunces)', fontSize: '28px', color: 'var(--text-primary)', marginBottom: '4px' }}>
+    <div style={{ maxWidth: '640px', margin: '0 auto', padding: '40px 20px', fontFamily: 'var(--font-ui)' }}>
+      <h1 style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '28px', color: 'var(--text-primary)', marginBottom: '4px' }}>
         Settings
       </h1>
       <p style={{ fontSize: '14px', color: 'var(--text-tertiary)', marginBottom: '40px' }}>
@@ -120,11 +120,11 @@ export default function SettingsClient({ initialSettings }: { initialSettings: S
                 style={{
                   padding: '10px 24px',
                   borderRadius: '8px',
-                  border: `1.5px solid ${active ? 'var(--brand-gold)' : 'var(--border-strong)'}`,
-                  backgroundColor: active ? 'var(--brand-gold-soft)' : 'var(--surface-raised)',
-                  color: active ? 'var(--brand-gold-dark)' : 'var(--text-secondary)',
+                  border: `1.5px solid ${active ? 'var(--brand-green)' : 'var(--border-strong)'}`,
+                  backgroundColor: active ? 'var(--brand-green-soft)' : 'var(--surface-raised)',
+                  color: active ? 'var(--brand-green-hover)' : 'var(--text-secondary)',
                   fontSize: '14px',
-                  fontFamily: 'var(--font-inter)',
+                  fontFamily: 'var(--font-ui)',
                   fontWeight: active ? '600' : '400',
                   cursor: 'pointer',
                   textTransform: 'capitalize',
@@ -141,7 +141,7 @@ export default function SettingsClient({ initialSettings }: { initialSettings: S
       <div style={{ borderTop: '1px solid var(--border)', margin: '28px 0' }} />
 
       {/* Weekend cycle settings */}
-      <h2 style={{ fontFamily: 'var(--font-fraunces)', fontSize: '18px', color: 'var(--text-primary)', margin: '0 0 20px' }}>
+      <h2 style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '18px', color: 'var(--text-primary)', margin: '0 0 20px' }}>
         Weekend cycle
       </h2>
 
@@ -179,7 +179,7 @@ export default function SettingsClient({ initialSettings }: { initialSettings: S
       <div style={{ borderTop: '1px solid var(--border)', margin: '28px 0' }} />
 
       {/* Midweek cycle settings */}
-      <h2 style={{ fontFamily: 'var(--font-fraunces)', fontSize: '18px', color: 'var(--text-primary)', margin: '0 0 20px' }}>
+      <h2 style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '18px', color: 'var(--text-primary)', margin: '0 0 20px' }}>
         Midweek cycle
       </h2>
 
@@ -228,10 +228,10 @@ export default function SettingsClient({ initialSettings }: { initialSettings: S
               saveState === 'error' ? 'var(--accent-terracotta)' :
               saveState === 'saved' ? 'var(--accent-forest)' :
               saveState === 'saving' ? 'var(--surface-sunken)' :
-              'var(--brand-gold)',
+              'var(--brand-green)',
             color: saveState === 'saving' ? 'var(--text-tertiary)' : '#fff',
             fontSize: '15px',
-            fontFamily: 'var(--font-inter)',
+            fontFamily: 'var(--font-ui)',
             fontWeight: '500',
             cursor: saveState === 'saving' ? 'default' : 'pointer',
           }}

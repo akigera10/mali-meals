@@ -10,7 +10,7 @@ export default function AdminResetPasswordPage() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        fontFamily: 'var(--font-inter)',
+        fontFamily: 'var(--font-ui)',
         color: 'var(--text-secondary)',
       }}>
         Loading reset page...

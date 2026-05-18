@@ -114,7 +114,7 @@ function ItemRows({ items }: {
           <span style={{ color: 'var(--text-tertiary)', whiteSpace: 'nowrap' }}>x {item.quantity}</span>
           <span style={{ color: 'var(--text-tertiary)', whiteSpace: 'nowrap' }}>{fmt(item.unit_price)}</span>
           <span style={{
-            fontFamily: 'var(--font-fraunces)',
+            fontFamily: 'var(--font-instrument-serif)',
             fontSize: '14px',
             color: 'var(--text-primary)',
             textAlign: 'right',
@@ -261,7 +261,7 @@ export default function OrderDetailClient({
           }
         }
       ` }} />
-      <div style={{ fontFamily: 'var(--font-inter)' }}>
+      <div style={{ fontFamily: 'var(--font-ui)' }}>
         <div data-order-detail-shell style={{ maxWidth: '960px', margin: '0 auto', padding: '32px 20px' }}>
           <Link data-order-back-link href="/admin" style={{
             fontSize: '13px',
@@ -284,7 +284,7 @@ export default function OrderDetailClient({
             <div>
               <div data-order-detail-title-row>
                 <h1 data-order-detail-title style={{
-                  fontFamily: 'var(--font-fraunces)',
+                  fontFamily: 'var(--font-instrument-serif)',
                   fontSize: '32px',
                   color: 'var(--text-primary)',
                   margin: '0 0 10px 0',
@@ -293,7 +293,7 @@ export default function OrderDetailClient({
                 </h1>
                 <div data-order-detail-mobile-total style={{
                   display: 'none',
-                  fontFamily: 'var(--font-fraunces)',
+                  fontFamily: 'var(--font-instrument-serif)',
                   fontSize: '24px',
                   color: 'var(--text-primary)',
                   textAlign: 'right',
@@ -308,7 +308,7 @@ export default function OrderDetailClient({
                   padding: '3px 10px',
                   borderRadius: '4px',
                   fontSize: '12px',
-                  fontFamily: 'var(--font-inter)',
+                  fontFamily: 'var(--font-ui)',
                   fontWeight: '500',
                   backgroundColor: order.payment_status === 'paid' ? 'var(--accent-forest)' : 'var(--surface-sunken)',
                   color: order.payment_status === 'paid' ? 'var(--surface-raised)' : 'var(--text-secondary)',
@@ -320,7 +320,7 @@ export default function OrderDetailClient({
                   padding: '3px 10px',
                   borderRadius: '4px',
                   fontSize: '12px',
-                  fontFamily: 'var(--font-inter)',
+                  fontFamily: 'var(--font-ui)',
                   fontWeight: '500',
                   backgroundColor: 'var(--surface-sunken)',
                   color: 'var(--text-secondary)',
@@ -346,7 +346,7 @@ export default function OrderDetailClient({
                 border: '1px solid var(--border-strong)',
                 cursor: 'pointer',
                 fontSize: '13px',
-                fontFamily: 'var(--font-inter)',
+                fontFamily: 'var(--font-ui)',
                 backgroundColor: 'var(--surface-raised)',
                 color: 'var(--text-secondary)',
                 textDecoration: 'none',
@@ -361,7 +361,7 @@ export default function OrderDetailClient({
                 border: '1px solid var(--border-strong)',
                 cursor: 'pointer',
                 fontSize: '13px',
-                fontFamily: 'var(--font-inter)',
+                fontFamily: 'var(--font-ui)',
                 backgroundColor: 'var(--surface-raised)',
                 color: 'var(--text-secondary)',
                 textDecoration: 'none',
@@ -379,9 +379,9 @@ export default function OrderDetailClient({
                     border: 'none',
                     cursor: 'pointer',
                     fontSize: '13px',
-                    fontFamily: 'var(--font-inter)',
+                    fontFamily: 'var(--font-ui)',
                     fontWeight: '500',
-                    backgroundColor: 'var(--brand-gold)',
+                    backgroundColor: 'var(--brand-green)',
                     color: 'var(--surface-raised)',
                   }}
                   onClick={() => setShowMpesaForm(value => !value)}
@@ -399,7 +399,7 @@ export default function OrderDetailClient({
                     border: '1px solid var(--border-strong)',
                     cursor: 'pointer',
                     fontSize: '13px',
-                    fontFamily: 'var(--font-inter)',
+                    fontFamily: 'var(--font-ui)',
                     backgroundColor: 'var(--surface-raised)',
                     color: 'var(--text-secondary)',
                   }}
@@ -418,7 +418,7 @@ export default function OrderDetailClient({
                     border: '1px solid var(--border-strong)',
                     cursor: 'pointer',
                     fontSize: '13px',
-                    fontFamily: 'var(--font-inter)',
+                    fontFamily: 'var(--font-ui)',
                     backgroundColor: 'var(--surface-raised)',
                     color: 'var(--text-secondary)',
                   }}
@@ -437,7 +437,7 @@ export default function OrderDetailClient({
                     border: '1px solid var(--border-strong)',
                     cursor: 'pointer',
                     fontSize: '13px',
-                    fontFamily: 'var(--font-inter)',
+                    fontFamily: 'var(--font-ui)',
                     backgroundColor: 'var(--surface-raised)',
                     color: 'var(--text-secondary)',
                   }}
@@ -453,7 +453,7 @@ export default function OrderDetailClient({
                 border: '1px solid var(--border-strong)',
                 cursor: 'pointer',
                 fontSize: '13px',
-                fontFamily: 'var(--font-inter)',
+                fontFamily: 'var(--font-ui)',
                 backgroundColor: 'var(--surface-raised)',
                 color: 'var(--text-secondary)',
                 textDecoration: 'none',
@@ -470,7 +470,7 @@ export default function OrderDetailClient({
                     border: '1px solid var(--accent-terracotta)',
                     cursor: 'pointer',
                     fontSize: '13px',
-                    fontFamily: 'var(--font-inter)',
+                    fontFamily: 'var(--font-ui)',
                     backgroundColor: 'transparent',
                     color: 'var(--accent-terracotta)',
                   }}
@@ -485,8 +485,8 @@ export default function OrderDetailClient({
 
           {showMpesaForm && (
             <div data-order-detail-section style={{
-              backgroundColor: 'var(--brand-gold-soft)',
-              border: '1px solid var(--brand-gold)',
+              backgroundColor: 'var(--brand-green-soft)',
+              border: '1px solid var(--brand-green)',
               borderRadius: '8px',
               padding: '20px',
               marginBottom: '20px',
@@ -505,7 +505,7 @@ export default function OrderDetailClient({
                     borderRadius: '6px',
                     border: '1px solid var(--border-strong)',
                     fontSize: '14px',
-                    fontFamily: 'var(--font-inter)',
+                    fontFamily: 'var(--font-ui)',
                     backgroundColor: 'var(--surface-raised)',
                     color: 'var(--text-primary)',
                     minWidth: '200px',
@@ -519,9 +519,9 @@ export default function OrderDetailClient({
                     border: 'none',
                     cursor: mpesaCode.trim().length < 6 ? 'not-allowed' : 'pointer',
                     fontSize: '13px',
-                    fontFamily: 'var(--font-inter)',
+                    fontFamily: 'var(--font-ui)',
                     fontWeight: '500',
-                    backgroundColor: 'var(--brand-gold)',
+                    backgroundColor: 'var(--brand-green)',
                     color: 'var(--surface-raised)',
                     opacity: mpesaCode.trim().length < 6 || saving ? 0.5 : 1,
                   }}
@@ -537,7 +537,7 @@ export default function OrderDetailClient({
                     border: '1px solid var(--border-strong)',
                     cursor: 'pointer',
                     fontSize: '13px',
-                    fontFamily: 'var(--font-inter)',
+                    fontFamily: 'var(--font-ui)',
                     backgroundColor: 'var(--surface-raised)',
                     color: 'var(--text-secondary)',
                   }}
@@ -581,7 +581,7 @@ export default function OrderDetailClient({
               </div>
               <a href={`tel:${order.customer_phone}`} style={{
                 fontSize: '14px',
-                color: 'var(--brand-gold)',
+                color: 'var(--brand-green)',
                 textDecoration: 'none',
                 display: 'block',
                 marginBottom: '4px',
@@ -773,7 +773,7 @@ export default function OrderDetailClient({
                     display: 'flex',
                     justifyContent: 'space-between',
                     fontSize: '16px',
-                    fontFamily: 'var(--font-fraunces)',
+                    fontFamily: 'var(--font-instrument-serif)',
                     color: 'var(--text-primary)',
                     paddingTop: '8px',
                     borderTop: '1px solid var(--border)',
@@ -814,7 +814,7 @@ export default function OrderDetailClient({
                 borderRadius: '6px',
                 border: '1px solid var(--border-strong)',
                 fontSize: '14px',
-                fontFamily: 'var(--font-inter)',
+                fontFamily: 'var(--font-ui)',
                 color: 'var(--text-primary)',
                 backgroundColor: 'var(--surface-raised)',
                 resize: 'vertical',

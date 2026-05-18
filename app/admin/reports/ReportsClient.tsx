@@ -221,9 +221,9 @@ export default function ReportsClient({
   }
 
   return (
-    <div style={{ fontFamily: 'var(--font-inter)' }}>
+    <div style={{ fontFamily: 'var(--font-ui)' }}>
       <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 20px 64px' }}>
-        <h1 style={{ fontFamily: 'var(--font-fraunces)', fontSize: '28px', color: 'var(--text-primary)', margin: '0 0 8px' }}>
+        <h1 style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '28px', color: 'var(--text-primary)', margin: '0 0 8px' }}>
           Reports
         </h1>
         <p style={{ fontSize: '14px', color: 'var(--text-tertiary)', margin: '0 0 24px' }}>
@@ -234,11 +234,11 @@ export default function ReportsClient({
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '12px' }}>
             <label style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
               From
-              <input type="date" value={from} onChange={e => setRange(e.target.value, to)} style={{ marginLeft: '8px', padding: '7px 10px', borderRadius: '6px', border: '1px solid var(--border-strong)', backgroundColor: 'var(--surface-raised)', color: 'var(--text-primary)', fontFamily: 'var(--font-inter)', fontSize: '13px' }} />
+              <input type="date" value={from} onChange={e => setRange(e.target.value, to)} style={{ marginLeft: '8px', padding: '7px 10px', borderRadius: '6px', border: '1px solid var(--border-strong)', backgroundColor: 'var(--surface-raised)', color: 'var(--text-primary)', fontFamily: 'var(--font-ui)', fontSize: '13px' }} />
             </label>
             <label style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
               To
-              <input type="date" value={to} onChange={e => setRange(from, e.target.value)} style={{ marginLeft: '8px', padding: '7px 10px', borderRadius: '6px', border: '1px solid var(--border-strong)', backgroundColor: 'var(--surface-raised)', color: 'var(--text-primary)', fontFamily: 'var(--font-inter)', fontSize: '13px' }} />
+              <input type="date" value={to} onChange={e => setRange(from, e.target.value)} style={{ marginLeft: '8px', padding: '7px 10px', borderRadius: '6px', border: '1px solid var(--border-strong)', backgroundColor: 'var(--surface-raised)', color: 'var(--text-primary)', fontFamily: 'var(--font-ui)', fontSize: '13px' }} />
             </label>
           </div>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -250,7 +250,7 @@ export default function ReportsClient({
               ['last-3-months', 'Last 3 months'],
               ['all', 'All time'],
             ].map(([key, label]) => (
-              <button key={key} onClick={() => applyPreset(key)} style={{ padding: '7px 12px', borderRadius: '6px', border: preset === key ? '1px solid var(--brand-gold)' : '1px solid var(--border-strong)', backgroundColor: preset === key ? 'var(--brand-gold-soft)' : 'var(--surface-raised)', color: preset === key ? 'var(--brand-gold-dark)' : 'var(--text-secondary)', fontFamily: 'var(--font-inter)', fontSize: '13px', cursor: 'pointer' }}>
+              <button key={key} onClick={() => applyPreset(key)} style={{ padding: '7px 12px', borderRadius: '6px', border: preset === key ? '1px solid var(--brand-green)' : '1px solid var(--border-strong)', backgroundColor: preset === key ? 'var(--brand-green-soft)' : 'var(--surface-raised)', color: preset === key ? 'var(--brand-green-hover)' : 'var(--text-secondary)', fontFamily: 'var(--font-ui)', fontSize: '13px', cursor: 'pointer' }}>
                 {label}
               </button>
             ))}
@@ -258,17 +258,17 @@ export default function ReportsClient({
         </div>
 
         <section style={{ marginBottom: '40px' }}>
-          <h2 style={{ fontFamily: 'var(--font-fraunces)', fontSize: '22px', color: 'var(--text-primary)', margin: '0 0 8px' }}>Dish performance</h2>
+          <h2 style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '22px', color: 'var(--text-primary)', margin: '0 0 8px' }}>Dish performance</h2>
           {missingSnapshots > 0 && (
             <p style={{ fontSize: '13px', color: 'var(--accent-terracotta)', margin: '0 0 12px' }}>
               {missingSnapshots} item{missingSnapshots === 1 ? '' : 's'} predate dish snapshots and use current menu name fallback.
             </p>
           )}
           <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-            <button onClick={() => setDishSort('portions')} style={{ padding: '7px 12px', borderRadius: '6px', border: dishSort === 'portions' ? '1px solid var(--brand-gold)' : '1px solid var(--border-strong)', backgroundColor: dishSort === 'portions' ? 'var(--brand-gold-soft)' : 'var(--surface-raised)', color: dishSort === 'portions' ? 'var(--brand-gold-dark)' : 'var(--text-secondary)', fontFamily: 'var(--font-inter)', fontSize: '13px', cursor: 'pointer' }}>
+            <button onClick={() => setDishSort('portions')} style={{ padding: '7px 12px', borderRadius: '6px', border: dishSort === 'portions' ? '1px solid var(--brand-green)' : '1px solid var(--border-strong)', backgroundColor: dishSort === 'portions' ? 'var(--brand-green-soft)' : 'var(--surface-raised)', color: dishSort === 'portions' ? 'var(--brand-green-hover)' : 'var(--text-secondary)', fontFamily: 'var(--font-ui)', fontSize: '13px', cursor: 'pointer' }}>
               Sort by portions
             </button>
-            <button onClick={() => setDishSort('revenue')} style={{ padding: '7px 12px', borderRadius: '6px', border: dishSort === 'revenue' ? '1px solid var(--brand-gold)' : '1px solid var(--border-strong)', backgroundColor: dishSort === 'revenue' ? 'var(--brand-gold-soft)' : 'var(--surface-raised)', color: dishSort === 'revenue' ? 'var(--brand-gold-dark)' : 'var(--text-secondary)', fontFamily: 'var(--font-inter)', fontSize: '13px', cursor: 'pointer' }}>
+            <button onClick={() => setDishSort('revenue')} style={{ padding: '7px 12px', borderRadius: '6px', border: dishSort === 'revenue' ? '1px solid var(--brand-green)' : '1px solid var(--border-strong)', backgroundColor: dishSort === 'revenue' ? 'var(--brand-green-soft)' : 'var(--surface-raised)', color: dishSort === 'revenue' ? 'var(--brand-green-hover)' : 'var(--text-secondary)', fontFamily: 'var(--font-ui)', fontSize: '13px', cursor: 'pointer' }}>
               Sort by revenue
             </button>
           </div>
@@ -284,11 +284,11 @@ export default function ReportsClient({
               <tbody>
                 {(dishSort === 'revenue' ? dishRowsByRevenue : dishRows).map(row => (
                   <tr key={row.name} style={{ borderTop: '1px solid var(--border)' }}>
-                    <td style={{ padding: '11px 14px', fontFamily: 'var(--font-fraunces)', fontSize: '14px', color: 'var(--text-primary)' }}>{row.name}</td>
+                    <td style={{ padding: '11px 14px', fontFamily: 'var(--font-instrument-serif)', fontSize: '14px', color: 'var(--text-primary)' }}>{row.name}</td>
                     <td style={{ padding: '11px 14px', fontSize: '13px', color: 'var(--text-primary)' }}>{row.portions}</td>
                     <td style={{ padding: '11px 14px', fontSize: '13px', color: 'var(--text-secondary)' }}>{row.vegetarian}</td>
                     <td style={{ padding: '11px 14px', fontSize: '13px', color: 'var(--text-secondary)' }}>{row.meat}</td>
-                    <td style={{ padding: '11px 14px', fontFamily: 'var(--font-fraunces)', fontSize: '14px', color: 'var(--text-primary)' }}>{fmt(row.revenue)}</td>
+                    <td style={{ padding: '11px 14px', fontFamily: 'var(--font-instrument-serif)', fontSize: '14px', color: 'var(--text-primary)' }}>{fmt(row.revenue)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -297,11 +297,11 @@ export default function ReportsClient({
         </section>
 
         <section style={{ marginBottom: '40px' }}>
-          <h2 style={{ fontFamily: 'var(--font-fraunces)', fontSize: '22px', color: 'var(--text-primary)', margin: '0 0 12px' }}>Monthly summary</h2>
+          <h2 style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '22px', color: 'var(--text-primary)', margin: '0 0 12px' }}>Monthly summary</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {monthlyRows.map(row => (
               <div key={row.month} style={{ backgroundColor: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', padding: '14px 16px', display: 'grid', gridTemplateColumns: '1.2fr repeat(4, 1fr)', gap: '12px', alignItems: 'baseline' }}>
-                <span style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--text-primary)', fontSize: '15px' }}>{monthLabel(row.month)}</span>
+                <span style={{ fontFamily: 'var(--font-instrument-serif)', color: 'var(--text-primary)', fontSize: '15px' }}>{monthLabel(row.month)}</span>
                 <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{row.orders} orders</span>
                 <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{fmt(row.revenue)} revenue</span>
                 <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{fmt(row.paid)} paid</span>
@@ -312,11 +312,11 @@ export default function ReportsClient({
         </section>
 
         <section style={{ marginBottom: '40px' }}>
-          <h2 style={{ fontFamily: 'var(--font-fraunces)', fontSize: '22px', color: 'var(--text-primary)', margin: '0 0 12px' }}>Revenue by delivery zone</h2>
+          <h2 style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '22px', color: 'var(--text-primary)', margin: '0 0 12px' }}>Revenue by delivery zone</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {zoneRows.map(row => (
               <div key={row.zone} style={{ backgroundColor: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', padding: '14px 16px', display: 'grid', gridTemplateColumns: '1.5fr .7fr .9fr .9fr', gap: '12px', alignItems: 'baseline' }}>
-                <span style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--text-primary)', fontSize: '15px' }}>Zone {row.zone} · {ZONE_NAMES[row.zone]}</span>
+                <span style={{ fontFamily: 'var(--font-instrument-serif)', color: 'var(--text-primary)', fontSize: '15px' }}>Zone {row.zone} · {ZONE_NAMES[row.zone]}</span>
                 <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{row.orders} orders</span>
                 <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{fmt(row.revenue)}</span>
                 <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>AOV {fmt(row.revenue / row.orders)}</span>
@@ -326,15 +326,15 @@ export default function ReportsClient({
         </section>
 
         <section style={{ marginBottom: '40px' }}>
-          <h2 style={{ fontFamily: 'var(--font-fraunces)', fontSize: '22px', color: 'var(--text-primary)', margin: '0 0 12px' }}>Repeat customers</h2>
+          <h2 style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '22px', color: 'var(--text-primary)', margin: '0 0 12px' }}>Repeat customers</h2>
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '12px' }}>
             <div style={{ backgroundColor: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', padding: '14px 16px', flex: '1 1 180px' }}>
               <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '4px' }}>Unique customers ever</div>
-              <div style={{ fontFamily: 'var(--font-fraunces)', fontSize: '24px', color: 'var(--text-primary)' }}>{repeatStats.total}</div>
+              <div style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '24px', color: 'var(--text-primary)' }}>{repeatStats.total}</div>
             </div>
             <div style={{ backgroundColor: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', padding: '14px 16px', flex: '1 1 180px' }}>
               <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '4px' }}>Customers with 2+ orders</div>
-              <div style={{ fontFamily: 'var(--font-fraunces)', fontSize: '24px', color: 'var(--text-primary)' }}>{repeatStats.repeatCount} · {repeatStats.repeatRate}%</div>
+              <div style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '24px', color: 'var(--text-primary)' }}>{repeatStats.repeatCount} · {repeatStats.repeatRate}%</div>
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -351,12 +351,12 @@ export default function ReportsClient({
         </section>
 
         <section style={{ marginBottom: '40px' }}>
-          <h2 style={{ fontFamily: 'var(--font-fraunces)', fontSize: '22px', color: 'var(--text-primary)', margin: '0 0 12px' }}>Weekend vs midweek</h2>
+          <h2 style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '22px', color: 'var(--text-primary)', margin: '0 0 12px' }}>Weekend vs midweek</h2>
           {cycleRows.find(row => row.cycle === 'midweek') ? (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               {cycleRows.map(row => (
                 <div key={row.cycle} style={{ backgroundColor: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px 20px' }}>
-                  <div style={{ fontFamily: 'var(--font-fraunces)', fontSize: '18px', color: 'var(--text-primary)', marginBottom: '8px', textTransform: 'capitalize' }}>{row.cycle}</div>
+                  <div style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '18px', color: 'var(--text-primary)', marginBottom: '8px', textTransform: 'capitalize' }}>{row.cycle}</div>
                   <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '4px' }}>{row.orders} orders</div>
                   <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '4px' }}>{fmt(row.revenue)} revenue</div>
                   <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>AOV {fmt(row.revenue / row.orders)}</div>
@@ -369,11 +369,11 @@ export default function ReportsClient({
         </section>
 
         <section>
-          <h2 style={{ fontFamily: 'var(--font-fraunces)', fontSize: '22px', color: 'var(--text-primary)', margin: '0 0 12px' }}>Protein upgrade performance</h2>
+          <h2 style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '22px', color: 'var(--text-primary)', margin: '0 0 12px' }}>Protein upgrade performance</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {addonRows.map(row => (
               <div key={row.name} style={{ backgroundColor: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', padding: '14px 16px', display: 'grid', gridTemplateColumns: '1.4fr .8fr .8fr .8fr', gap: '12px', alignItems: 'baseline' }}>
-                <span style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--text-primary)', fontSize: '15px' }}>{row.name}</span>
+                <span style={{ fontFamily: 'var(--font-instrument-serif)', color: 'var(--text-primary)', fontSize: '15px' }}>{row.name}</span>
                 <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{row.quantity} ordered</span>
                 <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{fmt(row.revenue)}</span>
                 <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{row.attachRate}% attach</span>

@@ -112,11 +112,11 @@ function validate(data: FormData): FormErrors {
 
 function inputStyle(hasError: boolean, focused = false): React.CSSProperties {
   return {
-    fontFamily: 'var(--font-inter), sans-serif',
+    fontFamily: 'var(--font-ui), sans-serif',
     fontSize: 14,
     color: 'var(--text-primary)',
     background: 'var(--surface-raised)',
-    border: `1px solid ${hasError ? '#B5533C' : focused ? 'var(--brand-gold)' : 'var(--border-strong)'}`,
+    border: `1px solid ${hasError ? '#B5533C' : focused ? 'var(--brand-green)' : 'var(--border-strong)'}`,
     borderRadius: 8,
     padding: '12px 14px',
     outline: 'none',
@@ -136,7 +136,7 @@ function Field({ label, error, hint, children }: {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       <label style={{
-        fontFamily: 'var(--font-inter), sans-serif',
+        fontFamily: 'var(--font-ui), sans-serif',
         fontSize: 13,
         fontWeight: 500,
         color: error ? '#B5533C' : 'var(--text-secondary)',
@@ -146,7 +146,7 @@ function Field({ label, error, hint, children }: {
       {children}
       {hint && (
         <span style={{
-          fontFamily: 'var(--font-inter), sans-serif',
+          fontFamily: 'var(--font-ui), sans-serif',
           fontSize: 12,
           fontStyle: 'italic',
           color: 'var(--text-tertiary)',
@@ -156,7 +156,7 @@ function Field({ label, error, hint, children }: {
       )}
       {error && (
         <span style={{
-          fontFamily: 'var(--font-inter), sans-serif',
+          fontFamily: 'var(--font-ui), sans-serif',
           fontSize: 12,
           color: '#B5533C',
         }}>
@@ -179,7 +179,7 @@ function StepIndicator({ step }: { step: 1 | 2 }) {
       <Link href="/" className="mali-menu-link" style={{
         position: 'absolute',
         left: 0,
-        fontFamily: 'var(--font-inter), sans-serif',
+        fontFamily: 'var(--font-ui), sans-serif',
         fontSize: 13,
         color: 'var(--text-tertiary)',
         textDecoration: 'none',
@@ -188,19 +188,19 @@ function StepIndicator({ step }: { step: 1 | 2 }) {
       </Link>
       <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
         <span style={{
-          fontFamily: 'var(--font-inter), sans-serif',
+          fontFamily: 'var(--font-ui), sans-serif',
           fontSize: 13,
           fontWeight: step === 1 ? 600 : 400,
-          color: step === 1 ? 'var(--brand-gold)' : 'var(--text-tertiary)',
+          color: step === 1 ? 'var(--brand-green)' : 'var(--text-tertiary)',
         }}>
           1 — Details
         </span>
         <span style={{ color: 'var(--text-tertiary)', fontSize: 13 }}>·</span>
         <span style={{
-          fontFamily: 'var(--font-inter), sans-serif',
+          fontFamily: 'var(--font-ui), sans-serif',
           fontSize: 13,
           fontWeight: step === 2 ? 600 : 400,
-          color: step === 2 ? 'var(--brand-gold)' : 'var(--text-tertiary)',
+          color: step === 2 ? 'var(--brand-green)' : 'var(--text-tertiary)',
         }}>
           2 — Review
         </span>
@@ -238,7 +238,7 @@ export default function CheckoutClient() {
     return (
       <div style={{ maxWidth: 600, margin: '0 auto', padding: '80px 20px', textAlign: 'center' }}>
         <p style={{
-          fontFamily: 'var(--font-fraunces), serif',
+          fontFamily: 'var(--font-instrument-serif), serif',
           fontSize: 26,
           fontWeight: 400,
           color: 'var(--text-primary)',
@@ -247,7 +247,7 @@ export default function CheckoutClient() {
           Your cart is empty
         </p>
         <p style={{
-          fontFamily: 'var(--font-inter), sans-serif',
+          fontFamily: 'var(--font-ui), sans-serif',
           fontSize: 14,
           color: 'var(--text-secondary)',
           margin: '0 0 24px',
@@ -255,10 +255,10 @@ export default function CheckoutClient() {
           Add some dishes before checking out.
         </p>
         <Link href="/" style={{
-          fontFamily: 'var(--font-inter), sans-serif',
+          fontFamily: 'var(--font-ui), sans-serif',
           fontSize: 14,
           fontWeight: 500,
-          color: 'var(--brand-gold)',
+          color: 'var(--brand-green)',
           textDecoration: 'none',
         }}>
           ← Back to menu
@@ -271,25 +271,63 @@ export default function CheckoutClient() {
 
   if (isSuccess) {
     return (
-      <div style={{ maxWidth: 600, margin: '0 auto', padding: '80px 20px', textAlign: 'center' }}>
+      <div style={{ maxWidth: 600, margin: '0 auto', padding: '72px 20px 88px', textAlign: 'left' }}>
+        <div style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 8,
+          background: 'var(--surface-sunken)',
+          border: '1px solid var(--border)',
+          borderRadius: 999,
+          padding: '6px 12px',
+          marginBottom: 18,
+        }}>
+          <span style={{
+            width: 7,
+            height: 7,
+            borderRadius: '50%',
+            background: 'var(--accent-forest)',
+            flexShrink: 0,
+          }} />
+          <span style={{
+            fontFamily: 'var(--font-ui), sans-serif',
+            fontSize: 12,
+            fontWeight: 600,
+            color: 'var(--text-secondary)',
+            letterSpacing: '0.01em',
+          }}>
+            Mali&apos;s Meals
+          </span>
+        </div>
         <p style={{
-          fontFamily: 'var(--font-fraunces), serif',
-          fontSize: 32,
+          fontFamily: 'var(--font-instrument-serif), serif',
+          fontSize: 40,
           fontWeight: 400,
           color: 'var(--text-primary)',
-          margin: '0 0 24px',
+          margin: '0 0 10px',
+          lineHeight: 1.02,
         }}>
           Order received!
         </p>
+        <p style={{
+          fontFamily: 'var(--font-ui), sans-serif',
+          fontSize: 15,
+          color: 'var(--text-secondary)',
+          margin: '0 0 26px',
+          lineHeight: 1.6,
+          maxWidth: 500,
+        }}>
+          Your order is safely in Mali&apos;s queue. Keep the reference below for any questions about this order.
+        </p>
         <div style={{
-          background: 'var(--brand-gold-soft)',
-          border: '1px solid var(--border)',
+          background: 'var(--brand-green-soft)',
+          border: '1px solid var(--brand-green)',
           borderRadius: 8,
-          padding: '20px 24px',
-          marginBottom: 32,
+          padding: '22px 24px',
+          marginBottom: 18,
         }}>
           <p style={{
-            fontFamily: 'var(--font-inter), sans-serif',
+            fontFamily: 'var(--font-ui), sans-serif',
             fontSize: 12,
             color: 'var(--text-tertiary)',
             margin: '0 0 6px',
@@ -299,8 +337,8 @@ export default function CheckoutClient() {
             Your order reference
           </p>
           <p style={{
-            fontFamily: 'var(--font-fraunces), serif',
-            fontSize: 34,
+            fontFamily: 'var(--font-instrument-serif), serif',
+            fontSize: 42,
             fontWeight: 400,
             color: 'var(--text-primary)',
             margin: '0 0 10px',
@@ -308,20 +346,127 @@ export default function CheckoutClient() {
             {orderRef}
           </p>
           <p style={{
-            fontFamily: 'var(--font-inter), sans-serif',
+            fontFamily: 'var(--font-ui), sans-serif',
             fontSize: 13,
             color: 'var(--text-secondary)',
             margin: 0,
+            lineHeight: 1.5,
           }}>
             Your order summary and payment details have been sent to {successEmail}
           </p>
         </div>
+        <div style={{
+          background: 'var(--surface-raised)',
+          border: '1px solid var(--border)',
+          borderRadius: 8,
+          padding: '20px 22px',
+          marginBottom: 28,
+        }}>
+          <p style={{
+            fontFamily: 'var(--font-instrument-serif), serif',
+            fontSize: 20,
+            color: 'var(--text-primary)',
+            margin: '0 0 14px',
+          }}>
+            What happens next
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+              <span style={{
+                width: 24,
+                height: 24,
+                borderRadius: '50%',
+                background: 'var(--surface-sunken)',
+                color: 'var(--text-secondary)',
+                fontFamily: 'var(--font-ui), sans-serif',
+                fontSize: 12,
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                1
+              </span>
+              <p style={{
+                fontFamily: 'var(--font-ui), sans-serif',
+                fontSize: 14,
+                color: 'var(--text-secondary)',
+                margin: 0,
+                lineHeight: 1.5,
+              }}>
+                Check your email for the full order summary and payment instructions.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+              <span style={{
+                width: 24,
+                height: 24,
+                borderRadius: '50%',
+                background: 'var(--surface-sunken)',
+                color: 'var(--text-secondary)',
+                fontFamily: 'var(--font-ui), sans-serif',
+                fontSize: 12,
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                2
+              </span>
+              <p style={{
+                fontFamily: 'var(--font-ui), sans-serif',
+                fontSize: 14,
+                color: 'var(--text-secondary)',
+                margin: 0,
+                lineHeight: 1.5,
+              }}>
+                Mali reviews the order and confirms it before it moves into prep.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+              <span style={{
+                width: 24,
+                height: 24,
+                borderRadius: '50%',
+                background: 'var(--surface-sunken)',
+                color: 'var(--text-secondary)',
+                fontFamily: 'var(--font-ui), sans-serif',
+                fontSize: 12,
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}>
+                3
+              </span>
+              <p style={{
+                fontFamily: 'var(--font-ui), sans-serif',
+                fontSize: 14,
+                color: 'var(--text-secondary)',
+                margin: 0,
+                lineHeight: 1.5,
+              }}>
+                Payment is completed before dispatch, then you receive your delivery update.
+              </p>
+            </div>
+          </div>
+        </div>
         <Link href="/" style={{
-          fontFamily: 'var(--font-inter), sans-serif',
+          display: 'inline-flex',
+          alignItems: 'center',
+          minHeight: 44,
+          fontFamily: 'var(--font-ui), sans-serif',
           fontSize: 14,
-          fontWeight: 500,
-          color: 'var(--brand-gold)',
+          fontWeight: 600,
+          color: 'var(--text-primary)',
           textDecoration: 'none',
+          border: '1px solid var(--border-strong)',
+          borderRadius: 8,
+          padding: '0 18px',
+          background: 'var(--surface-raised)',
         }}>
           ← Back to menu
         </Link>
@@ -561,7 +706,7 @@ export default function CheckoutClient() {
 
   const sectionTitle = (text: string) => (
     <h2 style={{
-      fontFamily: 'var(--font-fraunces), serif',
+      fontFamily: 'var(--font-instrument-serif), serif',
       fontSize: 22,
       fontWeight: 400,
       color: 'var(--text-primary)',
@@ -586,7 +731,7 @@ export default function CheckoutClient() {
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <Link href="/" style={{ textDecoration: 'none' }}>
             <span style={{
-              fontFamily: 'var(--font-fraunces), serif',
+              fontFamily: 'var(--font-instrument-serif), serif',
               fontSize: 26,
               fontWeight: 400,
               color: 'var(--text-primary)',
@@ -718,8 +863,8 @@ export default function CheckoutClient() {
                       key={z.value}
                       style={{
                         display: 'block',
-                        background: selected ? 'var(--brand-gold-soft)' : 'var(--surface-raised)',
-                        border: `1px solid ${selected ? 'var(--brand-gold)' : errors.zone ? '#B5533C' : 'var(--border-strong)'}`,
+                        background: selected ? 'var(--brand-green-soft)' : 'var(--surface-raised)',
+                        border: `1px solid ${selected ? 'var(--brand-green)' : errors.zone ? '#B5533C' : 'var(--border-strong)'}`,
                         borderRadius: 8,
                         padding: '12px 14px',
                         cursor: 'pointer',
@@ -735,7 +880,7 @@ export default function CheckoutClient() {
                       />
                       <div style={{ marginBottom: 3 }}>
                         <span style={{
-                          fontFamily: 'var(--font-fraunces), serif',
+                          fontFamily: 'var(--font-instrument-serif), serif',
                           fontSize: 16,
                           color: 'var(--text-primary)',
                         }}>
@@ -743,7 +888,7 @@ export default function CheckoutClient() {
                         </span>
                       </div>
                       <span style={{
-                        fontFamily: 'var(--font-inter), sans-serif',
+                        fontFamily: 'var(--font-ui), sans-serif',
                         fontSize: 12,
                         color: 'var(--text-tertiary)',
                         lineHeight: 1.4,
@@ -766,8 +911,8 @@ export default function CheckoutClient() {
                       key={opt.key}
                       style={{
                         display: 'block',
-                        background: selected ? 'var(--brand-gold-soft)' : 'var(--surface-raised)',
-                        border: `1px solid ${selected ? 'var(--brand-gold)' : errors.deliveryDay ? '#B5533C' : 'var(--border-strong)'}`,
+                        background: selected ? 'var(--brand-green-soft)' : 'var(--surface-raised)',
+                        border: `1px solid ${selected ? 'var(--brand-green)' : errors.deliveryDay ? '#B5533C' : 'var(--border-strong)'}`,
                         borderRadius: 8,
                         padding: '12px 14px',
                         cursor: 'pointer',
@@ -788,7 +933,7 @@ export default function CheckoutClient() {
                       }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <span style={{
-                            fontFamily: 'var(--font-fraunces), serif',
+                            fontFamily: 'var(--font-instrument-serif), serif',
                             fontSize: 15,
                             color: 'var(--text-primary)',
                           }}>
@@ -796,12 +941,12 @@ export default function CheckoutClient() {
                           </span>
                           {opt.badge && (
                             <span style={{
-                              fontFamily: 'var(--font-inter), sans-serif',
+                              fontFamily: 'var(--font-ui), sans-serif',
                               fontSize: 11,
                               fontWeight: 600,
-                              color: 'var(--brand-gold-dark)',
-                              background: 'var(--brand-gold-soft)',
-                              border: '1px solid var(--brand-gold)',
+                              color: 'var(--brand-green-hover)',
+                              background: 'var(--brand-green-soft)',
+                              border: '1px solid var(--brand-green)',
                               borderRadius: 4,
                               padding: '1px 6px',
                               letterSpacing: '0.04em',
@@ -812,7 +957,7 @@ export default function CheckoutClient() {
                         </div>
                         {!form.zone ? (
                           <span style={{
-                            fontFamily: 'var(--font-inter), sans-serif',
+                            fontFamily: 'var(--font-ui), sans-serif',
                             fontSize: 12,
                             fontStyle: 'italic',
                             color: 'var(--text-tertiary)',
@@ -821,9 +966,9 @@ export default function CheckoutClient() {
                           </span>
                         ) : opt.key === 'sunday_free' ? (
                           <span style={{
-                            fontFamily: 'var(--font-fraunces), serif',
+                            fontFamily: 'var(--font-instrument-serif), serif',
                             fontSize: 15,
-                            color: 'var(--brand-gold)',
+                            color: 'var(--brand-green)',
                             flexShrink: 0,
                             marginLeft: 12,
                           }}>
@@ -831,9 +976,9 @@ export default function CheckoutClient() {
                           </span>
                         ) : (
                           <span style={{
-                            fontFamily: 'var(--font-fraunces), serif',
+                            fontFamily: 'var(--font-instrument-serif), serif',
                             fontSize: 15,
-                            color: selected ? 'var(--brand-gold-dark)' : 'var(--brand-gold)',
+                            color: selected ? 'var(--brand-green-hover)' : 'var(--brand-green)',
                             flexShrink: 0,
                             marginLeft: 12,
                           }}>
@@ -852,12 +997,12 @@ export default function CheckoutClient() {
                                 type="button"
                                 onClick={e => { e.preventDefault(); setDeliverySlot(slot.value) }}
                                 style={{
-                                  background: form.deliverySlot === slot.value ? 'var(--brand-gold)' : '#fff',
+                                  background: form.deliverySlot === slot.value ? 'var(--brand-green)' : '#fff',
                                   color: form.deliverySlot === slot.value ? '#fff' : 'var(--text-primary)',
-                                  border: `1px solid ${form.deliverySlot === slot.value ? 'var(--brand-gold)' : 'var(--border-strong)'}`,
+                                  border: `1px solid ${form.deliverySlot === slot.value ? 'var(--brand-green)' : 'var(--border-strong)'}`,
                                   borderRadius: 8,
                                   padding: '6px 14px',
-                                  fontFamily: 'var(--font-inter), sans-serif',
+                                  fontFamily: 'var(--font-ui), sans-serif',
                                   fontSize: 13,
                                   cursor: 'pointer',
                                 }}
@@ -868,7 +1013,7 @@ export default function CheckoutClient() {
                           </div>
                           {errors.deliverySlot && (
                             <span style={{
-                              fontFamily: 'var(--font-inter), sans-serif',
+                              fontFamily: 'var(--font-ui), sans-serif',
                               fontSize: 12,
                               color: '#B5533C',
                               display: 'block',
@@ -904,12 +1049,12 @@ export default function CheckoutClient() {
             <button
               onClick={handleContinue}
               style={{
-                background: 'var(--brand-gold)',
+                background: 'var(--brand-green)',
                 color: '#fff',
                 border: 'none',
                 borderRadius: 8,
                 padding: '14px 24px',
-                fontFamily: 'var(--font-inter), sans-serif',
+                fontFamily: 'var(--font-ui), sans-serif',
                 fontSize: 15,
                 fontWeight: 600,
                 cursor: 'pointer',
@@ -921,7 +1066,7 @@ export default function CheckoutClient() {
             </button>
 
             <Link href="/" style={{
-              fontFamily: 'var(--font-inter), sans-serif',
+              fontFamily: 'var(--font-ui), sans-serif',
               fontSize: 13,
               color: 'var(--text-tertiary)',
               textDecoration: 'none',
@@ -938,7 +1083,7 @@ export default function CheckoutClient() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
             <h2 style={{
-              fontFamily: 'var(--font-fraunces), serif',
+              fontFamily: 'var(--font-instrument-serif), serif',
               fontSize: 22,
               fontWeight: 400,
               color: 'var(--text-primary)',
@@ -959,7 +1104,7 @@ export default function CheckoutClient() {
               {mains.length > 0 && (
                 <>
                   <div style={{
-                    fontFamily: 'var(--font-inter), sans-serif',
+                    fontFamily: 'var(--font-ui), sans-serif',
                     fontSize: 11,
                     fontWeight: 600,
                     letterSpacing: '0.08em',
@@ -980,18 +1125,18 @@ export default function CheckoutClient() {
                       borderBottom: '1px solid var(--border)',
                     }}>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: 16, color: 'var(--text-primary)', lineHeight: 1.3 }}>
+                        <div style={{ fontFamily: 'var(--font-instrument-serif), serif', fontSize: 16, color: 'var(--text-primary)', lineHeight: 1.3 }}>
                           {entry.name}
                         </div>
-                        <div style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>
+                        <div style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>
                           {variantLabel(entry)}
                         </div>
                       </div>
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <div style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 12, color: 'var(--text-tertiary)' }}>
+                        <div style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 12, color: 'var(--text-tertiary)' }}>
                           {entry.quantity} × {fmt(entry.unitPrice)}
                         </div>
-                        <div style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: 16, color: 'var(--text-primary)', marginTop: 2 }}>
+                        <div style={{ fontFamily: 'var(--font-instrument-serif), serif', fontSize: 16, color: 'var(--text-primary)', marginTop: 2 }}>
                           {fmt(entry.unitPrice * entry.quantity)}
                         </div>
                       </div>
@@ -1004,7 +1149,7 @@ export default function CheckoutClient() {
               {salads.length > 0 && (
                 <>
                   <div style={{
-                    fontFamily: 'var(--font-inter), sans-serif',
+                    fontFamily: 'var(--font-ui), sans-serif',
                     fontSize: 11,
                     fontWeight: 600,
                     letterSpacing: '0.08em',
@@ -1025,18 +1170,18 @@ export default function CheckoutClient() {
                       borderBottom: '1px solid var(--border)',
                     }}>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: 16, color: 'var(--text-primary)', lineHeight: 1.3 }}>
+                        <div style={{ fontFamily: 'var(--font-instrument-serif), serif', fontSize: 16, color: 'var(--text-primary)', lineHeight: 1.3 }}>
                           {entry.name}
                         </div>
-                        <div style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>
+                        <div style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>
                           {variantLabel(entry)}
                         </div>
                       </div>
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <div style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 12, color: 'var(--text-tertiary)' }}>
+                        <div style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 12, color: 'var(--text-tertiary)' }}>
                           {entry.quantity} × {fmt(entry.unitPrice)}
                         </div>
-                        <div style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: 16, color: 'var(--text-primary)', marginTop: 2 }}>
+                        <div style={{ fontFamily: 'var(--font-instrument-serif), serif', fontSize: 16, color: 'var(--text-primary)', marginTop: 2 }}>
                           {fmt(entry.unitPrice * entry.quantity)}
                         </div>
                       </div>
@@ -1049,7 +1194,7 @@ export default function CheckoutClient() {
               {specials.length > 0 && (
                 <>
                   <div style={{
-                    fontFamily: 'var(--font-inter), sans-serif',
+                    fontFamily: 'var(--font-ui), sans-serif',
                     fontSize: 11,
                     fontWeight: 600,
                     letterSpacing: '0.08em',
@@ -1070,7 +1215,7 @@ export default function CheckoutClient() {
                       borderBottom: '1px solid var(--border)',
                     }}>
                       <div style={{
-                        fontFamily: 'var(--font-fraunces), serif',
+                        fontFamily: 'var(--font-instrument-serif), serif',
                         fontSize: 16,
                         color: 'var(--text-primary)',
                         flex: 1,
@@ -1078,10 +1223,10 @@ export default function CheckoutClient() {
                         {entry.name}
                       </div>
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <div style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 12, color: 'var(--text-tertiary)' }}>
+                        <div style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 12, color: 'var(--text-tertiary)' }}>
                           {entry.quantity} × {fmt(entry.unitPrice)}
                         </div>
-                        <div style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: 16, color: 'var(--text-primary)', marginTop: 2 }}>
+                        <div style={{ fontFamily: 'var(--font-instrument-serif), serif', fontSize: 16, color: 'var(--text-primary)', marginTop: 2 }}>
                           {fmt(entry.unitPrice * entry.quantity)}
                         </div>
                       </div>
@@ -1094,7 +1239,7 @@ export default function CheckoutClient() {
               {addons.length > 0 && (
                 <>
                   <div style={{
-                    fontFamily: 'var(--font-inter), sans-serif',
+                    fontFamily: 'var(--font-ui), sans-serif',
                     fontSize: 11,
                     fontWeight: 600,
                     letterSpacing: '0.08em',
@@ -1115,7 +1260,7 @@ export default function CheckoutClient() {
                       borderBottom: '1px solid var(--border)',
                     }}>
                       <div style={{
-                        fontFamily: 'var(--font-fraunces), serif',
+                        fontFamily: 'var(--font-instrument-serif), serif',
                         fontSize: 16,
                         color: 'var(--text-primary)',
                         flex: 1,
@@ -1124,14 +1269,14 @@ export default function CheckoutClient() {
                       </div>
                       <div style={{ textAlign: 'right', flexShrink: 0 }}>
                         <div style={{
-                          fontFamily: 'var(--font-inter), sans-serif',
+                          fontFamily: 'var(--font-ui), sans-serif',
                           fontSize: 12,
                           color: 'var(--text-tertiary)',
                         }}>
                           {entry.quantity} × {fmt(entry.unitPrice)}
                         </div>
                         <div style={{
-                          fontFamily: 'var(--font-fraunces), serif',
+                          fontFamily: 'var(--font-instrument-serif), serif',
                           fontSize: 16,
                           color: 'var(--text-primary)',
                           marginTop: 2,
@@ -1148,14 +1293,14 @@ export default function CheckoutClient() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                   <span style={{
-                    fontFamily: 'var(--font-inter), sans-serif',
+                    fontFamily: 'var(--font-ui), sans-serif',
                     fontSize: 14,
                     color: 'var(--text-secondary)',
                   }}>
                     Subtotal
                   </span>
                   <span style={{
-                    fontFamily: 'var(--font-fraunces), serif',
+                    fontFamily: 'var(--font-instrument-serif), serif',
                     fontSize: 16,
                     color: 'var(--text-primary)',
                   }}>
@@ -1166,7 +1311,7 @@ export default function CheckoutClient() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <span style={{
-                      fontFamily: 'var(--font-inter), sans-serif',
+                      fontFamily: 'var(--font-ui), sans-serif',
                       fontSize: 14,
                       color: 'var(--text-secondary)',
                     }}>
@@ -1174,9 +1319,9 @@ export default function CheckoutClient() {
                     </span>
                     {isFreeWindow && (
                       <span style={{
-                        fontFamily: 'var(--font-inter), sans-serif',
+                        fontFamily: 'var(--font-ui), sans-serif',
                         fontSize: 12,
-                        color: 'var(--brand-gold)',
+                        color: 'var(--brand-green)',
                         marginLeft: 8,
                       }}>
                         Free delivery applied ✓
@@ -1184,7 +1329,7 @@ export default function CheckoutClient() {
                     )}
                   </div>
                   <span style={{
-                    fontFamily: 'var(--font-fraunces), serif',
+                    fontFamily: 'var(--font-instrument-serif), serif',
                     fontSize: 16,
                     color: isFreeWindow ? 'var(--text-tertiary)' : 'var(--text-primary)',
                     textDecoration: isFreeWindow ? 'line-through' : 'none',
@@ -1197,9 +1342,9 @@ export default function CheckoutClient() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                     <span />
                     <span style={{
-                      fontFamily: 'var(--font-fraunces), serif',
+                      fontFamily: 'var(--font-instrument-serif), serif',
                       fontSize: 16,
-                      color: 'var(--brand-gold)',
+                      color: 'var(--brand-green)',
                     }}>
                       {fmt(0)}
                     </span>
@@ -1215,7 +1360,7 @@ export default function CheckoutClient() {
                   marginTop: 2,
                 }}>
                   <span style={{
-                    fontFamily: 'var(--font-inter), sans-serif',
+                    fontFamily: 'var(--font-ui), sans-serif',
                     fontSize: 15,
                     fontWeight: 600,
                     color: 'var(--text-primary)',
@@ -1223,7 +1368,7 @@ export default function CheckoutClient() {
                     Total
                   </span>
                   <span style={{
-                    fontFamily: 'var(--font-fraunces), serif',
+                    fontFamily: 'var(--font-instrument-serif), serif',
                     fontSize: 24,
                     color: 'var(--text-primary)',
                   }}>
@@ -1247,7 +1392,7 @@ export default function CheckoutClient() {
                 marginBottom: 16,
               }}>
                 <span style={{
-                  fontFamily: 'var(--font-fraunces), serif',
+                  fontFamily: 'var(--font-instrument-serif), serif',
                   fontSize: 17,
                   color: 'var(--text-primary)',
                 }}>
@@ -1256,9 +1401,9 @@ export default function CheckoutClient() {
                 <button
                   onClick={() => { setStep(1); window.scrollTo(0, 0) }}
                   style={{
-                    fontFamily: 'var(--font-inter), sans-serif',
+                    fontFamily: 'var(--font-ui), sans-serif',
                     fontSize: 13,
-                    color: 'var(--brand-gold)',
+                    color: 'var(--brand-green)',
                     background: 'none',
                     border: 'none',
                     cursor: 'pointer',
@@ -1283,7 +1428,7 @@ export default function CheckoutClient() {
                 ]).map(row => (
                   <div key={row.label} style={{ display: 'flex', gap: 12 }}>
                     <span style={{
-                      fontFamily: 'var(--font-inter), sans-serif',
+                      fontFamily: 'var(--font-ui), sans-serif',
                       fontSize: 13,
                       color: 'var(--text-tertiary)',
                       width: 72,
@@ -1292,7 +1437,7 @@ export default function CheckoutClient() {
                       {row.label}
                     </span>
                     <span style={{
-                      fontFamily: 'var(--font-inter), sans-serif',
+                      fontFamily: 'var(--font-ui), sans-serif',
                       fontSize: 13,
                       color: 'var(--text-primary)',
                       lineHeight: 1.5,
@@ -1307,7 +1452,7 @@ export default function CheckoutClient() {
             {/* Submit error */}
             {submitError && (
               <p style={{
-                fontFamily: 'var(--font-inter), sans-serif',
+                fontFamily: 'var(--font-ui), sans-serif',
                 fontSize: 13,
                 color: '#B5533C',
                 margin: 0,
@@ -1321,12 +1466,12 @@ export default function CheckoutClient() {
               onClick={handlePlaceOrder}
               disabled={isSubmitting}
               style={{
-                background: isSubmitting ? 'var(--text-tertiary)' : 'var(--brand-gold)',
+                background: isSubmitting ? 'var(--text-tertiary)' : 'var(--brand-green)',
                 color: '#fff',
                 border: 'none',
                 borderRadius: 8,
                 padding: '16px 24px',
-                fontFamily: 'var(--font-inter), sans-serif',
+                fontFamily: 'var(--font-ui), sans-serif',
                 fontSize: 16,
                 fontWeight: 600,
                 cursor: isSubmitting ? 'not-allowed' : 'pointer',
@@ -1344,7 +1489,7 @@ export default function CheckoutClient() {
                 background: 'none',
                 border: 'none',
                 cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                fontFamily: 'var(--font-inter), sans-serif',
+                fontFamily: 'var(--font-ui), sans-serif',
                 fontSize: 13,
                 color: 'var(--text-tertiary)',
                 padding: 0,

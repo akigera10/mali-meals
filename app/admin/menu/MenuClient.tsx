@@ -117,7 +117,7 @@ function DishCard({
         value={dish.name}
         onChange={e => onUpdate({ name: e.target.value })}
         placeholder="Dish name"
-        style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-strong)', backgroundColor: 'var(--surface-raised)', fontFamily: 'var(--font-fraunces)', fontSize: '17px', color: 'var(--text-primary)', outline: 'none', boxSizing: 'border-box', marginBottom: '10px' }}
+        style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-strong)', backgroundColor: 'var(--surface-raised)', fontFamily: 'var(--font-instrument-serif)', fontSize: '17px', color: 'var(--text-primary)', outline: 'none', boxSizing: 'border-box', marginBottom: '10px' }}
       />
 
       <textarea
@@ -125,7 +125,7 @@ function DishCard({
         onChange={e => onUpdate({ description: e.target.value })}
         placeholder="Description"
         rows={3}
-        style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-strong)', backgroundColor: 'var(--surface-raised)', fontFamily: 'var(--font-inter)', fontSize: '14px', color: 'var(--text-secondary)', outline: 'none', resize: 'vertical', boxSizing: 'border-box', marginBottom: '16px', lineHeight: '1.5' }}
+        style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-strong)', backgroundColor: 'var(--surface-raised)', fontFamily: 'var(--font-ui)', fontSize: '14px', color: 'var(--text-secondary)', outline: 'none', resize: 'vertical', boxSizing: 'border-box', marginBottom: '16px', lineHeight: '1.5' }}
       />
 
       {/* Meat option */}
@@ -139,11 +139,11 @@ function DishCard({
               style={{
                 padding: '6px 14px',
                 borderRadius: '6px',
-                border: dish.meat_upgrade_type === option.value ? '1.5px solid var(--brand-gold)' : '1px solid var(--border-strong)',
-                backgroundColor: dish.meat_upgrade_type === option.value ? 'var(--brand-gold-soft)' : 'var(--surface-raised)',
-                color: dish.meat_upgrade_type === option.value ? 'var(--brand-gold-dark)' : 'var(--text-secondary)',
+                border: dish.meat_upgrade_type === option.value ? '1.5px solid var(--brand-green)' : '1px solid var(--border-strong)',
+                backgroundColor: dish.meat_upgrade_type === option.value ? 'var(--brand-green-soft)' : 'var(--surface-raised)',
+                color: dish.meat_upgrade_type === option.value ? 'var(--brand-green-hover)' : 'var(--text-secondary)',
                 fontSize: '13px',
-                fontFamily: 'var(--font-inter)',
+                fontFamily: 'var(--font-ui)',
                 cursor: 'pointer',
                 fontWeight: dish.meat_upgrade_type === option.value ? '500' : '400',
               }}
@@ -171,7 +171,7 @@ function DishCard({
                   backgroundColor: dish.allergens.includes(a.key) ? 'var(--accent-terracotta)' : 'var(--surface-sunken)',
                   color: dish.allergens.includes(a.key) ? '#fff' : 'var(--text-tertiary)',
                   fontSize: '12px',
-                  fontFamily: 'var(--font-inter)',
+                  fontFamily: 'var(--font-ui)',
                   fontWeight: '600',
                   cursor: 'pointer',
                 }}
@@ -198,7 +198,7 @@ function DishCard({
                   height: '32px',
                   borderRadius: '6px',
                   border: 'none',
-                  backgroundColor: (dish[flag.key as keyof MenuItem] as boolean) ? 'var(--brand-gold)' : 'var(--surface-sunken)',
+                  backgroundColor: (dish[flag.key as keyof MenuItem] as boolean) ? 'var(--brand-green)' : 'var(--surface-sunken)',
                   fontSize: '15px',
                   cursor: 'pointer',
                   lineHeight: '1',
@@ -240,10 +240,10 @@ function DishCard({
             padding: '8px 20px',
             borderRadius: '8px',
             border: 'none',
-            backgroundColor: saveState === 'saving' ? 'var(--surface-sunken)' : saveState === 'error' ? 'var(--accent-terracotta)' : 'var(--brand-gold)',
+            backgroundColor: saveState === 'saving' ? 'var(--surface-sunken)' : saveState === 'error' ? 'var(--accent-terracotta)' : 'var(--brand-green)',
             color: saveState === 'saving' ? 'var(--text-tertiary)' : '#fff',
             fontSize: '14px',
-            fontFamily: 'var(--font-inter)',
+            fontFamily: 'var(--font-ui)',
             cursor: saveState === 'saving' ? 'default' : 'pointer',
             whiteSpace: 'nowrap',
           }}
@@ -276,14 +276,14 @@ function AddonRow({
         type="text"
         value={addon.name}
         onChange={e => onUpdate({ name: e.target.value })}
-        style={{ flex: '1 1 180px', padding: '7px 10px', borderRadius: '6px', border: '1px solid var(--border-strong)', backgroundColor: 'var(--surface-raised)', fontFamily: 'var(--font-inter)', fontSize: '14px', color: 'var(--text-primary)', outline: 'none' }}
+        style={{ flex: '1 1 180px', padding: '7px 10px', borderRadius: '6px', border: '1px solid var(--border-strong)', backgroundColor: 'var(--surface-raised)', fontFamily: 'var(--font-ui)', fontSize: '14px', color: 'var(--text-primary)', outline: 'none' }}
       />
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
         <input
           type="number"
           value={addon.price}
           onChange={e => onUpdate({ price: Number(e.target.value) })}
-          style={{ width: '72px', padding: '7px 10px', borderRadius: '6px', border: '1px solid var(--border-strong)', backgroundColor: 'var(--surface-raised)', fontFamily: 'var(--font-inter)', fontSize: '14px', color: 'var(--text-primary)', outline: 'none', textAlign: 'right' }}
+          style={{ width: '72px', padding: '7px 10px', borderRadius: '6px', border: '1px solid var(--border-strong)', backgroundColor: 'var(--surface-raised)', fontFamily: 'var(--font-ui)', fontSize: '14px', color: 'var(--text-primary)', outline: 'none', textAlign: 'right' }}
         />
       </div>
       <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', fontSize: '13px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
@@ -301,10 +301,10 @@ function AddonRow({
           padding: '7px 16px',
           borderRadius: '6px',
           border: 'none',
-          backgroundColor: saveState === 'saving' ? 'var(--surface-sunken)' : saveState === 'error' ? 'var(--accent-terracotta)' : 'var(--brand-gold)',
+          backgroundColor: saveState === 'saving' ? 'var(--surface-sunken)' : saveState === 'error' ? 'var(--accent-terracotta)' : 'var(--brand-green)',
           color: saveState === 'saving' ? 'var(--text-tertiary)' : '#fff',
           fontSize: '13px',
-          fontFamily: 'var(--font-inter)',
+          fontFamily: 'var(--font-ui)',
           cursor: saveState === 'saving' ? 'default' : 'pointer',
           whiteSpace: 'nowrap',
         }}
@@ -335,14 +335,14 @@ function SpecialCard({
         value={special.name}
         onChange={e => onUpdate({ name: e.target.value })}
         placeholder="Special name"
-        style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-strong)', backgroundColor: 'var(--surface-raised)', fontFamily: 'var(--font-fraunces)', fontSize: '17px', color: 'var(--text-primary)', outline: 'none', boxSizing: 'border-box', marginBottom: '10px' }}
+        style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-strong)', backgroundColor: 'var(--surface-raised)', fontFamily: 'var(--font-instrument-serif)', fontSize: '17px', color: 'var(--text-primary)', outline: 'none', boxSizing: 'border-box', marginBottom: '10px' }}
       />
       <textarea
         value={special.description}
         onChange={e => onUpdate({ description: e.target.value })}
         placeholder="Description"
         rows={3}
-        style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-strong)', backgroundColor: 'var(--surface-raised)', fontFamily: 'var(--font-inter)', fontSize: '14px', color: 'var(--text-secondary)', outline: 'none', resize: 'vertical', boxSizing: 'border-box', marginBottom: '14px', lineHeight: '1.5' }}
+        style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid var(--border-strong)', backgroundColor: 'var(--surface-raised)', fontFamily: 'var(--font-ui)', fontSize: '14px', color: 'var(--text-secondary)', outline: 'none', resize: 'vertical', boxSizing: 'border-box', marginBottom: '14px', lineHeight: '1.5' }}
       />
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
         <span style={{ fontSize: '13px', color: 'var(--text-tertiary)', flexShrink: 0 }}>Price (Ksh)</span>
@@ -350,7 +350,7 @@ function SpecialCard({
           type="number"
           value={special.price}
           onChange={e => onUpdate({ price: Number(e.target.value) })}
-          style={{ width: '110px', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-strong)', backgroundColor: 'var(--surface-raised)', fontFamily: 'var(--font-fraunces)', fontSize: '15px', color: 'var(--text-primary)', outline: 'none', textAlign: 'right' }}
+          style={{ width: '110px', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-strong)', backgroundColor: 'var(--surface-raised)', fontFamily: 'var(--font-instrument-serif)', fontSize: '15px', color: 'var(--text-primary)', outline: 'none', textAlign: 'right' }}
         />
       </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', paddingTop: '16px', borderTop: '1px solid var(--border)', flexWrap: 'wrap' }}>
@@ -371,10 +371,10 @@ function SpecialCard({
             padding: '8px 20px',
             borderRadius: '8px',
             border: 'none',
-            backgroundColor: saveState === 'saving' ? 'var(--surface-sunken)' : saveState === 'error' ? 'var(--accent-terracotta)' : 'var(--brand-gold)',
+            backgroundColor: saveState === 'saving' ? 'var(--surface-sunken)' : saveState === 'error' ? 'var(--accent-terracotta)' : 'var(--brand-green)',
             color: saveState === 'saving' ? 'var(--text-tertiary)' : '#fff',
             fontSize: '14px',
-            fontFamily: 'var(--font-inter)',
+            fontFamily: 'var(--font-ui)',
             cursor: saveState === 'saving' ? 'default' : 'pointer',
             whiteSpace: 'nowrap',
           }}
@@ -540,7 +540,7 @@ export default function MenuClient({
           <p style={{ fontSize: '14px', color: 'var(--text-tertiary)', marginBottom: '12px' }}>No special yet.</p>
           <button
             onClick={addSpecial}
-            style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid var(--border-strong)', backgroundColor: 'var(--surface-raised)', color: 'var(--text-secondary)', fontSize: '14px', fontFamily: 'var(--font-inter)', cursor: 'pointer' }}
+            style={{ padding: '8px 20px', borderRadius: '8px', border: '1px solid var(--border-strong)', backgroundColor: 'var(--surface-raised)', color: 'var(--text-secondary)', fontSize: '14px', fontFamily: 'var(--font-ui)', cursor: 'pointer' }}
           >
             + Add special
           </button>
@@ -565,12 +565,12 @@ export default function MenuClient({
   // ── JSX ──────────────────────────────────────────────────────────────────────
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'var(--surface-base)', fontFamily: 'var(--font-inter)' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--surface-base)', fontFamily: 'var(--font-ui)' }}>
       <AdminNav />
 
       {/* Page header */}
       <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 20px 28px' }}>
-        <h1 style={{ fontFamily: 'var(--font-fraunces)', fontSize: '28px', color: 'var(--text-primary)', marginBottom: '8px' }}>
+        <h1 style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '28px', color: 'var(--text-primary)', marginBottom: '8px' }}>
           Menu
         </h1>
         <p style={{ fontSize: '13px', fontWeight: '500', margin: '0 0 4px', color: !activeCycle || !activeCutoff ? 'var(--accent-terracotta)' : isOrderingOpen ? 'var(--accent-forest)' : 'var(--text-tertiary)' }}>
@@ -593,7 +593,7 @@ export default function MenuClient({
 
           <button
             onClick={() => setActiveTab('weekend')}
-            style={{ padding: '12px 20px', border: 'none', borderBottom: activeTab === 'weekend' ? '2px solid var(--brand-gold)' : '2px solid transparent', backgroundColor: 'transparent', fontFamily: 'var(--font-inter)', fontSize: '14px', fontWeight: '500', color: activeTab === 'weekend' ? 'var(--text-primary)' : 'var(--text-tertiary)', cursor: 'pointer', marginBottom: '-1px', display: 'flex', alignItems: 'center', gap: '6px' }}
+            style={{ padding: '12px 20px', border: 'none', borderBottom: activeTab === 'weekend' ? '2px solid var(--brand-green)' : '2px solid transparent', backgroundColor: 'transparent', fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: '500', color: activeTab === 'weekend' ? 'var(--text-primary)' : 'var(--text-tertiary)', cursor: 'pointer', marginBottom: '-1px', display: 'flex', alignItems: 'center', gap: '6px' }}
           >
             Weekend Menu
             {activeCycle === 'weekend' && <span style={{ fontSize: '8px', color: 'var(--accent-forest)', lineHeight: '1' }}>●</span>}
@@ -601,7 +601,7 @@ export default function MenuClient({
 
           <button
             onClick={() => setActiveTab('midweek')}
-            style={{ padding: '12px 20px', border: 'none', borderBottom: activeTab === 'midweek' ? '2px solid var(--brand-gold)' : '2px solid transparent', backgroundColor: 'transparent', fontFamily: 'var(--font-inter)', fontSize: '14px', fontWeight: '500', color: activeTab === 'midweek' ? 'var(--text-primary)' : 'var(--text-tertiary)', cursor: 'pointer', marginBottom: '-1px', display: 'flex', alignItems: 'center', gap: '6px' }}
+            style={{ padding: '12px 20px', border: 'none', borderBottom: activeTab === 'midweek' ? '2px solid var(--brand-green)' : '2px solid transparent', backgroundColor: 'transparent', fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: '500', color: activeTab === 'midweek' ? 'var(--text-primary)' : 'var(--text-tertiary)', cursor: 'pointer', marginBottom: '-1px', display: 'flex', alignItems: 'center', gap: '6px' }}
           >
             Midweek Menu
             {activeCycle === 'midweek' && <span style={{ fontSize: '8px', color: 'var(--accent-forest)', lineHeight: '1' }}>●</span>}
@@ -609,7 +609,7 @@ export default function MenuClient({
 
           <button
             onClick={() => setActiveTab('addons')}
-            style={{ padding: '12px 20px', border: 'none', borderBottom: activeTab === 'addons' ? '2px solid var(--brand-gold)' : '2px solid transparent', backgroundColor: 'transparent', fontFamily: 'var(--font-inter)', fontSize: '14px', fontWeight: '500', color: activeTab === 'addons' ? 'var(--text-primary)' : 'var(--text-tertiary)', cursor: 'pointer', marginBottom: '-1px' }}
+            style={{ padding: '12px 20px', border: 'none', borderBottom: activeTab === 'addons' ? '2px solid var(--brand-green)' : '2px solid transparent', backgroundColor: 'transparent', fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: '500', color: activeTab === 'addons' ? 'var(--text-primary)' : 'var(--text-tertiary)', cursor: 'pointer', marginBottom: '-1px' }}
           >
             Protein Add-ons
           </button>
@@ -623,19 +623,19 @@ export default function MenuClient({
         {activeTab === 'weekend' && (
           <div>
             <div style={{ marginBottom: '40px' }}>
-              <div style={{ fontFamily: 'var(--font-fraunces)', fontSize: '16px', color: 'var(--text-primary)', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)' }}>
+              <div style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '16px', color: 'var(--text-primary)', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)' }}>
                 Mains · 995 · with protein 1,295
               </div>
               {renderDishList(weekendMains)}
             </div>
             <div style={{ marginBottom: '40px' }}>
-              <div style={{ fontFamily: 'var(--font-fraunces)', fontSize: '16px', color: 'var(--text-primary)', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)' }}>
+              <div style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '16px', color: 'var(--text-primary)', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)' }}>
                 Salads · 580 · with protein 880
               </div>
               {renderDishList(weekendSalads)}
             </div>
             <div>
-              <div style={{ fontFamily: 'var(--font-fraunces)', fontSize: '16px', color: 'var(--text-primary)', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)' }}>
+              <div style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '16px', color: 'var(--text-primary)', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)' }}>
                 Chef&apos;s Special · Shows on menu when active
               </div>
               {renderSpecials()}
@@ -646,19 +646,19 @@ export default function MenuClient({
         {activeTab === 'midweek' && (
           <div>
             <div style={{ marginBottom: '40px' }}>
-              <div style={{ fontFamily: 'var(--font-fraunces)', fontSize: '16px', color: 'var(--text-primary)', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)' }}>
+              <div style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '16px', color: 'var(--text-primary)', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)' }}>
                 Mains · 995 · with protein 1,295
               </div>
               {renderDishList(midweekMains)}
             </div>
             <div style={{ marginBottom: '40px' }}>
-              <div style={{ fontFamily: 'var(--font-fraunces)', fontSize: '16px', color: 'var(--text-primary)', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)' }}>
+              <div style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '16px', color: 'var(--text-primary)', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)' }}>
                 Salads · 580 · with protein 880
               </div>
               {renderDishList(midweekSalads)}
             </div>
             <div>
-              <div style={{ fontFamily: 'var(--font-fraunces)', fontSize: '16px', color: 'var(--text-primary)', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)' }}>
+              <div style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '16px', color: 'var(--text-primary)', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--border)' }}>
                 Chef&apos;s Special · Shows on menu when active
               </div>
               {renderSpecials()}

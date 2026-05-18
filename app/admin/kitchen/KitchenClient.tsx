@@ -86,7 +86,7 @@ const navBtnStyle: React.CSSProperties = {
   color: 'var(--text-primary)',
   fontSize: '16px',
   cursor: 'pointer',
-  fontFamily: 'var(--font-inter)',
+  fontFamily: 'var(--font-ui)',
   lineHeight: 1,
 }
 
@@ -97,7 +97,7 @@ function Dots({ qty }: { qty: number }) {
   const empty = 5 - filled
   return (
     <span style={{ fontSize: '14px', letterSpacing: '2px' }}>
-      <span style={{ color: 'var(--brand-gold)' }}>{'●'.repeat(filled)}</span>
+      <span style={{ color: 'var(--brand-green)' }}>{'●'.repeat(filled)}</span>
       <span style={{ color: 'var(--border-strong)' }}>{'○'.repeat(empty)}</span>
     </span>
   )
@@ -112,7 +112,7 @@ function DishSection({ heading, blocks, totalPortions }: {
   return (
     <div style={{ marginBottom: '36px' }}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '16px' }}>
-        <h2 style={{ fontFamily: 'var(--font-fraunces)', fontSize: '22px', color: 'var(--text-primary)', margin: 0 }}>
+        <h2 style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '22px', color: 'var(--text-primary)', margin: 0 }}>
           {heading}
         </h2>
         <span style={{ fontSize: '14px', color: 'var(--text-tertiary)' }}>
@@ -123,15 +123,15 @@ function DishSection({ heading, blocks, totalPortions }: {
         {blocks.map(dish => (
           <div key={dish.name} style={{ backgroundColor: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', padding: '14px 16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '10px' }}>
-              <span style={{ fontFamily: 'var(--font-fraunces)', fontSize: '15px', color: 'var(--text-primary)' }}>{dish.name}</span>
-              <span style={{ fontFamily: 'var(--font-fraunces)', fontSize: '14px', color: 'var(--text-tertiary)' }}>{dish.total} total</span>
+              <span style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '15px', color: 'var(--text-primary)' }}>{dish.name}</span>
+              <span style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '14px', color: 'var(--text-tertiary)' }}>{dish.total} total</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
               {dish.variants.map(({ variant, qty }) => (
                 <div key={variant} style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingLeft: '8px' }}>
                   <span style={{ fontSize: '13px', color: 'var(--text-secondary)', width: '130px', flexShrink: 0 }}>{variant}</span>
                   <Dots qty={qty} />
-                  <span style={{ fontFamily: 'var(--font-fraunces)', fontSize: '14px', color: 'var(--text-primary)', minWidth: '24px' }}>{qty}</span>
+                  <span style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '14px', color: 'var(--text-primary)', minWidth: '24px' }}>{qty}</span>
                 </div>
               ))}
             </div>
@@ -149,16 +149,16 @@ function CountSection({ heading, rows }: { heading: string; rows: [string, numbe
   if (rows.length === 0) return null
   return (
     <div style={{ marginBottom: '36px' }}>
-      <h2 style={{ fontFamily: 'var(--font-fraunces)', fontSize: '22px', color: 'var(--text-primary)', margin: '0 0 16px 0' }}>
+      <h2 style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '22px', color: 'var(--text-primary)', margin: '0 0 16px 0' }}>
         {heading}
       </h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {rows.map(([name, qty]) => (
           <div key={name} style={{ backgroundColor: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontFamily: 'var(--font-fraunces)', fontSize: '15px', color: 'var(--text-primary)' }}>{name}</span>
+            <span style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '15px', color: 'var(--text-primary)' }}>{name}</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <Dots qty={qty} />
-              <span style={{ fontFamily: 'var(--font-fraunces)', fontSize: '15px', color: 'var(--text-primary)', minWidth: '24px', textAlign: 'right' }}>{qty}</span>
+              <span style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '15px', color: 'var(--text-primary)', minWidth: '24px', textAlign: 'right' }}>{qty}</span>
             </div>
           </div>
         ))}
@@ -304,13 +304,13 @@ export default function KitchenClient() {
         }
       ` }} />
 
-      <div style={{ fontFamily: 'var(--font-inter)' }}>
+      <div style={{ fontFamily: 'var(--font-ui)' }}>
         <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 20px' }}>
 
           {/* ── Header + date nav ── */}
           <div data-noprint="">
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-              <h1 style={{ fontFamily: 'var(--font-fraunces)', fontSize: '28px', color: 'var(--text-primary)', margin: 0, flex: '1' }}>
+              <h1 style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '28px', color: 'var(--text-primary)', margin: 0, flex: '1' }}>
                 Kitchen
               </h1>
               <button
@@ -335,20 +335,20 @@ export default function KitchenClient() {
                   color: 'var(--text-secondary)',
                   fontSize: '13px',
                   cursor: 'pointer',
-                  fontFamily: 'var(--font-inter)',
+                  fontFamily: 'var(--font-ui)',
                 }}
               >
                 Print
               </button>
             </div>
-            <p style={{ fontSize: '15px', fontFamily: 'var(--font-fraunces)', color: 'var(--text-primary)', margin: '0 0 28px 0' }}>
+            <p style={{ fontSize: '15px', fontFamily: 'var(--font-instrument-serif)', color: 'var(--text-primary)', margin: '0 0 28px 0' }}>
               {datesLoaded && allDates.length === 0 ? 'No delivery dates found' : selectedDateLabel}
             </p>
           </div>
 
           {/* ── Print-only header ── */}
           <div data-printonly="">
-            <div style={{ fontFamily: 'var(--font-fraunces)', fontSize: '18px', color: 'var(--text-primary)', marginBottom: '4px' }}>
+            <div style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '18px', color: 'var(--text-primary)', marginBottom: '4px' }}>
               Mali&apos;s Meals — Kitchen Prep Sheet
             </div>
             <div style={{ fontSize: '14px', color: 'var(--text-primary)', marginBottom: '24px' }}>
@@ -369,7 +369,7 @@ export default function KitchenClient() {
               {/* ── Stats bar ── */}
               <div data-noprint="" style={{ display: 'flex', gap: '24px', marginBottom: '32px', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
-                  <strong style={{ color: 'var(--brand-gold)', fontFamily: 'var(--font-fraunces)', fontSize: '18px' }}>{orders.length}</strong>
+                  <strong style={{ color: 'var(--brand-green)', fontFamily: 'var(--font-instrument-serif)', fontSize: '18px' }}>{orders.length}</strong>
                   {' '}order{orders.length !== 1 ? 's' : ''}
                   {' · '}{orders.reduce((s, o) => s + o.total_amount, 0).toLocaleString()}
                 </span>
@@ -402,7 +402,7 @@ export default function KitchenClient() {
               {unconfirmedOrders.length > 0 && (
                 <section data-noprint="">
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '16px' }}>
-                    <h2 style={{ fontFamily: 'var(--font-fraunces)', fontSize: '20px', color: 'var(--accent-terracotta)', margin: 0 }}>
+                    <h2 style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '20px', color: 'var(--accent-terracotta)', margin: 0 }}>
                       Unconfirmed orders
                     </h2>
                     <span style={{ fontSize: '14px', color: 'var(--accent-terracotta)', fontWeight: '500' }}>
@@ -415,7 +415,7 @@ export default function KitchenClient() {
                         key={order.id}
                         style={{ backgroundColor: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}
                       >
-                        <Link href={`/admin/orders/${order.id}`} style={{ fontFamily: 'var(--font-fraunces)', fontSize: '14px', color: 'var(--brand-gold)', textDecoration: 'none', minWidth: '80px' }}>
+                        <Link href={`/admin/orders/${order.id}`} style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '14px', color: 'var(--brand-green)', textDecoration: 'none', minWidth: '80px' }}>
                           {order.order_ref}
                         </Link>
                         <span style={{ fontSize: '14px', color: 'var(--text-primary)', flex: 1, minWidth: '120px' }}>
@@ -424,7 +424,7 @@ export default function KitchenClient() {
                         <span style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
                           Zone {order.delivery_zone}
                         </span>
-                        <span style={{ fontFamily: 'var(--font-fraunces)', fontSize: '14px', color: 'var(--text-primary)' }}>
+                        <span style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '14px', color: 'var(--text-primary)' }}>
                           {fmt(order.total_amount)}
                         </span>
                         <button
@@ -433,11 +433,11 @@ export default function KitchenClient() {
                           style={{
                             padding: '6px 16px',
                             borderRadius: '6px',
-                            border: '1px solid var(--brand-gold)',
+                            border: '1px solid var(--brand-green)',
                             backgroundColor: 'transparent',
-                            color: 'var(--brand-gold)',
+                            color: 'var(--brand-green)',
                             fontSize: '13px',
-                            fontFamily: 'var(--font-inter)',
+                            fontFamily: 'var(--font-ui)',
                             fontWeight: '500',
                             cursor: confirmingIds.has(order.id) ? 'not-allowed' : 'pointer',
                             opacity: confirmingIds.has(order.id) ? 0.5 : 1,

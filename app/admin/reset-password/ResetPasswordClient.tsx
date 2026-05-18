@@ -113,7 +113,7 @@ export default function ResetPasswordClient() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      fontFamily: 'var(--font-inter)',
+      fontFamily: 'var(--font-ui)',
       padding: '24px',
     }}>
       <div style={{
@@ -125,7 +125,7 @@ export default function ResetPasswordClient() {
         maxWidth: '400px',
       }}>
         <h1 style={{
-          fontFamily: 'var(--font-fraunces)',
+          fontFamily: 'var(--font-instrument-serif)',
           fontSize: '24px',
           color: 'var(--text-primary)',
           margin: '0 0 8px',
@@ -246,10 +246,10 @@ export default function ResetPasswordClient() {
                 padding: '12px',
                 borderRadius: '8px',
                 border: 'none',
-                backgroundColor: saving || !password || !confirmPassword ? 'var(--surface-sunken)' : 'var(--brand-gold)',
+                backgroundColor: saving || !password || !confirmPassword ? 'var(--surface-sunken)' : 'var(--brand-green)',
                 color: saving || !password || !confirmPassword ? 'var(--text-tertiary)' : '#fff',
                 fontSize: '15px',
-                fontFamily: 'var(--font-inter)',
+                fontFamily: 'var(--font-ui)',
                 cursor: saving || !password || !confirmPassword ? 'default' : 'pointer',
               }}
             >
@@ -262,8 +262,8 @@ export default function ResetPasswordClient() {
           <p style={{
             fontSize: '13px',
             color: 'var(--accent-forest)',
-            backgroundColor: 'rgba(63, 90, 60, 0.08)',
-            border: '1px solid rgba(63, 90, 60, 0.22)',
+            backgroundColor: 'rgba(31, 107, 58, 0.08)',
+            border: '1px solid rgba(31, 107, 58, 0.22)',
             borderRadius: '8px',
             padding: '10px 12px',
             margin: 0,
@@ -278,7 +278,7 @@ export default function ResetPasswordClient() {
             display: 'inline-block',
             marginTop: '4px',
             fontSize: '13px',
-            color: 'var(--brand-gold-dark)',
+            color: 'var(--brand-green-hover)',
             textDecoration: 'none',
           }}>
             Back to admin login

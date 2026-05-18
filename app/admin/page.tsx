@@ -79,7 +79,7 @@ export default async function AdminPage() {
 
   if (error || datesResult.error || settingsResult.error) {
     return (
-      <div style={{ padding: '40px', fontFamily: 'var(--font-inter)', color: '#B5533C' }}>
+      <div style={{ padding: '40px', fontFamily: 'var(--font-ui)', color: '#B5533C' }}>
         Error loading orders: {error?.message ?? datesResult.error?.message ?? settingsResult.error?.message}
       </div>
     )

@@ -184,7 +184,7 @@ function isCutoffOpen(cutoff: string | null) {
 function OrderBadge({ order }: { order: Order }) {
   if (order.order_status === 'new') {
     return (
-      <span style={{ fontFamily: 'var(--font-inter)', fontSize: '12px', fontWeight: 500, padding: '3px 8px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'var(--surface-sunken)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
+      <span style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', fontWeight: 500, padding: '3px 8px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'var(--surface-sunken)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
         New
       </span>
     )
@@ -192,7 +192,7 @@ function OrderBadge({ order }: { order: Order }) {
 
   if (order.order_status === 'confirmed' && order.payment_status === 'unpaid') {
     return (
-      <span style={{ fontFamily: 'var(--font-inter)', fontSize: '12px', fontWeight: 500, padding: '3px 8px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'var(--surface-sunken)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
+      <span style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', fontWeight: 500, padding: '3px 8px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'var(--surface-sunken)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
         Confirmed · Unpaid
       </span>
     )
@@ -200,7 +200,7 @@ function OrderBadge({ order }: { order: Order }) {
 
   if (order.order_status === 'confirmed' && order.payment_status === 'paid') {
     return (
-      <span style={{ fontFamily: 'var(--font-inter)', fontSize: '12px', fontWeight: 500, padding: '3px 8px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'rgba(63,90,60,0.1)', color: 'var(--accent-forest)', border: '1px solid var(--accent-forest)' }}>
+      <span style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', fontWeight: 500, padding: '3px 8px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'rgba(31,107,58,0.1)', color: 'var(--accent-forest)', border: '1px solid var(--accent-forest)' }}>
         Paid · Ready
       </span>
     )
@@ -208,7 +208,7 @@ function OrderBadge({ order }: { order: Order }) {
 
   if (order.order_status === 'dispatched') {
     return (
-      <span style={{ fontFamily: 'var(--font-inter)', fontSize: '12px', fontWeight: 500, padding: '3px 8px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'var(--brand-gold-soft)', color: 'var(--brand-gold)', border: '1px solid var(--brand-gold)' }}>
+      <span style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', fontWeight: 500, padding: '3px 8px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'var(--brand-green-soft)', color: 'var(--brand-green)', border: '1px solid var(--brand-green)' }}>
         Out for delivery
       </span>
     )
@@ -216,7 +216,7 @@ function OrderBadge({ order }: { order: Order }) {
 
   if (order.order_status === 'delivered' && order.payment_status === 'paid') {
     return (
-      <span style={{ fontFamily: 'var(--font-inter)', fontSize: '12px', fontWeight: 500, padding: '3px 8px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'rgba(63,90,60,0.1)', color: 'var(--accent-forest)', border: '1px solid var(--accent-forest)' }}>
+      <span style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', fontWeight: 500, padding: '3px 8px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'rgba(31,107,58,0.1)', color: 'var(--accent-forest)', border: '1px solid var(--accent-forest)' }}>
         Delivered · Paid
       </span>
     )
@@ -224,14 +224,14 @@ function OrderBadge({ order }: { order: Order }) {
 
   if (order.order_status === 'delivered' && order.payment_status === 'unpaid') {
     return (
-      <span style={{ fontFamily: 'var(--font-inter)', fontSize: '12px', fontWeight: 500, padding: '3px 8px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'rgba(181,83,60,0.1)', color: 'var(--accent-terracotta)', border: '1px solid var(--accent-terracotta)' }}>
+      <span style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', fontWeight: 500, padding: '3px 8px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'rgba(181,83,60,0.1)', color: 'var(--accent-terracotta)', border: '1px solid var(--accent-terracotta)' }}>
         Delivered · Unpaid
       </span>
     )
   }
 
   return (
-    <span style={{ fontFamily: 'var(--font-inter)', fontSize: '12px', fontWeight: 500, padding: '3px 8px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'var(--surface-sunken)', color: 'var(--text-tertiary)', border: '1px solid var(--border)', opacity: 0.7 }}>
+    <span style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', fontWeight: 500, padding: '3px 8px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'var(--surface-sunken)', color: 'var(--text-tertiary)', border: '1px solid var(--border)', opacity: 0.7 }}>
       Cancelled
     </span>
   )
@@ -251,7 +251,7 @@ function DatePill({
       <button
         type="button"
         onClick={onClick}
-        style={{ minHeight: '42px', padding: '0 14px', borderRadius: '8px', border: '1px solid var(--brand-gold)', backgroundColor: 'var(--brand-gold-soft)', color: 'var(--brand-gold)', fontFamily: 'var(--font-inter)', fontSize: '14px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+        style={{ minHeight: '42px', padding: '0 14px', borderRadius: '8px', border: '1px solid var(--brand-green)', backgroundColor: 'var(--brand-green-soft)', color: 'var(--brand-green)', fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
       >
         {shortDate(date)}
       </button>
@@ -262,7 +262,7 @@ function DatePill({
     <button
       type="button"
       onClick={onClick}
-      style={{ minHeight: '42px', padding: '0 14px', borderRadius: '8px', border: '1px solid transparent', backgroundColor: 'var(--surface-sunken)', color: 'var(--text-secondary)', fontFamily: 'var(--font-inter)', fontSize: '14px', fontWeight: 400, cursor: 'pointer', whiteSpace: 'nowrap' }}
+      style={{ minHeight: '42px', padding: '0 14px', borderRadius: '8px', border: '1px solid transparent', backgroundColor: 'var(--surface-sunken)', color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: 400, cursor: 'pointer', whiteSpace: 'nowrap' }}
   >
       {shortDate(date)}
     </button>
@@ -285,7 +285,7 @@ function TabButton({
       <button
         type="button"
         onClick={onClick}
-        style={{ padding: '0 0 10px', border: 'none', borderBottom: '2px solid var(--brand-gold)', backgroundColor: 'transparent', color: 'var(--text-primary)', fontFamily: 'var(--font-inter)', fontSize: '14px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+        style={{ padding: '0 0 10px', border: 'none', borderBottom: '2px solid var(--brand-green)', backgroundColor: 'transparent', color: 'var(--text-primary)', fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
       >
         {label} ({count})
       </button>
@@ -296,7 +296,7 @@ function TabButton({
     <button
       type="button"
       onClick={onClick}
-      style={{ padding: '0 0 10px', border: 'none', borderBottom: '2px solid transparent', backgroundColor: 'transparent', color: 'var(--text-tertiary)', fontFamily: 'var(--font-inter)', fontSize: '14px', fontWeight: 400, cursor: 'pointer', whiteSpace: 'nowrap' }}
+      style={{ padding: '0 0 10px', border: 'none', borderBottom: '2px solid transparent', backgroundColor: 'transparent', color: 'var(--text-tertiary)', fontFamily: 'var(--font-ui)', fontSize: '14px', fontWeight: 400, cursor: 'pointer', whiteSpace: 'nowrap' }}
     >
       {label} ({count})
     </button>
@@ -305,7 +305,7 @@ function TabButton({
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', color: 'var(--text-tertiary)', textTransform: 'uppercase', padding: '12px 0 6px 0', fontFamily: 'var(--font-inter)' }}>
+    <div style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', color: 'var(--text-tertiary)', textTransform: 'uppercase', padding: '12px 0 6px 0', fontFamily: 'var(--font-ui)' }}>
       {children}
     </div>
   )
@@ -319,29 +319,29 @@ function OrderRow({ order }: { order: Order }) {
       style={{ display: 'grid', gridTemplateColumns: '40% 40% 20%', alignItems: 'center', textDecoration: 'none', backgroundColor: 'var(--surface-raised)', borderBottom: '1px solid var(--border)', padding: '14px 16px', cursor: 'pointer' }}
     >
       <div>
-        <span style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--brand-gold)', fontSize: '15px', fontWeight: 600, display: 'inline-block', marginBottom: '3px' }}>
+        <span style={{ fontFamily: 'var(--font-instrument-serif)', color: 'var(--brand-green)', fontSize: '15px', fontWeight: 600, display: 'inline-block', marginBottom: '3px' }}>
           {order.order_ref}
         </span>
-        <div style={{ fontFamily: 'var(--font-inter)', color: 'var(--text-primary)', fontSize: '14px', fontWeight: 500, marginBottom: '2px' }}>
+        <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--text-primary)', fontSize: '14px', fontWeight: 500, marginBottom: '2px' }}>
           {order.customer_name}
         </div>
-        <div style={{ fontFamily: 'var(--font-inter)', color: 'var(--text-tertiary)', fontSize: '13px' }}>
+        <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--text-tertiary)', fontSize: '13px' }}>
           {order.customer_phone}
         </div>
       </div>
 
       <div>
-        <div style={{ fontFamily: 'var(--font-inter)', color: 'var(--text-secondary)', fontSize: '13px', marginBottom: '7px' }}>
+        <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--text-secondary)', fontSize: '13px', marginBottom: '7px' }}>
           {order.delivery_date ? shortDate(order.delivery_date) : 'No date'} · Zone {order.delivery_zone}{deliveryWindow(order) ? ` · ${deliveryWindow(order)}` : ''}
         </div>
         <OrderBadge order={order} />
       </div>
 
       <div style={{ textAlign: 'right' }}>
-        <div style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--text-primary)', fontSize: '15px', fontWeight: 600, marginBottom: '4px' }}>
+        <div style={{ fontFamily: 'var(--font-instrument-serif)', color: 'var(--text-primary)', fontSize: '15px', fontWeight: 600, marginBottom: '4px' }}>
           {fmt(order.total_amount)}
         </div>
-        <div style={{ fontFamily: 'var(--font-inter)', color: 'var(--text-tertiary)', fontSize: '12px' }}>
+        <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--text-tertiary)', fontSize: '12px' }}>
           {timestamp(order.updated_at ?? order.created_at)}
         </div>
       </div>
@@ -367,13 +367,13 @@ function EmptyState({
 
   if (totalOrderCount === 0) {
     return (
-      <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontFamily: 'var(--font-inter)', fontSize: '15px', padding: '42px 20px' }}>
+      <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontFamily: 'var(--font-ui)', fontSize: '15px', padding: '42px 20px' }}>
         <p style={{ margin: '0 0 8px' }}>No orders yet.</p>
         <p style={{ margin: '0 0 12px' }}>Share your ordering link to start receiving orders.</p>
         <button
           type="button"
           onClick={() => navigator.clipboard?.writeText('https://www.malismeals.com')}
-          style={{ border: 'none', backgroundColor: 'transparent', color: 'var(--brand-gold)', fontFamily: 'var(--font-inter)', fontSize: '15px', cursor: 'pointer', padding: 0 }}
+          style={{ border: 'none', backgroundColor: 'transparent', color: 'var(--brand-green)', fontFamily: 'var(--font-ui)', fontSize: '15px', cursor: 'pointer', padding: 0 }}
         >
           www.malismeals.com
         </button>
@@ -383,7 +383,7 @@ function EmptyState({
 
   if (search.trim()) {
     return (
-      <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontFamily: 'var(--font-inter)', fontSize: '15px', padding: '42px 20px' }}>
+      <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontFamily: 'var(--font-ui)', fontSize: '15px', padding: '42px 20px' }}>
         No orders matching &quot;{search.trim()}&quot;
       </div>
     )
@@ -392,7 +392,7 @@ function EmptyState({
   if (tab !== 'all') {
     const label = tabs.find(item => item.key === tab)?.label.toLowerCase() ?? 'matching'
     return (
-      <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontFamily: 'var(--font-inter)', fontSize: '15px', padding: '42px 20px' }}>
+      <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontFamily: 'var(--font-ui)', fontSize: '15px', padding: '42px 20px' }}>
         No {label} orders for this date.
       </div>
     )
@@ -400,7 +400,7 @@ function EmptyState({
 
   if (selectedDate && isFutureOrToday(selectedDate) && isCutoffOpen(cutoff)) {
     return (
-      <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontFamily: 'var(--font-inter)', fontSize: '15px', padding: '42px 20px' }}>
+      <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontFamily: 'var(--font-ui)', fontSize: '15px', padding: '42px 20px' }}>
         <p style={{ margin: '0 0 8px' }}>No orders for {shortDate(selectedDate)} yet.</p>
         {cutoffDay && <p style={{ margin: 0 }}>Orders close {cutoffDay} at 2pm.</p>}
       </div>
@@ -409,14 +409,14 @@ function EmptyState({
 
   if (selectedDate) {
     return (
-      <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontFamily: 'var(--font-inter)', fontSize: '15px', padding: '42px 20px' }}>
+      <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontFamily: 'var(--font-ui)', fontSize: '15px', padding: '42px 20px' }}>
         No orders were placed for this date.
       </div>
     )
   }
 
   return (
-    <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontFamily: 'var(--font-inter)', fontSize: '15px', padding: '42px 20px' }}>
+    <div style={{ textAlign: 'center', color: 'var(--text-tertiary)', fontFamily: 'var(--font-ui)', fontSize: '15px', padding: '42px 20px' }}>
       No orders yet.
     </div>
   )
@@ -507,8 +507,8 @@ export default function OrdersClient({
         }
       ` }} />
 
-      <div data-orders-shell style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 20px', fontFamily: 'var(--font-inter)' }}>
-        <h1 style={{ fontFamily: 'var(--font-fraunces)', color: 'var(--text-primary)', fontSize: '34px', fontWeight: 400, margin: '0 0 22px' }}>
+      <div data-orders-shell style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 20px', fontFamily: 'var(--font-ui)' }}>
+        <h1 style={{ fontFamily: 'var(--font-instrument-serif)', color: 'var(--text-primary)', fontSize: '34px', fontWeight: 400, margin: '0 0 22px' }}>
           Orders
         </h1>
 
@@ -525,7 +525,7 @@ export default function OrdersClient({
             <button
               type="button"
               onClick={() => setShowDatePicker(open => !open)}
-              style={{ border: 'none', backgroundColor: 'transparent', color: 'var(--text-tertiary)', fontFamily: 'var(--font-inter)', fontSize: '13px', cursor: 'pointer', padding: '0 4px', whiteSpace: 'nowrap', textDecoration: 'none' }}
+              style={{ border: 'none', backgroundColor: 'transparent', color: 'var(--text-tertiary)', fontFamily: 'var(--font-ui)', fontSize: '13px', cursor: 'pointer', padding: '0 4px', whiteSpace: 'nowrap', textDecoration: 'none' }}
             >
               Older orders ›
             </button>
@@ -537,14 +537,14 @@ export default function OrdersClient({
               onChange={event => {
                 if (event.target.value) changeDate(event.target.value)
               }}
-              style={{ minHeight: '38px', borderRadius: '8px', border: '1px solid var(--border)', backgroundColor: 'var(--surface-raised)', color: 'var(--text-primary)', fontFamily: 'var(--font-inter)', fontSize: '13px', padding: '0 10px', outline: 'none' }}
+              style={{ minHeight: '38px', borderRadius: '8px', border: '1px solid var(--border)', backgroundColor: 'var(--surface-raised)', color: 'var(--text-primary)', fontFamily: 'var(--font-ui)', fontSize: '13px', padding: '0 10px', outline: 'none' }}
             />
           )}
         </div>
 
         {(counts.new > 0 || counts.confirmed > 0 || counts.paid > 0 || counts.out > 0) && (
-          <p style={{ fontFamily: 'var(--font-inter)', fontSize: '14px', color: 'var(--text-secondary)', margin: '0 0 16px' }}>
-            {counts.new > 0 && <><span style={{ color: 'var(--brand-gold)', fontWeight: 700 }}>{counts.new} new</span>{(counts.confirmed > 0 || counts.paid > 0 || counts.out > 0) && '  ·  '}</>}
+          <p style={{ fontFamily: 'var(--font-ui)', fontSize: '14px', color: 'var(--text-secondary)', margin: '0 0 16px' }}>
+            {counts.new > 0 && <><span style={{ color: 'var(--brand-green)', fontWeight: 700 }}>{counts.new} new</span>{(counts.confirmed > 0 || counts.paid > 0 || counts.out > 0) && '  ·  '}</>}
             {counts.confirmed > 0 && <>{counts.confirmed} confirmed{(counts.paid > 0 || counts.out > 0) && '  ·  '}</>}
             {counts.paid > 0 && <>{counts.paid} paid{counts.out > 0 && '  ·  '}</>}
             {counts.out > 0 && <>{counts.out} out for delivery</>}
@@ -556,10 +556,10 @@ export default function OrdersClient({
           value={search}
           onChange={event => setSearch(event.target.value)}
           placeholder="Search by name, phone, or order ref..."
-          style={{ width: '100%', boxSizing: 'border-box', minHeight: '44px', backgroundColor: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', padding: '0 14px', fontFamily: 'var(--font-inter)', fontSize: '14px', color: 'var(--text-primary)', outline: 'none', marginBottom: search.trim() ? '8px' : '18px' }}
+          style={{ width: '100%', boxSizing: 'border-box', minHeight: '44px', backgroundColor: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', padding: '0 14px', fontFamily: 'var(--font-ui)', fontSize: '14px', color: 'var(--text-primary)', outline: 'none', marginBottom: search.trim() ? '8px' : '18px' }}
         />
         {search.trim() && (
-          <p style={{ fontFamily: 'var(--font-inter)', fontSize: '13px', color: 'var(--text-tertiary)', margin: '0 0 18px' }}>
+          <p style={{ fontFamily: 'var(--font-ui)', fontSize: '13px', color: 'var(--text-tertiary)', margin: '0 0 18px' }}>
             {visibleOrders.length} order{visibleOrders.length === 1 ? '' : 's'} matching &apos;{search.trim()}&apos;
           </p>
         )}

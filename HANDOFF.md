@@ -42,28 +42,29 @@
 ## Design system (non-negotiable)
 
 **Fonts** — loaded via `next/font/google` in `app/layout.tsx`:
-- `--font-fraunces` — display text, dish names, prices, headings, order refs
-- `--font-inter` — body copy, buttons, labels, inputs, everything else
+- `--font-instrument-serif` / `--font-display` — display text, dish names, prices, headings, order refs
+- `--font-manrope` / `--font-ui` — body copy, buttons, labels, inputs, admin UI
 
 **CSS custom properties** (defined in `app/globals.css`):
 
 ```
---surface-base: #FBF7F0       page background
+--surface-base: #EEF3EC       sage page background
 --surface-raised: #FFFFFF     cards, inputs
---surface-sunken: #F3EDE1     badges, inactive states
---text-primary: #1F1B16       headings, dish names
---text-secondary: #5C554A     body copy, descriptions
---text-tertiary: #8B8375      labels, hints, muted text
---brand-gold: #C8872E         primary buttons, accents
---brand-gold-dark: #A26B1E    hover states
---brand-gold-soft: #F5E3C0    selected state backgrounds
---accent-forest: #3F5A3C      delivered/paid status badge
+--surface-sunken: #D4E8CF     badges, inactive states
+--text-primary: #102015       headings, dish names
+--text-secondary: #3A4F3E     body copy, descriptions
+--text-tertiary: #6B7D6E      labels, hints, muted text
+--brand-green: #72C472        primary customer actions
+--brand-green-hover: #52A852  hover/focus states
+--brand-green-soft: #D4EDD4   selected state backgrounds
+--accent-forest: #1F6B3A      delivered/paid/admin primary status
 --accent-terracotta: #B5533C  allergen badges, errors, urgent states
---border: rgba(31,27,22,0.10)
---border-strong: rgba(31,27,22,0.22)
+--border: rgba(16,32,21,0.10)
+--border-strong: rgba(16,32,21,0.22)
 ```
 
 **Rules:**
+- Fresh Green Kitchen direction: no gold/brown brand primitives; use green/sage/forest roles from `DESIGN.md`
 - No shadows anywhere
 - 8px border radius on cards and inputs
 - Customer pages: max-width 600px centered
@@ -166,7 +167,7 @@ mali-meals/
 descriptions each week. The dish slots persist but the content changes. This means
 querying menu_items for historical data (e.g. what was on the menu 3 weeks ago) is
 impossible. The only way to preserve what was served historically is through the
-dish_name snapshot on order_items — NOT YET IMPLEMENTED. See Critical Issue 2.
+dish_name snapshot on order_items, which is now implemented for new orders.
 
 **`protein_addons`**
 | Column | Type | Notes |
@@ -225,7 +226,7 @@ dish_name snapshot on order_items — NOT YET IMPLEMENTED. See Critical Issue 2.
 | id | uuid PK | |
 | order_id | uuid FK → orders | |
 | menu_item_id | uuid FK → menu_items | |
-| dish_name | text | SNAPSHOT — NOT YET ADDED. Critical for data integrity. Must be populated at checkout with the dish name at time of ordering. Without this, historical orders show wrong dish names after menu updates. |
+| dish_name | text | SNAPSHOT — populated at checkout with the dish name at time of ordering. Historical/dev orders from before the fix may be null and fall back to menu_items.name. |
 | quantity | integer | |
 | variant | text | 'vegetarian' or 'meat' ONLY |
 | meat_type | text | 'beef', 'chicken', or null — already exists in DB |
@@ -248,7 +249,7 @@ dish_name snapshot on order_items — NOT YET IMPLEMENTED. See Critical Issue 2.
 | id | uuid PK | |
 | order_id | uuid FK → orders | |
 | special_id | uuid FK → specials | |
-| special_name | text | SNAPSHOT — NOT YET ADDED. Same issue as dish_name — must snapshot at checkout. |
+| special_name | text | SNAPSHOT — populated at checkout with the special name at time of ordering. Historical/dev orders from before the fix may be null and fall back to specials.name. |
 | quantity | integer | |
 | unit_price | integer | price snapshot |
 | created_at | timestamptz | |
@@ -578,7 +579,7 @@ In MenuClient.tsx:
 Fixed by splitting `/admin/menu/page.tsx` into server-only data loading and
 `/admin/menu/MenuClient.tsx` for all rendering, tab state, and save actions.
 
-### FIXED — dish_name snapshot missing (data integrity time bomb)
+### FIXED — dish_name and special_name snapshots
 
 Every week Mali overwrites menu_items.name with new dish names. Every historical
 order that references a menu_item_id now shows the CURRENT dish name, not what
@@ -670,20 +671,20 @@ but their content is replaced each week.
 - menu_items is NOT a historical record of dishes served
 - It only reflects the CURRENT week's menu
 - Querying menu_items for historical analysis is unreliable after any menu update
-- The dish_name snapshot (Critical Issue 2) is the ONLY way to preserve history
+- The dish_name snapshot is the source of truth for historical dish names
 
 **What IS reliably stored in the database:**
 - orders — complete record: delivery_date, cycle_type, zone, amounts, status
 - order_items — quantity, variant, meat_type, unit_price (price IS snapshotted)
-  dish_name is NOT yet snapshotted — fix required urgently
+  dish_name is snapshotted for new orders; old dev rows may be null
 - order_item_addons — protein addon quantities and prices — reliable
-- order_specials — quantities and prices — reliable, special_name not yet snapshotted
+- order_specials — quantities, prices, and special_name snapshots for new orders are reliable; old dev rows may be null
 
-**Once dish_name snapshot is implemented:**
+**With dish_name snapshot implemented:**
 All historical analysis becomes fully reliable. You can query what was sold,
 when, in what quantity, at what price — from order_items forever.
 
-### What the data can answer (once dish_name snapshot is in place)
+### What the data can answer with snapshots
 
 **Dish performance:**
 - Best selling mains by volume — all time and by date range
@@ -751,9 +752,9 @@ Priority order — fix critical issues before building new features.
 ### PRIORITY 1 — Fix menu page styling (Critical Issue 1)
 Architectural fix. See Critical Issue 1 above. Must be first.
 
-### PRIORITY 2 — dish_name and special_name snapshots (Critical Issue 2)
-Data integrity fix. See Critical Issue 2 above. Urgent — every week that
-passes without this makes historical data less reliable.
+### FIXED — dish_name and special_name snapshots
+New checkout orders populate order_items.dish_name and order_specials.special_name.
+Display surfaces read snapshots first, with menu table fallbacks for old dev rows.
 
 ### PRIORITY 3 — Ksh removal + "with protein" copy (Issues 4 and 5)
 Quick wins, high visibility fixes.
@@ -773,7 +774,7 @@ Spinach and mushroom lasagna
                  ───────
                  Total  5
 ```
-Dots in --brand-gold up to 5, then show number.
+Dots in --brand-green up to 5, then show number.
 Unconfirmed orders section with inline confirm buttons.
 Print button for cooking prep sheet.
 
@@ -845,8 +846,8 @@ operational tool from a business tool.
 
 Add to AdminNav after Payments.
 
-NOTE: Section 1 (dish performance) requires dish_name snapshot (Issue 2)
-to be accurate. Build the page but note the data limitation until fixed.
+NOTE: Section 1 (dish performance) uses dish_name snapshots, with fallback to
+menu_items.name for old dev rows that predate the snapshot fix.
 
 **Date range selector** — from/to delivery_date.
 Presets: This week, Last week, This month, Last month, Last 3 months, All time.
@@ -899,7 +900,7 @@ All styling inline style={{}} — no Tailwind.
 
 ### 17. Menu history archive (FUTURE PHASE)
 
-Once dish_name snapshot is live, past menus can be reconstructed from
+Since dish_name snapshot is live, past menus can be reconstructed from
 order_items.dish_name grouped by delivery_date. No new tables needed.
 Read-only archive showing what was served each week.
 
@@ -1058,7 +1059,7 @@ claude
 
 Connect to GitHub repo akigera10/mali-meals. Read HANDOFF.md first.
 Codex creates a branch, opens a PR. Review before merging.
-Best used for: menu page architectural fix, dish_name snapshot, reports page.
+Best used for: menu page architectural fixes, checkout validation, reports refinements.
 
 ---
 

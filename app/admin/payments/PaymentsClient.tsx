@@ -53,7 +53,7 @@ const navBtnStyle: React.CSSProperties = {
   color: 'var(--text-primary)',
   fontSize: '16px',
   cursor: 'pointer',
-  fontFamily: 'var(--font-inter)',
+  fontFamily: 'var(--font-ui)',
   lineHeight: 1,
 }
 
@@ -62,7 +62,7 @@ const thStyle: React.CSSProperties = {
   textAlign: 'left',
   fontSize: '11px',
   fontWeight: '600',
-  fontFamily: 'var(--font-inter)',
+  fontFamily: 'var(--font-ui)',
   color: 'var(--text-tertiary)',
   textTransform: 'uppercase',
   letterSpacing: '0.07em',
@@ -73,7 +73,7 @@ const tdStyle: React.CSSProperties = {
   padding: '11px 16px',
   fontSize: '13px',
   color: 'var(--text-primary)',
-  fontFamily: 'var(--font-inter)',
+  fontFamily: 'var(--font-ui)',
   verticalAlign: 'middle',
 }
 
@@ -83,7 +83,7 @@ function StatCard({ label, value, alert }: { label: string; value: string; alert
       <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: '600' }}>
         {label}
       </div>
-      <div style={{ fontFamily: 'var(--font-fraunces)', fontSize: '24px', color: alert ? 'var(--accent-terracotta)' : 'var(--text-primary)' }}>
+      <div style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '24px', color: alert ? 'var(--accent-terracotta)' : 'var(--text-primary)' }}>
         {value}
       </div>
     </div>
@@ -156,13 +156,13 @@ export default function PaymentsClient() {
         }
       ` }} />
 
-      <div style={{ fontFamily: 'var(--font-inter)' }}>
+      <div style={{ fontFamily: 'var(--font-ui)' }}>
         <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 20px' }}>
 
           {/* Header */}
           <div data-noprint="">
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-              <h1 style={{ fontFamily: 'var(--font-fraunces)', fontSize: '28px', color: 'var(--text-primary)', margin: 0, flex: '1' }}>
+              <h1 style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '28px', color: 'var(--text-primary)', margin: 0, flex: '1' }}>
                 Payments
               </h1>
               <button
@@ -187,13 +187,13 @@ export default function PaymentsClient() {
                   color: 'var(--text-secondary)',
                   fontSize: '13px',
                   cursor: 'pointer',
-                  fontFamily: 'var(--font-inter)',
+                  fontFamily: 'var(--font-ui)',
                 }}
               >
                 Print
               </button>
             </div>
-            <p style={{ fontSize: '15px', fontFamily: 'var(--font-fraunces)', color: 'var(--text-primary)', marginTop: 0, marginBottom: '28px' }}>
+            <p style={{ fontSize: '15px', fontFamily: 'var(--font-instrument-serif)', color: 'var(--text-primary)', marginTop: 0, marginBottom: '28px' }}>
               {datesLoaded && allDates.length === 0 ? 'No delivery dates found' : selectedDateLabel}
             </p>
 
@@ -209,7 +209,7 @@ export default function PaymentsClient() {
 
           {/* Print-only heading */}
           <div data-printonly="">
-            <div style={{ fontFamily: 'var(--font-fraunces)', fontSize: '20px', color: 'var(--text-primary)', marginBottom: '4px' }}>
+            <div style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '20px', color: 'var(--text-primary)', marginBottom: '4px' }}>
               Mali&apos;s Meals — Payments
             </div>
             <div style={{ fontSize: '13px', color: 'var(--text-tertiary)', marginBottom: '20px' }}>
@@ -231,7 +231,7 @@ export default function PaymentsClient() {
               {/* ── Outstanding payments ── */}
               {unpaidOrders.length > 0 && (
                 <section>
-                  <h2 style={{ fontFamily: 'var(--font-fraunces)', fontSize: '20px', color: 'var(--accent-terracotta)', margin: '0 0 16px 0' }}>
+                  <h2 style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '20px', color: 'var(--accent-terracotta)', margin: '0 0 16px 0' }}>
                     Outstanding payments
                   </h2>
                   <div style={{ backgroundColor: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden' }}>
@@ -247,13 +247,13 @@ export default function PaymentsClient() {
                         {unpaidOrders.map(order => (
                           <tr key={order.id} style={{ borderBottom: '1px solid var(--border)' }}>
                             <td style={{ ...tdStyle }}>
-                              <Link href={`/admin/orders/${order.id}`} style={{ fontFamily: 'var(--font-fraunces)', fontSize: '14px', color: 'var(--brand-gold)', textDecoration: 'none' }}>
+                              <Link href={`/admin/orders/${order.id}`} style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '14px', color: 'var(--brand-green)', textDecoration: 'none' }}>
                                 {order.order_ref}
                               </Link>
                             </td>
                             <td style={tdStyle}>{order.customer_name}</td>
                             <td style={{ ...tdStyle, color: 'var(--text-secondary)' }}>{order.customer_phone}</td>
-                            <td style={{ ...tdStyle, fontFamily: 'var(--font-fraunces)', fontSize: '14px', whiteSpace: 'nowrap' }}>
+                            <td style={{ ...tdStyle, fontFamily: 'var(--font-instrument-serif)', fontSize: '14px', whiteSpace: 'nowrap' }}>
                               {fmt(order.total_amount)}
                             </td>
                           </tr>
@@ -261,10 +261,10 @@ export default function PaymentsClient() {
                       </tbody>
                       <tfoot>
                         <tr style={{ borderTop: '2px solid var(--border-strong)', backgroundColor: 'var(--surface-sunken)' }}>
-                          <td colSpan={3} style={{ padding: '12px 16px', fontSize: '13px', fontFamily: 'var(--font-inter)', color: 'var(--text-secondary)', fontWeight: '500' }}>
+                          <td colSpan={3} style={{ padding: '12px 16px', fontSize: '13px', fontFamily: 'var(--font-ui)', color: 'var(--text-secondary)', fontWeight: '500' }}>
                             {unpaidOrders.length} order{unpaidOrders.length !== 1 ? 's' : ''} outstanding
                           </td>
-                          <td style={{ padding: '12px 16px', fontFamily: 'var(--font-fraunces)', fontSize: '15px', color: 'var(--accent-terracotta)', whiteSpace: 'nowrap' }}>
+                          <td style={{ padding: '12px 16px', fontFamily: 'var(--font-instrument-serif)', fontSize: '15px', color: 'var(--accent-terracotta)', whiteSpace: 'nowrap' }}>
                             {fmt(unpaidOrders.reduce((s, o) => s + o.total_amount, 0))}
                           </td>
                         </tr>
@@ -276,7 +276,7 @@ export default function PaymentsClient() {
 
               {/* ── Paid orders reconciliation ── */}
               <section>
-                <h2 style={{ fontFamily: 'var(--font-fraunces)', fontSize: '20px', color: 'var(--text-primary)', margin: '0 0 16px 0' }}>
+                <h2 style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '20px', color: 'var(--text-primary)', margin: '0 0 16px 0' }}>
                   Paid orders
                 </h2>
                 {paidOrders.length === 0 ? (
@@ -298,20 +298,20 @@ export default function PaymentsClient() {
                               {fmtPaidAt(order.paid_at)}
                             </td>
                             <td style={{ ...tdStyle }}>
-                              <Link href={`/admin/orders/${order.id}`} style={{ fontFamily: 'var(--font-fraunces)', fontSize: '14px', color: 'var(--brand-gold)', textDecoration: 'none' }}>
+                              <Link href={`/admin/orders/${order.id}`} style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '14px', color: 'var(--brand-green)', textDecoration: 'none' }}>
                                 {order.order_ref}
                               </Link>
                             </td>
                             <td style={tdStyle}>{order.customer_name}</td>
                             <td style={{ ...tdStyle, color: 'var(--text-secondary)' }}>{order.customer_phone}</td>
                             <td style={{ ...tdStyle, color: 'var(--text-secondary)' }}>Zone {order.delivery_zone}</td>
-                            <td style={{ ...tdStyle, fontFamily: 'var(--font-fraunces)', fontSize: '14px', whiteSpace: 'nowrap' }}>
+                            <td style={{ ...tdStyle, fontFamily: 'var(--font-instrument-serif)', fontSize: '14px', whiteSpace: 'nowrap' }}>
                               {order.subtotal.toLocaleString()}
                             </td>
                             <td style={{ ...tdStyle, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                               {order.delivery_fee.toLocaleString()}
                             </td>
-                            <td style={{ ...tdStyle, fontFamily: 'var(--font-fraunces)', fontSize: '14px', whiteSpace: 'nowrap' }}>
+                            <td style={{ ...tdStyle, fontFamily: 'var(--font-instrument-serif)', fontSize: '14px', whiteSpace: 'nowrap' }}>
                               {order.total_amount.toLocaleString()}
                             </td>
                             <td style={{ ...tdStyle, letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
@@ -322,16 +322,16 @@ export default function PaymentsClient() {
                       </tbody>
                       <tfoot>
                         <tr style={{ borderTop: '2px solid var(--border-strong)', backgroundColor: 'var(--surface-sunken)' }}>
-                          <td colSpan={5} style={{ padding: '12px 16px', fontSize: '13px', fontFamily: 'var(--font-inter)', color: 'var(--text-secondary)', fontWeight: '500' }}>
+                          <td colSpan={5} style={{ padding: '12px 16px', fontSize: '13px', fontFamily: 'var(--font-ui)', color: 'var(--text-secondary)', fontWeight: '500' }}>
                             {paidOrders.length} order{paidOrders.length !== 1 ? 's' : ''}
                           </td>
-                          <td style={{ padding: '12px 16px', fontFamily: 'var(--font-fraunces)', fontSize: '14px', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                          <td style={{ padding: '12px 16px', fontFamily: 'var(--font-instrument-serif)', fontSize: '14px', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                             {totalFoodSubtotal.toLocaleString()}
                           </td>
-                          <td style={{ padding: '12px 16px', fontSize: '13px', fontFamily: 'var(--font-inter)', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                          <td style={{ padding: '12px 16px', fontSize: '13px', fontFamily: 'var(--font-ui)', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                             {totalDeliveryFees.toLocaleString()}
                           </td>
-                          <td style={{ padding: '12px 16px', fontFamily: 'var(--font-fraunces)', fontSize: '15px', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
+                          <td style={{ padding: '12px 16px', fontFamily: 'var(--font-instrument-serif)', fontSize: '15px', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                             {totalCollected.toLocaleString()}
                           </td>
                           <td style={{ padding: '12px 16px' }} />

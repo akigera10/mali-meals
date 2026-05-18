@@ -9,8 +9,8 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        display: ["var(--font-fraunces)", "serif"],
-        body: ["var(--font-inter)", "sans-serif"],
+        display: ["var(--font-instrument-serif)", "serif"],
+        body: ["var(--font-ui)", "sans-serif"],
       },
       colors: {
         "surface-base": "var(--surface-base)",

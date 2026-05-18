@@ -99,7 +99,7 @@ export default function AdminLogin() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      fontFamily: 'var(--font-inter)',
+      fontFamily: 'var(--font-ui)',
       padding: '24px',
     }}>
       <div style={{
@@ -111,7 +111,7 @@ export default function AdminLogin() {
         maxWidth: '380px',
       }}>
         <h1 style={{
-          fontFamily: 'var(--font-fraunces)',
+          fontFamily: 'var(--font-instrument-serif)',
           fontSize: '24px',
           color: 'var(--text-primary)',
           margin: '0 0 8px',
@@ -256,8 +256,8 @@ export default function AdminLogin() {
           <p style={{
             fontSize: '13px',
             color: resetMessage.includes('sent') ? 'var(--accent-forest)' : 'var(--text-secondary)',
-            backgroundColor: resetMessage.includes('sent') ? 'rgba(63, 90, 60, 0.08)' : 'transparent',
-            border: resetMessage.includes('sent') ? '1px solid rgba(63, 90, 60, 0.22)' : 'none',
+            backgroundColor: resetMessage.includes('sent') ? 'rgba(31, 107, 58, 0.08)' : 'transparent',
+            border: resetMessage.includes('sent') ? '1px solid rgba(31, 107, 58, 0.22)' : 'none',
             borderRadius: '8px',
             padding: resetMessage.includes('sent') ? '10px 12px' : 0,
             margin: '12px 0 0',
@@ -277,10 +277,10 @@ export default function AdminLogin() {
               padding: '12px',
               borderRadius: '8px',
               border: 'none',
-              backgroundColor: loading || !email || !password ? 'var(--surface-sunken)' : 'var(--brand-gold)',
+              backgroundColor: loading || !email || !password ? 'var(--surface-sunken)' : 'var(--brand-green)',
               color: loading || !email || !password ? 'var(--text-tertiary)' : '#fff',
               fontSize: '15px',
-              fontFamily: 'var(--font-inter)',
+              fontFamily: 'var(--font-ui)',
               cursor: loading || !email || !password ? 'default' : 'pointer',
             }}
           >
@@ -298,10 +298,10 @@ export default function AdminLogin() {
                 padding: '12px',
                 borderRadius: '8px',
                 border: 'none',
-                backgroundColor: resetLoading || cooldownSeconds > 0 ? 'var(--surface-sunken)' : 'var(--brand-gold)',
+                backgroundColor: resetLoading || cooldownSeconds > 0 ? 'var(--surface-sunken)' : 'var(--brand-green)',
                 color: resetLoading || cooldownSeconds > 0 ? 'var(--text-tertiary)' : '#fff',
                 fontSize: '15px',
-                fontFamily: 'var(--font-inter)',
+                fontFamily: 'var(--font-ui)',
                 cursor: resetLoading || cooldownSeconds > 0 ? 'default' : 'pointer',
               }}
             >
@@ -318,7 +318,7 @@ export default function AdminLogin() {
                 background: 'none',
                 color: 'var(--text-tertiary)',
                 fontSize: '13px',
-                fontFamily: 'var(--font-inter)',
+                fontFamily: 'var(--font-ui)',
                 cursor: 'pointer',
               }}
             >

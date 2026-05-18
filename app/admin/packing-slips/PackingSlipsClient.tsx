@@ -185,7 +185,7 @@ function Slip({ order }: { order: SlipOrder }) {
   const landmark = order.address_landmark ? `Near ${order.address_landmark}` : ''
 
   return (
-    <div style={{ fontFamily: 'var(--font-inter)', padding: '10px', lineHeight: 1.3 }}>
+    <div style={{ fontFamily: 'var(--font-ui)', padding: '10px', lineHeight: 1.3 }}>
 
       {/* Header: branding + order ref */}
       <div style={{
@@ -196,10 +196,10 @@ function Slip({ order }: { order: SlipOrder }) {
         marginBottom: '3px',
         borderBottom: '0.5px solid var(--border)',
       }}>
-        <span style={{ fontFamily: 'var(--font-fraunces)', fontSize: '10px', color: 'var(--text-tertiary)' }}>
+        <span style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '10px', color: 'var(--text-tertiary)' }}>
           Mali&apos;s Meals
         </span>
-        <span style={{ fontFamily: 'var(--font-fraunces)', fontSize: '18px', color: 'var(--text-primary)' }}>
+        <span style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '18px', color: 'var(--text-primary)' }}>
           {order.order_ref}
         </span>
       </div>
@@ -400,7 +400,7 @@ export default function PackingSlipsClient({
       </div>
 
       {/* ── Screen view ── */}
-      <div data-screen-view="" style={{ fontFamily: 'var(--font-inter)', minHeight: '100vh', backgroundColor: 'var(--surface-base)' }}>
+      <div data-screen-view="" style={{ fontFamily: 'var(--font-ui)', minHeight: '100vh', backgroundColor: 'var(--surface-base)' }}>
 
         {/* Top bar */}
         <div style={{
@@ -430,10 +430,10 @@ export default function PackingSlipsClient({
               padding: '8px 20px',
               borderRadius: '6px',
               border: 'none',
-              backgroundColor: 'var(--brand-gold)',
+              backgroundColor: 'var(--brand-green)',
               color: '#fff',
               fontSize: '13px',
-              fontFamily: 'var(--font-inter)',
+              fontFamily: 'var(--font-ui)',
               fontWeight: '500',
               cursor: printReady ? 'pointer' : 'wait',
               opacity: printReady ? 1 : 0.6,

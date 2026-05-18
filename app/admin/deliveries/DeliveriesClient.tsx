@@ -70,7 +70,7 @@ const navBtnStyle: React.CSSProperties = {
   color: 'var(--text-primary)',
   fontSize: '16px',
   cursor: 'pointer',
-  fontFamily: 'var(--font-inter)',
+  fontFamily: 'var(--font-ui)',
   lineHeight: 1,
 }
 
@@ -147,13 +147,13 @@ export default function DeliveriesClient() {
         }
       ` }} />
 
-      <div style={{ fontFamily: 'var(--font-inter)' }}>
+      <div style={{ fontFamily: 'var(--font-ui)' }}>
         <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 20px' }}>
 
           {/* ── Header row ── */}
           <div data-noprint="">
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-              <h1 style={{ fontFamily: 'var(--font-fraunces)', fontSize: '28px', color: 'var(--text-primary)', margin: 0, flex: '1' }}>
+              <h1 style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '28px', color: 'var(--text-primary)', margin: 0, flex: '1' }}>
                 Deliveries
               </h1>
               <button
@@ -178,7 +178,7 @@ export default function DeliveriesClient() {
                     backgroundColor: 'var(--surface-raised)',
                     color: 'var(--text-secondary)',
                     fontSize: '13px',
-                    fontFamily: 'var(--font-inter)',
+                    fontFamily: 'var(--font-ui)',
                     textDecoration: 'none',
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -197,21 +197,21 @@ export default function DeliveriesClient() {
                   color: 'var(--text-secondary)',
                   fontSize: '13px',
                   cursor: 'pointer',
-                  fontFamily: 'var(--font-inter)',
+                  fontFamily: 'var(--font-ui)',
                 }}
               >
                 Print
               </button>
             </div>
 
-            <p style={{ fontSize: '15px', fontFamily: 'var(--font-fraunces)', color: 'var(--text-primary)', margin: '0 0 28px 0' }}>
+            <p style={{ fontSize: '15px', fontFamily: 'var(--font-instrument-serif)', color: 'var(--text-primary)', margin: '0 0 28px 0' }}>
               {datesLoaded && allDates.length === 0 ? 'No delivery dates found' : selectedDateLabel}
             </p>
           </div>
 
           {/* ── Print-only header ── */}
           <div data-printonly="">
-            <div style={{ fontFamily: 'var(--font-fraunces)', fontSize: '18px', color: 'var(--text-primary)', marginBottom: '4px' }}>
+            <div style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '18px', color: 'var(--text-primary)', marginBottom: '4px' }}>
               Mali&apos;s Meals — Delivery Manifest
             </div>
             <div style={{ fontSize: '14px', color: 'var(--text-primary)', marginBottom: '20px' }}>
@@ -247,7 +247,7 @@ export default function DeliveriesClient() {
                       paddingBottom: '10px',
                       borderBottom: '2px solid var(--border-strong)',
                     }}>
-                      <h3 style={{ fontFamily: 'var(--font-fraunces)', fontSize: '17px', color: 'var(--text-primary)', margin: 0 }}>
+                      <h3 style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '17px', color: 'var(--text-primary)', margin: 0 }}>
                         Zone {zone} — {ZONE_NAMES[zone]}
                       </h3>
                       <span style={{ fontSize: '13px', color: 'var(--text-tertiary)', whiteSpace: 'nowrap' }}>
@@ -265,13 +265,13 @@ export default function DeliveriesClient() {
                           {/* Row 1: ref, name, phone, amount */}
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '8px', marginBottom: '6px' }}>
                             <div style={{ display: 'flex', gap: '12px', alignItems: 'baseline', flexWrap: 'wrap' }}>
-                              <Link href={`/admin/orders/${order.id}`} style={{ fontFamily: 'var(--font-fraunces)', fontSize: '15px', color: 'var(--brand-gold)', textDecoration: 'none' }}>
+                              <Link href={`/admin/orders/${order.id}`} style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '15px', color: 'var(--brand-green)', textDecoration: 'none' }}>
                                 {order.order_ref}
                               </Link>
                               <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: '500' }}>{order.customer_name}</span>
                               <span style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>{order.customer_phone}</span>
                             </div>
-                            <span style={{ fontFamily: 'var(--font-fraunces)', fontSize: '15px', color: 'var(--text-primary)' }}>
+                            <span style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '15px', color: 'var(--text-primary)' }}>
                               {fmt(order.total_amount)}
                             </span>
                           </div>

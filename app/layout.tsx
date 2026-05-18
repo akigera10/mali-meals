@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
-import { Fraunces, Inter } from "next/font/google";
+import { Instrument_Serif, Manrope } from "next/font/google";
 import { CartProvider } from "./context/CartContext";
 import "./globals.css";
 
-const fraunces = Fraunces({
+const instrumentSerif = Instrument_Serif({
   subsets: ["latin"],
-  variable: "--font-fraunces",
+  weight: "400",
+  variable: "--font-instrument-serif",
   display: "swap",
 });
 
-const inter = Inter({
+const manrope = Manrope({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-manrope",
   display: "swap",
 });
 
@@ -26,8 +27,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${fraunces.variable} ${inter.variable}`}>
-      <body style={{ fontFamily: "var(--font-inter), sans-serif" }}>
+    <html lang="en" className={`${instrumentSerif.variable} ${manrope.variable}`}>
+      <body style={{ fontFamily: "var(--font-ui), sans-serif" }}>
         <CartProvider>
           {children}
         </CartProvider>

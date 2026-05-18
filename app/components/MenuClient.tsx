@@ -74,13 +74,13 @@ function buildBadges(dish: MenuItem): BadgeSpec[] {
     }
   }
   if (dish.is_freezer_friendly) {
-    badges.push({ key: 'freezer', short: '❄', label: 'Freezer-friendly', bg: '#C8872E' })
+    badges.push({ key: 'freezer', short: '❄', label: 'Freezer-friendly', bg: 'var(--brand-green)' })
   }
   if (dish.is_spicy) {
-    badges.push({ key: 'spicy', short: '🌶', label: 'Mild spice', bg: '#C8872E' })
+    badges.push({ key: 'spicy', short: '🌶', label: 'Mild spice', bg: 'var(--brand-green)' })
   }
   if (dish.is_family_friendly) {
-    badges.push({ key: 'family', short: 'Fam', label: 'Family-friendly', bg: '#C8872E' })
+    badges.push({ key: 'family', short: 'Fam', label: 'Family-friendly', bg: 'var(--brand-green)' })
   }
   return badges
 }
@@ -96,6 +96,15 @@ function meatLabel(type: string | null): string {
   if (type === 'chicken') return 'chicken'
   if (type === 'both') return 'beef or chicken'
   return 'meat'
+}
+
+function shortDateLabel(date: string | null | undefined): string | null {
+  if (!date) return null
+  return new Date(date + 'T12:00:00').toLocaleDateString('en-GB', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  })
 }
 
 // ─── Qty control ──────────────────────────────────────────────────────────────
@@ -114,12 +123,12 @@ function Qty({
       <button
         onClick={onInc}
         style={{
-          background: 'var(--brand-gold)',
+          background: 'var(--brand-green)',
           color: '#fff',
           border: 'none',
           borderRadius: 6,
           padding: '7px 18px',
-          fontFamily: 'var(--font-inter), sans-serif',
+          fontFamily: 'var(--font-ui), sans-serif',
           fontSize: 13,
           fontWeight: 500,
           cursor: 'pointer',
@@ -147,7 +156,7 @@ function Qty({
         }}
       >−</button>
       <span style={{
-        fontFamily: 'var(--font-fraunces), serif',
+        fontFamily: 'var(--font-instrument-serif), serif',
         fontSize: 16,
         minWidth: 18,
         textAlign: 'center',
@@ -161,7 +170,7 @@ function Qty({
         style={{
           width: 28, height: 28, borderRadius: '50%',
           border: 'none',
-          background: 'var(--brand-gold)',
+          background: 'var(--brand-green)',
           cursor: 'pointer',
           color: '#fff',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -224,7 +233,7 @@ function DishCard({
       {/* Name + sold-out badge */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
         <h3 style={{
-          fontFamily: 'var(--font-fraunces), serif',
+          fontFamily: 'var(--font-instrument-serif), serif',
           fontSize: 19,
           fontWeight: 400,
           color: 'var(--text-primary)',
@@ -236,7 +245,7 @@ function DishCard({
         </h3>
         {soldOut && (
           <span style={{
-            fontFamily: 'var(--font-inter), sans-serif',
+            fontFamily: 'var(--font-ui), sans-serif',
             fontSize: 10,
             fontWeight: 600,
             letterSpacing: '0.08em',
@@ -256,7 +265,7 @@ function DishCard({
       {/* Description */}
       {dish.description && (
         <p style={{
-          fontFamily: 'var(--font-inter), sans-serif',
+          fontFamily: 'var(--font-ui), sans-serif',
           fontSize: 13,
           color: 'var(--text-secondary)',
           margin: '6px 0 0',
@@ -281,7 +290,7 @@ function DishCard({
                   border: 'none',
                   borderRadius: 4,
                   padding: '3px 7px',
-                  fontFamily: 'var(--font-inter), sans-serif',
+                  fontFamily: 'var(--font-ui), sans-serif',
                   fontSize: 11,
                   fontWeight: 600,
                   cursor: 'pointer',
@@ -295,7 +304,7 @@ function DishCard({
           </div>
           {activeTooltip && (
             <p style={{
-              fontFamily: 'var(--font-inter), sans-serif',
+              fontFamily: 'var(--font-ui), sans-serif',
               fontSize: 12,
               color: 'var(--text-tertiary)',
               margin: '5px 0 0',
@@ -320,11 +329,11 @@ function DishCard({
           {/* Vegetarian row */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-              <span style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: 18, color: 'var(--brand-gold)' }}>
+              <span style={{ fontFamily: 'var(--font-instrument-serif), serif', fontSize: 18, color: 'var(--brand-green)' }}>
                 {fmt(dish.base_price)}
               </span>
               {hasMeat && (
-                <span style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 12, color: 'var(--text-tertiary)' }}>
+                <span style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 12, color: 'var(--text-tertiary)' }}>
                   vegetarian
                 </span>
               )}
@@ -340,10 +349,10 @@ function DishCard({
           {hasMeat && (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                <span style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: 18, color: 'var(--text-primary)' }}>
+                <span style={{ fontFamily: 'var(--font-instrument-serif), serif', fontSize: 18, color: 'var(--text-primary)' }}>
                   {fmt(meatPrice)}
                 </span>
-                <span style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 12, color: 'var(--text-tertiary)' }}>
+                <span style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 12, color: 'var(--text-tertiary)' }}>
                   {meatRowLabel()}
                 </span>
               </div>
@@ -365,12 +374,12 @@ function DishCard({
                       <button
                         onClick={() => setShowMeatSelector(true)}
                         style={{
-                          background: 'var(--brand-gold)',
+                          background: 'var(--brand-green)',
                           color: '#fff',
                           border: 'none',
                           borderRadius: 6,
                           padding: '7px 18px',
-                          fontFamily: 'var(--font-inter), sans-serif',
+                          fontFamily: 'var(--font-ui), sans-serif',
                           fontSize: 13,
                           fontWeight: 500,
                           cursor: 'pointer',
@@ -395,7 +404,7 @@ function DishCard({
                               background: 'transparent',
                               borderRadius: 6,
                               padding: '5px 12px',
-                              fontFamily: 'var(--font-inter), sans-serif',
+                              fontFamily: 'var(--font-ui), sans-serif',
                               fontSize: 12,
                               fontWeight: 500,
                               color: 'var(--text-primary)',
@@ -434,7 +443,7 @@ function DishCard({
 
       {/* Sold out: show price greyed, no controls */}
       {soldOut && (
-        <p style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: 18, color: 'var(--text-tertiary)', margin: '12px 0 0' }}>
+        <p style={{ fontFamily: 'var(--font-instrument-serif), serif', fontSize: 18, color: 'var(--text-tertiary)', margin: '12px 0 0' }}>
           {fmt(dish.base_price)}
         </p>
       )}
@@ -469,16 +478,16 @@ function AddonCard({
       opacity: soldOut ? 0.5 : 1,
     }}>
       <div>
-        <span style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: 16, color: 'var(--text-primary)' }}>
+        <span style={{ fontFamily: 'var(--font-instrument-serif), serif', fontSize: 16, color: 'var(--text-primary)' }}>
           {addon.name}
         </span>
-        <span style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: 15, color: 'var(--brand-gold)', marginLeft: 12 }}>
+        <span style={{ fontFamily: 'var(--font-instrument-serif), serif', fontSize: 15, color: 'var(--brand-green)', marginLeft: 12 }}>
           {fmt(addon.price)}
         </span>
       </div>
       {soldOut ? (
         <span style={{
-          fontFamily: 'var(--font-inter), sans-serif',
+          fontFamily: 'var(--font-ui), sans-serif',
           fontSize: 10,
           fontWeight: 600,
           letterSpacing: '0.08em',
@@ -526,7 +535,7 @@ function SpecialCard({
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
         <h3 style={{
-          fontFamily: 'var(--font-fraunces), serif',
+          fontFamily: 'var(--font-instrument-serif), serif',
           fontSize: 19,
           fontWeight: 400,
           color: 'var(--text-primary)',
@@ -538,7 +547,7 @@ function SpecialCard({
         </h3>
         {soldOut && (
           <span style={{
-            fontFamily: 'var(--font-inter), sans-serif',
+            fontFamily: 'var(--font-ui), sans-serif',
             fontSize: 10,
             fontWeight: 600,
             letterSpacing: '0.08em',
@@ -557,7 +566,7 @@ function SpecialCard({
 
       {special.description && (
         <p style={{
-          fontFamily: 'var(--font-inter), sans-serif',
+          fontFamily: 'var(--font-ui), sans-serif',
           fontSize: 13,
           color: 'var(--text-secondary)',
           margin: '6px 0 0',
@@ -577,7 +586,7 @@ function SpecialCard({
           justifyContent: 'space-between',
           gap: 8,
         }}>
-          <span style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: 18, color: 'var(--brand-gold)' }}>
+          <span style={{ fontFamily: 'var(--font-instrument-serif), serif', fontSize: 18, color: 'var(--brand-green)' }}>
             {fmt(special.price)}
           </span>
           <Qty
@@ -587,7 +596,7 @@ function SpecialCard({
           />
         </div>
       ) : (
-        <p style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: 18, color: 'var(--text-tertiary)', margin: '12px 0 0' }}>
+        <p style={{ fontFamily: 'var(--font-instrument-serif), serif', fontSize: 18, color: 'var(--text-tertiary)', margin: '12px 0 0' }}>
           {fmt(special.price)}
         </p>
       )}
@@ -600,7 +609,7 @@ function SpecialCard({
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
     <h2 style={{
-      fontFamily: 'var(--font-fraunces), serif',
+      fontFamily: 'var(--font-instrument-serif), serif',
       fontSize: 28,
       fontWeight: 400,
       color: 'var(--text-primary)',
@@ -650,6 +659,13 @@ export default function MenuClient({
 
   const cartTotal = cart.reduce((s, e) => s + e.unitPrice * e.quantity, 0)
   const cartCount = cart.reduce((s, e) => s + e.quantity, 0)
+  const isMidweek = activeCycle === 'midweek'
+  const primaryDeliveryLabel = isMidweek
+    ? shortDateLabel(nextWednesdayDate) ?? 'Wednesday delivery'
+    : shortDateLabel(nextSundayDate) ?? 'Sunday delivery'
+  const secondaryDeliveryLabel = !isMidweek && nextMondayDate
+    ? shortDateLabel(nextMondayDate)
+    : null
 
   return (
     <>
@@ -661,37 +677,117 @@ export default function MenuClient({
       }}>
 
         {/* Header */}
-        <header style={{ textAlign: 'center', marginBottom: 52 }}>
+        <header style={{ textAlign: 'left', marginBottom: 44 }}>
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 8,
+            background: 'var(--surface-sunken)',
+            border: '1px solid var(--border)',
+            borderRadius: 999,
+            padding: '6px 12px',
+            marginBottom: 18,
+          }}>
+            <span style={{
+              width: 7,
+              height: 7,
+              borderRadius: '50%',
+              background: 'var(--accent-forest)',
+              flexShrink: 0,
+            }} />
+            <span style={{
+              fontFamily: 'var(--font-ui), sans-serif',
+              fontSize: 12,
+              fontWeight: 600,
+              color: 'var(--text-secondary)',
+              letterSpacing: '0.01em',
+            }}>
+              {isMidweek ? 'Midweek menu open' : 'Weekend menu open'}
+            </span>
+          </div>
           <h1 style={{
-            fontFamily: 'var(--font-fraunces), serif',
-            fontSize: 'clamp(36px, 8vw, 52px)',
+            fontFamily: 'var(--font-instrument-serif), serif',
+            fontSize: 'clamp(42px, 11vw, 64px)',
             fontWeight: 400,
             color: 'var(--text-primary)',
             margin: 0,
-            lineHeight: 1.1,
+            lineHeight: 0.98,
           }}>
             Mali&apos;s Meals
           </h1>
           <p style={{
-            fontFamily: 'var(--font-inter), sans-serif',
+            fontFamily: 'var(--font-ui), sans-serif',
             fontSize: 16,
             color: 'var(--text-secondary)',
-            margin: '8px 0 0',
+            margin: '14px 0 0',
+            lineHeight: 1.55,
+            maxWidth: 480,
           }}>
-            Home-cooked meals, delivered in Nairobi
+            Home-cooked meals for Nairobi, prepared in weekly batches and delivered on schedule.
           </p>
-          <p style={{
-            fontFamily: 'var(--font-inter), sans-serif',
-            fontSize: 13,
-            fontWeight: 500,
-            color: 'var(--brand-gold)',
-            margin: '6px 0 0',
-            letterSpacing: '0.01em',
+          <div style={{
+            marginTop: 22,
+            background: 'var(--brand-green-soft)',
+            border: '1px solid var(--brand-green)',
+            borderRadius: 8,
+            padding: '16px 18px',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+            gap: 14,
           }}>
-            {activeCycle === 'midweek'
-              ? `Order by Tuesday 2pm${nextWednesdayDate ? ` · Wednesday ${new Date(nextWednesdayDate + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })} delivery` : ' · Wednesday delivery'}`
-              : `Order by Friday 2pm${nextSundayDate ? ` · Sunday ${new Date(nextSundayDate + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })} & Monday ${nextMondayDate ? new Date(nextMondayDate + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long' }) : ''} delivery` : ' · Sunday & Monday delivery'}`
-            }
+            <div>
+              <p style={{
+                fontFamily: 'var(--font-ui), sans-serif',
+                fontSize: 11,
+                fontWeight: 700,
+                color: 'var(--text-tertiary)',
+                margin: '0 0 4px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+              }}>
+                Order by
+              </p>
+              <p style={{
+                fontFamily: 'var(--font-instrument-serif), serif',
+                fontSize: 24,
+                color: 'var(--text-primary)',
+                margin: 0,
+                lineHeight: 1.1,
+              }}>
+                {isMidweek ? 'Tuesday 2pm' : 'Friday 2pm'}
+              </p>
+            </div>
+            <div>
+              <p style={{
+                fontFamily: 'var(--font-ui), sans-serif',
+                fontSize: 11,
+                fontWeight: 700,
+                color: 'var(--text-tertiary)',
+                margin: '0 0 4px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+              }}>
+                Delivery
+              </p>
+              <p style={{
+                fontFamily: 'var(--font-instrument-serif), serif',
+                fontSize: 24,
+                color: 'var(--text-primary)',
+                margin: 0,
+                lineHeight: 1.1,
+              }}>
+                {primaryDeliveryLabel}{secondaryDeliveryLabel ? ` + ${secondaryDeliveryLabel}` : ''}
+              </p>
+            </div>
+          </div>
+          <p style={{
+            fontFamily: 'var(--font-ui), sans-serif',
+            fontSize: 13,
+            color: 'var(--text-tertiary)',
+            margin: '14px 0 0',
+            lineHeight: 1.5,
+          }}>
+            After you order, you will get an email receipt. Mali reviews the order, confirms it, then payment is handled before dispatch.
           </p>
         </header>
 
@@ -699,7 +795,7 @@ export default function MenuClient({
         <section style={{ marginBottom: 52 }}>
           <SectionHeading>Mains</SectionHeading>
           <p style={{
-            fontFamily: 'var(--font-inter), sans-serif',
+            fontFamily: 'var(--font-ui), sans-serif',
             fontSize: 13,
             color: 'var(--text-tertiary)',
             margin: '-8px 0 20px',
@@ -742,7 +838,7 @@ export default function MenuClient({
           <section>
             <SectionHeading>Protein add-ons</SectionHeading>
             <p style={{
-              fontFamily: 'var(--font-inter), sans-serif',
+              fontFamily: 'var(--font-ui), sans-serif',
               fontSize: 13,
               color: 'var(--text-secondary)',
               margin: '-8px 0 16px',
@@ -781,22 +877,22 @@ export default function MenuClient({
           }}
         >
           <div>
-            <span style={{ fontFamily: 'var(--font-inter), sans-serif', fontSize: 13, color: 'var(--text-secondary)' }}>
+            <span style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 13, color: 'var(--text-secondary)' }}>
               {cartCount} {cartCount === 1 ? 'item' : 'items'}
             </span>
-            <span style={{ fontFamily: 'var(--font-fraunces), serif', fontSize: 22, color: 'var(--text-primary)', marginLeft: 12 }}>
+            <span style={{ fontFamily: 'var(--font-instrument-serif), serif', fontSize: 22, color: 'var(--text-primary)', marginLeft: 12 }}>
               {fmt(cartTotal)}
             </span>
           </div>
           <button
             onClick={() => router.push('/checkout')}
             style={{
-              background: 'var(--brand-gold)',
+              background: 'var(--brand-green)',
               color: '#fff',
               border: 'none',
               borderRadius: 8,
               padding: '12px 24px',
-              fontFamily: 'var(--font-inter), sans-serif',
+              fontFamily: 'var(--font-ui), sans-serif',
               fontSize: 15,
               fontWeight: 600,
               cursor: 'pointer',

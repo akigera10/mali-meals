@@ -20,7 +20,7 @@ export default async function AdminMenuPage() {
 
   if (menuError || addonError || specialError) {
     return (
-      <div style={{ padding: '40px', fontFamily: 'var(--font-inter)', color: '#B5533C' }}>
+      <div style={{ padding: '40px', fontFamily: 'var(--font-ui)', color: '#B5533C' }}>
         Error loading menu: {menuError?.message || addonError?.message || specialError?.message}
       </div>
     )

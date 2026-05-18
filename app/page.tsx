@@ -50,9 +50,9 @@ export default async function HomePage() {
   if (isClosed) {
     const cycleLabel = activeCycle === 'midweek' ? 'midweek' : 'weekend'
     return (
-      <div style={{ maxWidth: 600, margin: '0 auto', padding: '80px 20px', textAlign: 'center', fontFamily: 'var(--font-inter), sans-serif' }}>
+      <div style={{ maxWidth: 600, margin: '0 auto', padding: '80px 20px', textAlign: 'center', fontFamily: 'var(--font-ui), sans-serif' }}>
         <h1 style={{
-          fontFamily: 'var(--font-fraunces), serif',
+          fontFamily: 'var(--font-instrument-serif), serif',
           fontSize: 'clamp(36px, 8vw, 52px)',
           fontWeight: 400,
           color: 'var(--text-primary)',
@@ -78,7 +78,7 @@ export default async function HomePage() {
               borderRadius: '8px',
               backgroundColor: '#25D366',
               color: '#fff',
-              fontFamily: 'var(--font-inter), sans-serif',
+              fontFamily: 'var(--font-ui), sans-serif',
               fontSize: 15,
               fontWeight: 600,
               textDecoration: 'none',

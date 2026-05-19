@@ -222,7 +222,7 @@ export default function ReportsClient({
 
   return (
     <div style={{ fontFamily: 'var(--font-ui)' }}>
-      <div data-admin-page-shell style={{ flex: 1, minWidth: 0, width: '100%', maxWidth: '960px', margin: '0 auto', padding: '32px 56px 64px', boxSizing: 'border-box', fontFamily: 'var(--font-ui), sans-serif', fontSize: 15, color: 'var(--text-primary)' }}>
+      <div data-admin-page-shell style={{ flex: 1, minWidth: 0, width: '100%', maxWidth: '1212px', margin: '0 auto', padding: '40px 56px 64px', boxSizing: 'border-box', fontFamily: 'var(--font-ui), sans-serif', fontSize: 15, color: 'var(--text-primary)' }}>
         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '28px', fontWeight: 400, color: 'var(--text-primary)', margin: '0 0 24px' }}>
           Reports
         </h1>

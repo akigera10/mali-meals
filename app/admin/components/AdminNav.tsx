@@ -80,11 +80,29 @@ export default function AdminNav() {
           }
           [data-admin-desktop-nav] ~ * {
             margin-left: 200px !important;
+            width: auto;
+            flex: 1;
             min-width: 0;
             box-sizing: border-box;
           }
           [data-admin-desktop-nav][data-collapsed="true"] ~ * {
             margin-left: 56px !important;
+          }
+          [data-admin-desktop-nav] ~ [data-orders-shell],
+          [data-admin-desktop-nav] ~ [data-order-detail-shell],
+          [data-admin-desktop-nav] ~ [data-admin-page-shell] {
+            margin-left: calc(200px + max(0px, (100vw - 200px - 1212px) / 2)) !important;
+          }
+          [data-admin-desktop-nav][data-collapsed="true"] ~ [data-orders-shell],
+          [data-admin-desktop-nav][data-collapsed="true"] ~ [data-order-detail-shell],
+          [data-admin-desktop-nav][data-collapsed="true"] ~ [data-admin-page-shell] {
+            margin-left: calc(56px + max(0px, (100vw - 56px - 1212px) / 2)) !important;
+          }
+          [data-admin-desktop-nav] ~ [data-admin-settings-shell] {
+            margin-left: calc(200px + max(0px, (100vw - 200px - 832px) / 2)) !important;
+          }
+          [data-admin-desktop-nav][data-collapsed="true"] ~ [data-admin-settings-shell] {
+            margin-left: calc(56px + max(0px, (100vw - 56px - 832px) / 2)) !important;
           }
         }
         @media (max-width: 768px) {

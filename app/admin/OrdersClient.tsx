@@ -507,7 +507,7 @@ export default function OrdersClient({
         }
       ` }} />
 
-      <div data-orders-shell style={{ flex: 1, minWidth: 0, width: '100%', maxWidth: '960px', margin: '0 auto', padding: '32px 56px', boxSizing: 'border-box', fontFamily: 'var(--font-ui), sans-serif', fontSize: 15, color: 'var(--text-primary)' }}>
+      <div data-orders-shell style={{ flex: 1, minWidth: 0, width: '100%', maxWidth: '1212px', margin: '0 auto', padding: '40px 56px', boxSizing: 'border-box', fontFamily: 'var(--font-ui), sans-serif', fontSize: 15, color: 'var(--text-primary)' }}>
         <h1 style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)', fontSize: '28px', fontWeight: 400, margin: '0 0 24px' }}>
           Orders
         </h1>

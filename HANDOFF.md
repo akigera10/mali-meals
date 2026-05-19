@@ -39,14 +39,16 @@
 
 ---
 
-## Current status - end of May 18, 2026 work session
+## Current status - end of May 19, 2026 work session
 
 Latest completed app-work commit before this handoff update:
 
-`a17c66e polish: cart, zones, copy, success-screen, reassurance-line`
+`232efa2 admin-layout: remove-max-width-constraint, full-width-content`
 
-GitHub `main` and Vercel Production were verified up to date after that
-customer-polish commit. This handoff update may be a docs-only commit after it.
+GitHub `main` and Vercel Production were verified up to date after the
+admin layout width commit. Latest verified Production deployment:
+
+`https://mali-meals-9wzfp2c1s-akigera10-9005s-projects.vercel.app`
 
 ### Completed in the Fresh Green Kitchen rollout
 
@@ -55,18 +57,23 @@ customer-polish commit. This handoff update may be a docs-only commit after it.
 - Phase 2 customer menu component pass: completed. Dish card dividers removed, prices use dark text, delivery info card is white/raised, chips use full words, protein add-ons are compact rows.
 - Phase 3 checkout visual polish: completed. Stepper removed, back navigation simplified, form state persists through menu/checkout navigation, review and success screens polished, reassurance copy added above Place order.
 - Phase 4 admin UI pass: completed. Admin active navigation and primary operational actions lean forest, rows are denser, and admin screens read more like an operations tool.
+- Admin Part 1 structural pass: completed. Desktop admin now uses a left sidebar with daily operations and configuration groups, mobile bottom nav remains unchanged, login primary button is forest/white, order detail actions have primary/secondary/danger hierarchy, reports hierarchy is stronger, and the sidebar can collapse with state persisted in `localStorage`.
+- Admin layout width refinement: completed. Orders, order detail, reports, menu, kitchen, payments, and deliveries use a wider operational content area. Settings remains narrower and centered for readable form work. The menu admin dish cards now stretch as full-width editing panels.
 - Phase 5 email restyle: completed. Confirmation, dispatch, and admin notification emails use green/sage/forest direct hex values instead of old gold/cream styling.
 - iOS Safari checkout input zoom fix: completed with 16px input sizing in checkout and globals.
 - Local/mobile verification: customer menu, cart bar, checkout step 1, review step, and success screen were tested with mobile Playwright screenshots.
+- Admin desktop verification: Orders, Menu, Reports, and Settings were screenshot on desktop with expanded and collapsed sidebar states. Screenshots are local-only under `output/playwright/admin-layout-2026-05-19` and are intentionally not committed.
 
 ### Key learnings from this session
 
 - `npm run build` rewrites `.next`. If a dev server is still running, localhost can serve stale `_next/static` asset paths and CSS may disappear. Fix by stopping the stale server, removing `.next`, restarting dev, and hard-refreshing the printed port.
+- Do not trust a localhost page that appears as plain black/blue browser-default text. That means CSS assets are stale or missing, not that the design tokens vanished. Stop the dev server, remove `.next`, restart dev, and hard refresh.
 - Always trust the port printed by Next. Port 3000 may be occupied; this project often runs on 3001 during local work.
 - Vercel deployment is not instant at push time. After `git push origin main`, verify the latest Production deployment reaches `Ready` before assuming the live site has the change.
 - Email changes only appear in newly sent emails after the new Vercel deployment finishes. An email sent before the deployment completes can still look old.
 - Checkout form state now lives in `CartContext` with cart state, so customer details persist when navigating back to menu and returning to checkout.
 - Browser/mobile QA is important for this app. Mobile screenshots caught the real cart, zone, delivery option, review, and success-screen states.
+- Admin QA should check both expanded and collapsed sidebar states. The desktop sidebar width changes from 200px to 56px, and the content positioning uses CSS calculations so the operational surface remains centered in the remaining viewport.
 
 ---
 
@@ -99,7 +106,7 @@ customer-polish commit. This handoff update may be a docs-only commit after it.
 - No shadows anywhere
 - 8px border radius on cards and inputs
 - Customer pages: max-width 600px centered
-- Admin pages: max-width 960px centered
+- Admin pages: desktop sidebar plus centered operational content. Orders/order detail/reports/menu/kitchen/payments/deliveries target about 1100px of usable inner content. Settings targets about 720px usable inner content. Several wrappers use a larger `maxWidth` to include the required 56px side padding.
 - All styling inline `style={}` — never Tailwind classes in components
 - NEVER store styles in variables, state, or computed functions — always static object literals directly on JSX elements
 

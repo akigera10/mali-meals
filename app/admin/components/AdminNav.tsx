@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
@@ -8,6 +8,19 @@ export default function AdminNav() {
   const pathname = usePathname()
   const router = useRouter()
   const [moreOpen, setMoreOpen] = useState(false)
+  const [collapsed, setCollapsed] = useState(false)
+
+  useEffect(() => {
+    setCollapsed(localStorage.getItem('adminSidebarCollapsed') === 'true')
+  }, [])
+
+  function toggleCollapsed() {
+    setCollapsed(value => {
+      const next = !value
+      localStorage.setItem('adminSidebarCollapsed', String(next))
+      return next
+    })
+  }
 
   const dailyLinks = [
     { href: '/admin', label: 'Orders' },
@@ -51,6 +64,9 @@ export default function AdminNav() {
     <>
       <style dangerouslySetInnerHTML={{ __html: `
         [data-admin-desktop-nav] { display: flex; }
+        [data-admin-desktop-nav], [data-admin-desktop-nav] ~ * { transition: width 200ms ease, margin-left 200ms ease; }
+        [data-admin-nav-link]:hover { color: var(--text-secondary) !important; background: var(--surface-sunken) !important; }
+        [data-admin-nav-link][data-active="true"]:hover { color: var(--text-primary) !important; background: var(--brand-green-soft) !important; }
         [data-admin-mobile-nav] { display: none; }
         [data-admin-mobile-more] { display: none; }
         @media (min-width: 769px) {
@@ -59,19 +75,26 @@ export default function AdminNav() {
           }
           [data-admin-desktop-nav] ~ * {
             margin-left: 200px !important;
+            min-width: 0;
+            box-sizing: border-box;
+          }
+          [data-admin-desktop-nav][data-collapsed="true"] ~ * {
+            margin-left: 56px !important;
           }
         }
         @media (max-width: 768px) {
           [data-admin-desktop-nav] { display: none !important; }
           [data-admin-mobile-nav] { display: block; }
           [data-admin-mobile-more][data-open="true"] { display: block; }
+          [data-admin-page-shell] { padding-left: 14px !important; padding-right: 14px !important; }
+          [data-admin-page-tabs] { padding-left: 14px !important; padding-right: 14px !important; }
           body { padding-bottom: 82px; }
         }
       ` }} />
 
-      <nav data-admin-desktop-nav style={{
-        width: '200px',
-        minWidth: '200px',
+      <nav data-admin-desktop-nav data-collapsed={collapsed ? 'true' : 'false'} style={{
+        width: collapsed ? '56px' : '200px',
+        minWidth: collapsed ? '56px' : '200px',
         background: 'var(--surface-raised)',
         borderRight: '1px solid var(--border)',
         flexDirection: 'column',
@@ -80,6 +103,8 @@ export default function AdminNav() {
         top: 0,
         height: '100vh',
         boxSizing: 'border-box',
+        transition: 'width 200ms ease',
+        overflow: 'hidden',
       }}>
         <div style={{
           display: 'flex',
@@ -92,49 +117,122 @@ export default function AdminNav() {
             fontSize: 16,
             fontWeight: 400,
             color: 'var(--text-primary)',
-            padding: '0 20px 32px 20px',
+            padding: collapsed ? '0 0 32px 0' : '0 20px 32px 20px',
+            textAlign: collapsed ? 'center' : 'left',
+            whiteSpace: 'nowrap',
+            transition: 'opacity 150ms ease',
           }}>
-            Mali&apos;s Meals
+            {collapsed ? 'M' : "Mali's Meals"}
           </span>
           {dailyLinks.map(link => (
             <Link
               key={link.href}
               href={link.href}
+              data-admin-nav-link
+              data-active={isActive(link.href) ? 'true' : 'false'}
               style={{
-                display: 'block',
-                padding: isActive(link.href) ? '9px 20px 9px 18px' : '9px 20px',
+                display: 'flex',
+                justifyContent: collapsed ? 'center' : 'flex-start',
+                padding: isActive(link.href) ? (collapsed ? '9px 0' : '9px 20px 9px 17px') : (collapsed ? '9px 0' : '9px 20px'),
                 fontFamily: 'var(--font-ui), sans-serif',
-                fontSize: 14,
+                fontSize: isActive(link.href) ? 15 : 13,
                 fontWeight: isActive(link.href) ? 600 : 400,
-                color: isActive(link.href) ? 'var(--accent-forest)' : 'var(--text-secondary)',
+                color: isActive(link.href) ? 'var(--text-primary)' : 'var(--text-tertiary)',
                 textDecoration: 'none',
-                borderRadius: 0,
-                background: isActive(link.href) ? 'var(--brand-green-soft)' : 'transparent',
-                borderLeft: isActive(link.href) ? '2px solid var(--accent-forest)' : '2px solid transparent',
+                background: isActive(link.href) ? 'var(--brand-green-soft)' : 'none',
+                borderLeft: isActive(link.href) ? '3px solid var(--accent-forest)' : 'none',
+                boxSizing: 'border-box',
+                minHeight: 38,
+                alignItems: 'center',
               }}
             >
-              {link.label}
+              <span style={{
+                opacity: collapsed ? 0 : 1,
+                pointerEvents: collapsed ? 'none' : 'auto',
+                transition: 'opacity 150ms ease',
+                position: collapsed ? 'absolute' : 'static',
+              }}>
+                {link.label}
+              </span>
+              {collapsed && (
+                <span style={{
+                  color: 'var(--text-tertiary)',
+                  fontFamily: 'var(--font-ui), sans-serif',
+                  fontSize: 12,
+                  fontWeight: isActive(link.href) ? 600 : 400,
+                  textTransform: 'uppercase',
+                }}>
+                  {link.label.slice(0, 1)}
+                </span>
+              )}
             </Link>
           ))}
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: '50%',
+              background: 'var(--surface-sunken)',
+              border: '1px solid var(--border)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: collapsed ? '8px auto' : '8px 20px',
+              color: 'var(--text-secondary)',
+              fontFamily: 'var(--font-ui), sans-serif',
+              fontSize: 18,
+              lineHeight: 1,
+              padding: 0,
+            }}
+          >
+            {collapsed ? '›' : '‹'}
+          </button>
           <div style={{ flex: 1 }} />
           {configLinks.map(link => (
             <Link
               key={link.href}
               href={link.href}
+              data-admin-nav-link
+              data-active={isActive(link.href) ? 'true' : 'false'}
               style={{
-                display: 'block',
-                padding: isActive(link.href) ? '9px 20px 9px 18px' : '9px 20px',
+                display: 'flex',
+                justifyContent: collapsed ? 'center' : 'flex-start',
+                padding: isActive(link.href) ? (collapsed ? '9px 0' : '9px 20px 9px 17px') : (collapsed ? '9px 0' : '9px 20px'),
                 fontFamily: 'var(--font-ui), sans-serif',
-                fontSize: 14,
+                fontSize: isActive(link.href) ? 15 : 13,
                 fontWeight: isActive(link.href) ? 600 : 400,
-                color: isActive(link.href) ? 'var(--accent-forest)' : 'var(--text-secondary)',
+                color: isActive(link.href) ? 'var(--text-primary)' : 'var(--text-tertiary)',
                 textDecoration: 'none',
-                borderRadius: 0,
-                background: isActive(link.href) ? 'var(--brand-green-soft)' : 'transparent',
-                borderLeft: isActive(link.href) ? '2px solid var(--accent-forest)' : '2px solid transparent',
+                background: isActive(link.href) ? 'var(--brand-green-soft)' : 'none',
+                borderLeft: isActive(link.href) ? '3px solid var(--accent-forest)' : 'none',
+                boxSizing: 'border-box',
+                minHeight: 38,
+                alignItems: 'center',
               }}
             >
-              {link.label}
+              <span style={{
+                opacity: collapsed ? 0 : 1,
+                pointerEvents: collapsed ? 'none' : 'auto',
+                transition: 'opacity 150ms ease',
+                position: collapsed ? 'absolute' : 'static',
+              }}>
+                {link.label}
+              </span>
+              {collapsed && (
+                <span style={{
+                  color: 'var(--text-tertiary)',
+                  fontFamily: 'var(--font-ui), sans-serif',
+                  fontSize: 12,
+                  fontWeight: isActive(link.href) ? 600 : 400,
+                  textTransform: 'uppercase',
+                }}>
+                  {link.label.slice(0, 1)}
+                </span>
+              )}
             </Link>
           ))}
           <button
@@ -143,11 +241,17 @@ export default function AdminNav() {
               padding: '20px 20px 0 20px',
               fontFamily: 'var(--font-ui), sans-serif',
               fontSize: 13,
-              color: 'var(--text-tertiary)',
+              fontWeight: 400,
+              color: 'var(--text-secondary)',
               background: 'none',
               border: 'none',
               cursor: 'pointer',
               textAlign: 'left',
+              display: 'block',
+              whiteSpace: 'nowrap',
+              opacity: collapsed ? 0 : 1,
+              pointerEvents: collapsed ? 'none' : 'auto',
+              transition: 'opacity 150ms ease',
             }}
           >
             Sign out

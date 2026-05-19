@@ -100,7 +100,7 @@ export default function SettingsClient({ initialSettings }: { initialSettings: S
   }
 
   return (
-    <div style={{ maxWidth: '640px', margin: '0 auto', padding: '40px 20px', fontFamily: 'var(--font-ui)' }}>
+    <div data-admin-page-shell style={{ flex: 1, minWidth: 0, width: '100%', maxWidth: '720px', margin: '0 auto', padding: '40px 48px', boxSizing: 'border-box', fontFamily: 'var(--font-ui)' }}>
       <h1 style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '28px', color: 'var(--text-primary)', marginBottom: '4px' }}>
         Settings
       </h1>

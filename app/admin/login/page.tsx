@@ -273,15 +273,17 @@ export default function AdminLogin() {
             disabled={loading || !email || !password}
             style={{
               marginTop: '20px',
-              width: '100%',
-              padding: '12px',
-              borderRadius: '8px',
+              background: 'var(--accent-forest)',
+              color: '#FFFFFF',
               border: 'none',
-              backgroundColor: loading || !email || !password ? 'var(--surface-sunken)' : 'var(--brand-green)',
-              color: loading || !email || !password ? 'var(--text-tertiary)' : '#fff',
-              fontSize: '15px',
-              fontFamily: 'var(--font-ui)',
-              cursor: loading || !email || !password ? 'default' : 'pointer',
+              borderRadius: 8,
+              padding: '10px 20px',
+              minHeight: 44,
+              width: '100%',
+              fontFamily: 'var(--font-ui), sans-serif',
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: 'pointer',
             }}
           >
             {loading ? 'Signing in...' : 'Sign in'}

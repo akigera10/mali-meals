@@ -258,7 +258,7 @@ export default function ReportsClient({
         </div>
 
         <section style={{ marginBottom: '40px' }}>
-          <h2 style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '22px', color: 'var(--text-primary)', margin: '0 0 8px' }}>Dish performance</h2>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 400, color: 'var(--text-primary)', marginTop: 40, marginBottom: 16 }}>Dish performance</h2>
           {missingSnapshots > 0 && (
             <p style={{ fontSize: '13px', color: 'var(--accent-terracotta)', margin: '0 0 12px' }}>
               {missingSnapshots} item{missingSnapshots === 1 ? '' : 's'} predate dish snapshots and use current menu name fallback.
@@ -277,18 +277,18 @@ export default function ReportsClient({
               <thead>
                 <tr style={{ backgroundColor: 'var(--surface-sunken)' }}>
                   {['Dish', 'Portions', 'Vegetarian', 'Meat', 'Revenue'].map(h => (
-                    <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: '11px', color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{h}</th>
+                    <th key={h} style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 11, fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em', background: 'var(--surface-sunken)', padding: '8px 12px', textAlign: 'left' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {(dishSort === 'revenue' ? dishRowsByRevenue : dishRows).map(row => (
-                  <tr key={row.name} style={{ borderTop: '1px solid var(--border)' }}>
-                    <td style={{ padding: '11px 14px', fontFamily: 'var(--font-instrument-serif)', fontSize: '14px', color: 'var(--text-primary)' }}>{row.name}</td>
-                    <td style={{ padding: '11px 14px', fontSize: '13px', color: 'var(--text-primary)' }}>{row.portions}</td>
-                    <td style={{ padding: '11px 14px', fontSize: '13px', color: 'var(--text-secondary)' }}>{row.vegetarian}</td>
-                    <td style={{ padding: '11px 14px', fontSize: '13px', color: 'var(--text-secondary)' }}>{row.meat}</td>
-                    <td style={{ padding: '11px 14px', fontFamily: 'var(--font-instrument-serif)', fontSize: '14px', color: 'var(--text-primary)' }}>{fmt(row.revenue)}</td>
+                  <tr key={row.name}>
+                    <td style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 14, color: 'var(--text-primary)', padding: '10px 12px', borderBottom: '1px solid var(--border)' }}>{row.name}</td>
+                    <td style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 14, color: 'var(--text-primary)', padding: '10px 12px', borderBottom: '1px solid var(--border)' }}>{row.portions}</td>
+                    <td style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 14, color: 'var(--text-primary)', padding: '10px 12px', borderBottom: '1px solid var(--border)' }}>{row.vegetarian}</td>
+                    <td style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 14, color: 'var(--text-primary)', padding: '10px 12px', borderBottom: '1px solid var(--border)' }}>{row.meat}</td>
+                    <td style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 14, color: 'var(--text-primary)', padding: '10px 12px', borderBottom: '1px solid var(--border)' }}>{fmt(row.revenue)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -297,22 +297,34 @@ export default function ReportsClient({
         </section>
 
         <section style={{ marginBottom: '40px' }}>
-          <h2 style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '22px', color: 'var(--text-primary)', margin: '0 0 12px' }}>Monthly summary</h2>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 400, color: 'var(--text-primary)', marginTop: 40, marginBottom: 16 }}>Monthly summary</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {monthlyRows.map(row => (
               <div key={row.month} style={{ backgroundColor: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', padding: '14px 16px', display: 'grid', gridTemplateColumns: '1.2fr repeat(4, 1fr)', gap: '12px', alignItems: 'baseline' }}>
-                <span style={{ fontFamily: 'var(--font-instrument-serif)', color: 'var(--text-primary)', fontSize: '15px' }}>{monthLabel(row.month)}</span>
-                <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{row.orders} orders</span>
-                <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{fmt(row.revenue)} revenue</span>
-                <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{fmt(row.paid)} paid</span>
-                <span style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>{row.customers} customers</span>
+                <span style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)', fontSize: 15 }}>{monthLabel(row.month)}</span>
+                <span>
+                  <span style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 11, fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>orders</span>
+                  <span style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 400, color: 'var(--text-primary)', display: 'block' }}>{row.orders}</span>
+                </span>
+                <span>
+                  <span style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 11, fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>revenue</span>
+                  <span style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 400, color: 'var(--text-primary)', display: 'block' }}>{fmt(row.revenue)}</span>
+                </span>
+                <span>
+                  <span style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 11, fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>paid</span>
+                  <span style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 400, color: 'var(--text-primary)', display: 'block' }}>{fmt(row.paid)}</span>
+                </span>
+                <span>
+                  <span style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 11, fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>customers</span>
+                  <span style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 400, color: 'var(--text-primary)', display: 'block' }}>{row.customers}</span>
+                </span>
               </div>
             ))}
           </div>
         </section>
 
         <section style={{ marginBottom: '40px' }}>
-          <h2 style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '22px', color: 'var(--text-primary)', margin: '0 0 12px' }}>Revenue by delivery zone</h2>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 400, color: 'var(--text-primary)', marginTop: 40, marginBottom: 16 }}>Revenue by delivery zone</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {zoneRows.map(row => (
               <div key={row.zone} style={{ backgroundColor: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', padding: '14px 16px', display: 'grid', gridTemplateColumns: '1.5fr .7fr .9fr .9fr', gap: '12px', alignItems: 'baseline' }}>
@@ -326,7 +338,7 @@ export default function ReportsClient({
         </section>
 
         <section style={{ marginBottom: '40px' }}>
-          <h2 style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '22px', color: 'var(--text-primary)', margin: '0 0 12px' }}>Repeat customers</h2>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 400, color: 'var(--text-primary)', marginTop: 40, marginBottom: 16 }}>Repeat customers</h2>
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginBottom: '12px' }}>
             <div style={{ backgroundColor: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', padding: '14px 16px', flex: '1 1 180px' }}>
               <div style={{ fontSize: '12px', color: 'var(--text-tertiary)', marginBottom: '4px' }}>Unique customers ever</div>
@@ -351,7 +363,7 @@ export default function ReportsClient({
         </section>
 
         <section style={{ marginBottom: '40px' }}>
-          <h2 style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '22px', color: 'var(--text-primary)', margin: '0 0 12px' }}>Weekend vs midweek</h2>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 400, color: 'var(--text-primary)', marginTop: 40, marginBottom: 16 }}>Weekend vs midweek</h2>
           {cycleRows.find(row => row.cycle === 'midweek') ? (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               {cycleRows.map(row => (
@@ -369,7 +381,7 @@ export default function ReportsClient({
         </section>
 
         <section>
-          <h2 style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '22px', color: 'var(--text-primary)', margin: '0 0 12px' }}>Protein upgrade performance</h2>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 20, fontWeight: 400, color: 'var(--text-primary)', marginTop: 40, marginBottom: 16 }}>Protein upgrade performance</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {addonRows.map(row => (
               <div key={row.name} style={{ backgroundColor: 'var(--surface-raised)', border: '1px solid var(--border)', borderRadius: '8px', padding: '14px 16px', display: 'grid', gridTemplateColumns: '1.4fr .8fr .8fr .8fr', gap: '12px', alignItems: 'baseline' }}>

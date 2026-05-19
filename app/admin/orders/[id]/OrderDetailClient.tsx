@@ -340,155 +340,174 @@ export default function OrderDetailClient({
               </div>
             </div>
 
-            <div data-order-detail-actions style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-              <a href={`tel:${order.customer_phone}`} style={{
-                minHeight: '40px',
-                padding: '0 16px',
-                borderRadius: '8px',
-                border: '1px solid var(--border-strong)',
-                cursor: 'pointer',
-                fontSize: '13px',
-                fontFamily: 'var(--font-ui)',
-                backgroundColor: 'var(--surface-raised)',
-                color: 'var(--text-secondary)',
-                textDecoration: 'none',
-                display: 'inline-flex',
-                alignItems: 'center',
-              }}>
-                Call customer
-              </a>
-              <a href={`mailto:${order.customer_email}`} style={{
-                minHeight: '40px',
-                padding: '0 16px',
-                borderRadius: '8px',
-                border: '1px solid var(--border-strong)',
-                cursor: 'pointer',
-                fontSize: '13px',
-                fontFamily: 'var(--font-ui)',
-                backgroundColor: 'var(--surface-raised)',
-                color: 'var(--text-secondary)',
-                textDecoration: 'none',
-                display: 'inline-flex',
-                alignItems: 'center',
-              }}>
-                Email
-              </a>
-              {order.payment_status === 'unpaid' && (
-                <button
-                  data-order-detail-primary-action
-                  style={{
-                    minHeight: '40px',
-                    padding: '0 18px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    fontFamily: 'var(--font-ui)',
-                    fontWeight: '600',
-                    backgroundColor: 'var(--accent-forest)',
-                    color: 'var(--surface-raised)',
-                  }}
-                  onClick={() => setShowMpesaForm(value => !value)}
-                  disabled={saving}
-                >
-                  Mark paid
-                </button>
-              )}
-              {order.order_status === 'new' && (
-                <button
-                  data-order-detail-primary-action
-                  style={{
-                    minHeight: '40px',
-                    padding: '0 18px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    fontFamily: 'var(--font-ui)',
-                    backgroundColor: 'var(--accent-forest)',
-                    color: 'var(--surface-raised)',
-                  }}
-                  onClick={() => handleStatusUpdate('confirmed')}
-                  disabled={saving}
-                >
-                  Confirm order
-                </button>
-              )}
-              {order.order_status === 'confirmed' && (
-                <button
-                  data-order-detail-primary-action
-                  style={{
-                    minHeight: '40px',
-                    padding: '0 18px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    fontFamily: 'var(--font-ui)',
-                    backgroundColor: 'var(--accent-forest)',
-                    color: 'var(--surface-raised)',
-                  }}
-                  onClick={handleMarkDispatched}
-                  disabled={saving}
-                >
-                  Mark dispatched
-                </button>
-              )}
-              {order.order_status === 'dispatched' && (
-                <button
-                  data-order-detail-primary-action
-                  style={{
-                    minHeight: '40px',
-                    padding: '0 18px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    fontFamily: 'var(--font-ui)',
-                    backgroundColor: 'var(--accent-forest)',
-                    color: 'var(--surface-raised)',
-                  }}
-                  onClick={() => handleStatusUpdate('delivered')}
-                  disabled={saving}
-                >
-                  Mark delivered
-                </button>
-              )}
-              <Link href={`/admin/packing-slips?order=${order.id}`} style={{
-                minHeight: '40px',
-                padding: '0 16px',
-                borderRadius: '8px',
-                border: '1px solid var(--border-strong)',
-                cursor: 'pointer',
-                fontSize: '13px',
-                fontFamily: 'var(--font-ui)',
-                backgroundColor: 'var(--surface-raised)',
-                color: 'var(--text-secondary)',
-                textDecoration: 'none',
-                display: 'inline-flex',
-                alignItems: 'center',
-              }}>
-                Print slip
-              </Link>
-              {order.order_status !== 'delivered' && order.order_status !== 'cancelled' && (
-                <button
-                  style={{
-                    minHeight: '40px',
-                    padding: '0 16px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--accent-terracotta)',
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    fontFamily: 'var(--font-ui)',
-                    backgroundColor: 'transparent',
-                    color: 'var(--accent-terracotta)',
-                  }}
-                  onClick={handleCancel}
-                  disabled={saving}
-                >
-                  Cancel order
-                </button>
-              )}
+            <div data-order-detail-actions>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+                {order.payment_status === 'unpaid' && (
+                  <button
+                    data-order-detail-primary-action
+                    style={{
+                      background: 'var(--accent-forest)',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      borderRadius: 8,
+                      padding: '10px 20px',
+                      minHeight: 44,
+                      fontFamily: 'var(--font-ui), sans-serif',
+                      fontSize: 14,
+                      fontWeight: 600,
+                      lineHeight: 1,
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => setShowMpesaForm(value => !value)}
+                    disabled={saving}
+                  >
+                    Mark paid
+                  </button>
+                )}
+                {order.order_status === 'new' && (
+                  <button
+                    data-order-detail-primary-action
+                    style={{
+                      background: 'var(--accent-forest)',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      borderRadius: 8,
+                      padding: '10px 20px',
+                      minHeight: 44,
+                      fontFamily: 'var(--font-ui), sans-serif',
+                      fontSize: 14,
+                      fontWeight: 600,
+                      lineHeight: 1,
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => handleStatusUpdate('confirmed')}
+                    disabled={saving}
+                  >
+                    Confirm order
+                  </button>
+                )}
+                {order.order_status === 'confirmed' && (
+                  <button
+                    data-order-detail-primary-action
+                    style={{
+                      background: 'var(--accent-forest)',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      borderRadius: 8,
+                      padding: '10px 20px',
+                      minHeight: 44,
+                      fontFamily: 'var(--font-ui), sans-serif',
+                      fontSize: 14,
+                      fontWeight: 600,
+                      lineHeight: 1,
+                      cursor: 'pointer',
+                    }}
+                    onClick={handleMarkDispatched}
+                    disabled={saving}
+                  >
+                    Mark dispatched
+                  </button>
+                )}
+                {order.order_status === 'dispatched' && (
+                  <button
+                    data-order-detail-primary-action
+                    style={{
+                      background: 'var(--accent-forest)',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      borderRadius: 8,
+                      padding: '10px 20px',
+                      minHeight: 44,
+                      fontFamily: 'var(--font-ui), sans-serif',
+                      fontSize: 14,
+                      fontWeight: 600,
+                      lineHeight: 1,
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => handleStatusUpdate('delivered')}
+                    disabled={saving}
+                  >
+                    Mark delivered
+                  </button>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <a href={`tel:${order.customer_phone}`} style={{
+                  background: 'var(--surface-raised)',
+                  color: 'var(--text-primary)',
+                  border: '1px solid var(--border-strong)',
+                  borderRadius: 8,
+                  padding: '10px 20px',
+                  minHeight: 44,
+                  fontFamily: 'var(--font-ui), sans-serif',
+                  fontSize: 14,
+                  fontWeight: 500,
+                  lineHeight: 1,
+                  cursor: 'pointer',
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                }}>
+                  Call customer
+                </a>
+                <a href={`mailto:${order.customer_email}`} style={{
+                  background: 'var(--surface-raised)',
+                  color: 'var(--text-primary)',
+                  border: '1px solid var(--border-strong)',
+                  borderRadius: 8,
+                  padding: '10px 20px',
+                  minHeight: 44,
+                  fontFamily: 'var(--font-ui), sans-serif',
+                  fontSize: 14,
+                  fontWeight: 500,
+                  lineHeight: 1,
+                  cursor: 'pointer',
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                }}>
+                  Email
+                </a>
+                <Link href={`/admin/packing-slips?order=${order.id}`} style={{
+                  background: 'var(--surface-raised)',
+                  color: 'var(--text-primary)',
+                  border: '1px solid var(--border-strong)',
+                  borderRadius: 8,
+                  padding: '10px 20px',
+                  minHeight: 44,
+                  fontFamily: 'var(--font-ui), sans-serif',
+                  fontSize: 14,
+                  fontWeight: 500,
+                  lineHeight: 1,
+                  cursor: 'pointer',
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                }}>
+                  Print slip
+                </Link>
+                {order.order_status !== 'delivered' && order.order_status !== 'cancelled' && (
+                  <button
+                    style={{
+                      background: 'transparent',
+                      color: 'var(--accent-terracotta)',
+                      border: '1px solid var(--accent-terracotta)',
+                      borderRadius: 8,
+                      padding: '10px 20px',
+                      minHeight: 44,
+                      fontFamily: 'var(--font-ui), sans-serif',
+                      fontSize: 14,
+                      fontWeight: 500,
+                      lineHeight: 1,
+                      cursor: 'pointer',
+                    }}
+                    onClick={handleCancel}
+                    disabled={saving}
+                  >
+                    Cancel order
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 

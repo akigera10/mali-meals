@@ -184,7 +184,7 @@ function isCutoffOpen(cutoff: string | null) {
 function OrderBadge({ order }: { order: Order }) {
   if (order.order_status === 'new') {
     return (
-      <span style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', fontWeight: 500, padding: '3px 8px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'var(--surface-sunken)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
+      <span style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', fontWeight: 600, padding: '4px 10px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'var(--surface-sunken)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
         New
       </span>
     )
@@ -192,7 +192,7 @@ function OrderBadge({ order }: { order: Order }) {
 
   if (order.order_status === 'confirmed' && order.payment_status === 'unpaid') {
     return (
-      <span style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', fontWeight: 500, padding: '3px 8px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'var(--surface-sunken)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
+      <span style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', fontWeight: 600, padding: '4px 10px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'var(--surface-sunken)', color: 'var(--text-secondary)', border: '1px solid var(--border)' }}>
         Confirmed · Unpaid
       </span>
     )
@@ -200,7 +200,7 @@ function OrderBadge({ order }: { order: Order }) {
 
   if (order.order_status === 'confirmed' && order.payment_status === 'paid') {
     return (
-      <span style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', fontWeight: 500, padding: '3px 8px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'rgba(31,107,58,0.1)', color: 'var(--accent-forest)', border: '1px solid var(--accent-forest)' }}>
+      <span style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', fontWeight: 600, padding: '4px 10px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'rgba(31,107,58,0.1)', color: 'var(--accent-forest)', border: '1px solid var(--accent-forest)' }}>
         Paid · Ready
       </span>
     )
@@ -208,7 +208,7 @@ function OrderBadge({ order }: { order: Order }) {
 
   if (order.order_status === 'dispatched') {
     return (
-      <span style={{ fontFamily: 'var(--font-ui)', fontSize: '11px', fontWeight: 600, padding: '3px 8px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'var(--brand-green-soft)', color: 'var(--accent-forest)', border: '1px solid var(--brand-green-hover)', letterSpacing: '0.04em' }}>
+      <span style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', fontWeight: 600, padding: '4px 10px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'var(--brand-green-soft)', color: 'var(--accent-forest)', border: '1px solid var(--brand-green-hover)', letterSpacing: '0.04em' }}>
         Out for delivery
       </span>
     )
@@ -216,7 +216,7 @@ function OrderBadge({ order }: { order: Order }) {
 
   if (order.order_status === 'delivered' && order.payment_status === 'paid') {
     return (
-      <span style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', fontWeight: 500, padding: '3px 8px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'rgba(31,107,58,0.1)', color: 'var(--accent-forest)', border: '1px solid var(--accent-forest)' }}>
+      <span style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', fontWeight: 600, padding: '4px 10px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'rgba(31,107,58,0.1)', color: 'var(--accent-forest)', border: '1px solid var(--accent-forest)' }}>
         Delivered · Paid
       </span>
     )
@@ -224,14 +224,14 @@ function OrderBadge({ order }: { order: Order }) {
 
   if (order.order_status === 'delivered' && order.payment_status === 'unpaid') {
     return (
-      <span style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', fontWeight: 500, padding: '3px 8px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'rgba(181,83,60,0.1)', color: 'var(--accent-terracotta)', border: '1px solid var(--accent-terracotta)' }}>
+      <span style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', fontWeight: 600, padding: '4px 10px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'rgba(181,83,60,0.1)', color: 'var(--accent-terracotta)', border: '1px solid var(--accent-terracotta)' }}>
         Delivered · Unpaid
       </span>
     )
   }
 
   return (
-    <span style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', fontWeight: 500, padding: '3px 8px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'var(--surface-sunken)', color: 'var(--text-tertiary)', border: '1px solid var(--border)', opacity: 0.7 }}>
+    <span style={{ fontFamily: 'var(--font-ui)', fontSize: '12px', fontWeight: 600, padding: '4px 10px', borderRadius: '4px', display: 'inline-block', backgroundColor: 'var(--surface-sunken)', color: 'var(--text-tertiary)', border: '1px solid var(--border)', opacity: 0.7 }}>
       Cancelled
     </span>
   )
@@ -305,7 +305,7 @@ function TabButton({
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', color: 'var(--text-tertiary)', textTransform: 'uppercase', padding: '12px 0 6px 0', fontFamily: 'var(--font-ui)' }}>
+    <div style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.08em', color: 'var(--text-tertiary)', textTransform: 'uppercase', padding: '12px 0 8px 0', marginBottom: 8, fontFamily: 'var(--font-ui)' }}>
       {children}
     </div>
   )
@@ -316,16 +316,16 @@ function OrderRow({ order }: { order: Order }) {
     <Link
       href={`/admin/orders/${order.id}`}
       data-order-row
-      style={{ display: 'grid', gridTemplateColumns: '34% 42% 24%', alignItems: 'center', textDecoration: 'none', backgroundColor: 'var(--surface-raised)', borderBottom: '1px solid var(--border)', padding: '12px 16px', minHeight: '56px', cursor: 'pointer' }}
+      style={{ display: 'grid', gridTemplateColumns: '34% 42% 24%', alignItems: 'center', textDecoration: 'none', backgroundColor: 'var(--surface-raised)', borderBottom: '1px solid var(--border)', padding: '16px 20px', minHeight: '72px', cursor: 'pointer' }}
     >
       <div>
-        <span style={{ fontFamily: 'var(--font-display)', color: 'var(--accent-forest)', fontSize: '15px', fontWeight: 600, display: 'inline-block', marginBottom: '2px' }}>
+        <span style={{ fontFamily: 'var(--font-display)', color: 'var(--accent-forest)', fontSize: '14px', fontWeight: 400, display: 'inline-block', marginBottom: '2px' }}>
           {order.order_ref}
         </span>
-        <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--text-primary)', fontSize: '14px', fontWeight: 600, marginBottom: '1px' }}>
+        <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--text-primary)', fontSize: '15px', fontWeight: 500, marginBottom: '1px' }}>
           {order.customer_name}
         </div>
-        <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--text-tertiary)', fontSize: '13px' }}>
+        <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--text-secondary)', fontSize: '13px' }}>
           {order.customer_phone}
         </div>
       </div>
@@ -338,7 +338,7 @@ function OrderRow({ order }: { order: Order }) {
       </div>
 
       <div style={{ textAlign: 'right' }}>
-        <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--text-primary)', fontSize: '14px', fontWeight: 700, marginBottom: '3px' }}>
+        <div style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)', fontSize: '17px', fontWeight: 400, marginBottom: '3px' }}>
           {fmt(order.total_amount)}
         </div>
         <div style={{ fontFamily: 'var(--font-ui)', color: 'var(--text-tertiary)', fontSize: '12px' }}>
@@ -507,8 +507,8 @@ export default function OrdersClient({
         }
       ` }} />
 
-      <div data-orders-shell style={{ flex: 1, minWidth: 0, width: '100%', maxWidth: '960px', margin: '0 auto', padding: '40px 48px', boxSizing: 'border-box', fontFamily: 'var(--font-ui)' }}>
-        <h1 style={{ fontFamily: 'var(--font-ui)', color: 'var(--text-primary)', fontSize: '28px', fontWeight: 700, margin: '0 0 18px' }}>
+      <div data-orders-shell style={{ flex: 1, minWidth: 0, width: '100%', maxWidth: '960px', margin: '0 auto', padding: '32px 56px', boxSizing: 'border-box', fontFamily: 'var(--font-ui), sans-serif', fontSize: 15, color: 'var(--text-primary)' }}>
+        <h1 style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)', fontSize: '28px', fontWeight: 400, margin: '0 0 24px' }}>
           Orders
         </h1>
 

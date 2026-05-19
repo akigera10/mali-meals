@@ -67,6 +67,11 @@ export default function AdminNav() {
         [data-admin-desktop-nav], [data-admin-desktop-nav] ~ * { transition: width 200ms ease, margin-left 200ms ease; }
         [data-admin-nav-link]:hover { color: var(--text-secondary) !important; background: var(--surface-sunken) !important; }
         [data-admin-nav-link][data-active="true"]:hover { color: var(--text-primary) !important; background: var(--brand-green-soft) !important; }
+        [data-admin-page-shell], [data-orders-shell], [data-order-detail-shell] {
+          font-size: 15px;
+          font-family: var(--font-ui), sans-serif;
+          color: var(--text-primary);
+        }
         [data-admin-mobile-nav] { display: none; }
         [data-admin-mobile-more] { display: none; }
         @media (min-width: 769px) {
@@ -112,18 +117,51 @@ export default function AdminNav() {
           flex: 1,
           minHeight: 0,
         }}>
-          <span style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 16,
-            fontWeight: 400,
-            color: 'var(--text-primary)',
-            padding: collapsed ? '0 0 32px 0' : '0 20px 32px 20px',
-            textAlign: collapsed ? 'center' : 'left',
-            whiteSpace: 'nowrap',
-            transition: 'opacity 150ms ease',
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: collapsed ? 'center' : 'space-between',
+            padding: collapsed ? '0 0 32px 0' : '0 16px 32px 20px',
           }}>
-            {collapsed ? 'M' : "Mali's Meals"}
-          </span>
+            <span style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 16,
+              fontWeight: 400,
+              color: 'var(--text-primary)',
+              whiteSpace: 'nowrap',
+              opacity: collapsed ? 0 : 1,
+              pointerEvents: collapsed ? 'none' : 'auto',
+              transition: 'opacity 150ms ease',
+              width: collapsed ? 0 : 'auto',
+              overflow: 'hidden',
+            }}>
+              Mali&apos;s Meals
+            </span>
+            <button
+              type="button"
+              onClick={toggleCollapsed}
+              aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              style={{
+                width: 24,
+                height: 24,
+                borderRadius: 6,
+                background: 'var(--surface-sunken)',
+                border: '1px solid var(--border)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 12,
+                color: 'var(--text-tertiary)',
+                flexShrink: 0,
+                fontFamily: 'var(--font-ui), sans-serif',
+                lineHeight: 1,
+                padding: 0,
+              }}
+            >
+              {collapsed ? '›' : '‹'}
+            </button>
+          </div>
           {dailyLinks.map(link => (
             <Link
               key={link.href}
@@ -135,7 +173,7 @@ export default function AdminNav() {
                 justifyContent: collapsed ? 'center' : 'flex-start',
                 padding: isActive(link.href) ? (collapsed ? '9px 0' : '9px 20px 9px 17px') : (collapsed ? '9px 0' : '9px 20px'),
                 fontFamily: 'var(--font-ui), sans-serif',
-                fontSize: isActive(link.href) ? 15 : 13,
+                fontSize: isActive(link.href) ? 15 : 14,
                 fontWeight: isActive(link.href) ? 600 : 400,
                 color: isActive(link.href) ? 'var(--text-primary)' : 'var(--text-tertiary)',
                 textDecoration: 'none',
@@ -167,30 +205,6 @@ export default function AdminNav() {
               )}
             </Link>
           ))}
-          <button
-            type="button"
-            onClick={toggleCollapsed}
-            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: '50%',
-              background: 'var(--surface-sunken)',
-              border: '1px solid var(--border)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: collapsed ? '8px auto' : '8px 20px',
-              color: 'var(--text-secondary)',
-              fontFamily: 'var(--font-ui), sans-serif',
-              fontSize: 18,
-              lineHeight: 1,
-              padding: 0,
-            }}
-          >
-            {collapsed ? '›' : '‹'}
-          </button>
           <div style={{ flex: 1 }} />
           {configLinks.map(link => (
             <Link
@@ -203,7 +217,7 @@ export default function AdminNav() {
                 justifyContent: collapsed ? 'center' : 'flex-start',
                 padding: isActive(link.href) ? (collapsed ? '9px 0' : '9px 20px 9px 17px') : (collapsed ? '9px 0' : '9px 20px'),
                 fontFamily: 'var(--font-ui), sans-serif',
-                fontSize: isActive(link.href) ? 15 : 13,
+                fontSize: isActive(link.href) ? 15 : 14,
                 fontWeight: isActive(link.href) ? 600 : 400,
                 color: isActive(link.href) ? 'var(--text-primary)' : 'var(--text-tertiary)',
                 textDecoration: 'none',

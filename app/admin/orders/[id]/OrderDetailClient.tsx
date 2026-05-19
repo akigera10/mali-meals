@@ -262,7 +262,7 @@ export default function OrderDetailClient({
         }
       ` }} />
       <div style={{ fontFamily: 'var(--font-ui)' }}>
-        <div data-order-detail-shell style={{ flex: 1, minWidth: 0, width: '100%', maxWidth: '960px', margin: '0 auto', padding: '40px 48px', boxSizing: 'border-box' }}>
+        <div data-order-detail-shell style={{ flex: 1, minWidth: 0, width: '100%', maxWidth: '960px', margin: '0 auto', padding: '32px 56px', boxSizing: 'border-box', fontFamily: 'var(--font-ui), sans-serif', fontSize: 15, color: 'var(--text-primary)' }}>
           <Link data-order-back-link href="/admin" style={{
             fontSize: '13px',
             color: 'var(--text-tertiary)',

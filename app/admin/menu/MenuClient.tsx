@@ -569,8 +569,8 @@ export default function MenuClient({
       <AdminNav />
 
       {/* Page header */}
-      <div data-admin-page-shell style={{ flex: 1, minWidth: 0, width: '100%', maxWidth: '960px', margin: '0 auto', padding: '40px 48px 28px', boxSizing: 'border-box' }}>
-        <h1 style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '28px', color: 'var(--text-primary)', marginBottom: '8px' }}>
+      <div data-admin-page-shell style={{ flex: 1, minWidth: 0, width: '100%', maxWidth: '960px', margin: '0 auto', padding: '32px 56px 28px', boxSizing: 'border-box', fontFamily: 'var(--font-ui), sans-serif', fontSize: 15, color: 'var(--text-primary)' }}>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '28px', fontWeight: 400, color: 'var(--text-primary)', margin: '0 0 24px' }}>
           Menu
         </h1>
         <p style={{ fontSize: '13px', fontWeight: '500', margin: '0 0 4px', color: !activeCycle || !activeCutoff ? 'var(--accent-terracotta)' : isOrderingOpen ? 'var(--accent-forest)' : 'var(--text-tertiary)' }}>
@@ -589,7 +589,7 @@ export default function MenuClient({
 
       {/* Tab bar */}
       <div style={{ borderBottom: '1px solid var(--border)' }}>
-        <div data-admin-page-tabs style={{ width: '100%', maxWidth: '960px', margin: '0 auto', padding: '0 48px', boxSizing: 'border-box', display: 'flex' }}>
+        <div data-admin-page-tabs style={{ width: '100%', maxWidth: '960px', margin: '0 auto', padding: '0 56px', boxSizing: 'border-box', display: 'flex' }}>
 
           <button
             onClick={() => setActiveTab('weekend')}
@@ -618,7 +618,7 @@ export default function MenuClient({
       </div>
 
       {/* Tab content */}
-      <div data-admin-page-shell style={{ flex: 1, minWidth: 0, width: '100%', maxWidth: '960px', margin: '0 auto', padding: '40px 48px 56px', boxSizing: 'border-box' }}>
+      <div data-admin-page-shell style={{ flex: 1, minWidth: 0, width: '100%', maxWidth: '960px', margin: '0 auto', padding: '32px 56px 56px', boxSizing: 'border-box', fontFamily: 'var(--font-ui), sans-serif', fontSize: 15, color: 'var(--text-primary)' }}>
 
         {activeTab === 'weekend' && (
           <div>

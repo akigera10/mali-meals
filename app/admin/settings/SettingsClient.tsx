@@ -100,8 +100,8 @@ export default function SettingsClient({ initialSettings }: { initialSettings: S
   }
 
   return (
-    <div data-admin-page-shell style={{ flex: 1, minWidth: 0, width: '100%', maxWidth: '720px', margin: '0 auto', padding: '40px 48px', boxSizing: 'border-box', fontFamily: 'var(--font-ui)' }}>
-      <h1 style={{ fontFamily: 'var(--font-instrument-serif)', fontSize: '28px', color: 'var(--text-primary)', marginBottom: '4px' }}>
+    <div data-admin-page-shell style={{ flex: 1, minWidth: 0, width: '100%', maxWidth: '680px', margin: '0 auto', padding: '32px 56px', boxSizing: 'border-box', fontFamily: 'var(--font-ui), sans-serif', fontSize: 15, color: 'var(--text-primary)' }}>
+      <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '28px', fontWeight: 400, color: 'var(--text-primary)', margin: '0 0 24px' }}>
         Settings
       </h1>
       <p style={{ fontSize: '14px', color: 'var(--text-tertiary)', marginBottom: '40px' }}>

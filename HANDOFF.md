@@ -1052,6 +1052,43 @@ Remove-Item -Recurse -Force .next
 npm.cmd run dev
 ```
 
+### Pencil visual sketching
+
+Pencil is installed as a local dev dependency via `@pencil.dev/cli`. Use it only
+when explicitly instructed in the prompt. Never proactively.
+
+Pencil is for visual sketching and review only. Pencil output is never the
+implementation source of truth and must not be implemented directly without
+explicit user approval.
+
+Every Pencil prompt must include the Mali design constraints:
+- Fresh Green Kitchen system
+- No shadows
+- No gradients
+- No rounded big cards
+- White surfaces on sage background
+- Borders instead of shadows
+- Forest green for admin actions
+- 8px radius
+- Compact operational density
+
+Do not use Pencil for surfaces already specced in `DESIGN.md`. Use it only for
+new surfaces or interaction patterns not yet defined.
+
+Approved Pencil surfaces:
+- Order detail drawer: desktop open state and mobile sheet state
+- Reports page expansion: when charts and data visualisations are added
+
+Never use Pencil on:
+- `MenuClient.tsx`
+- `CheckoutClient.tsx`
+- Success screen
+- Any surface already implemented and confirmed working
+
+After a Pencil sketch is approved, implement in code using inline `style={{}}`
+with CSS custom properties per `DESIGN.md`. Never use Tailwind, shadcn/ui, or a
+new component library based on Pencil output.
+
 ### Claude Code
 
 ```bash

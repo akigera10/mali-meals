@@ -615,9 +615,14 @@ export default function OrdersClient({
           [data-admin-desktop-nav] ~ [data-orders-shell] { margin-left: 200px !important; }
           [data-admin-desktop-nav][data-collapsed="true"] ~ [data-orders-shell] { margin-left: 56px !important; }
         }
+        @media (max-width: 1180px) and (min-width: 721px) {
+          [data-orders-list-content] { padding: 32px 28px !important; }
+          [data-orders-drawer] { flex-basis: 480px !important; max-width: 480px !important; }
+        }
         @media (max-width: 720px) {
           [data-orders-workspace] { display: block !important; }
           [data-orders-list-pane] { width: 100% !important; overflow: visible !important; }
+          [data-orders-list-content] { padding: 0 !important; }
           [data-orders-drawer] { display: none !important; }
           [data-orders-shell] { padding: 22px 14px 112px !important; }
           [data-date-pills], [data-tabs] { margin-left: -14px; margin-right: -14px; padding-left: 14px; padding-right: 14px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -630,6 +635,7 @@ export default function OrdersClient({
       <div data-orders-shell style={{ flex: 1, minWidth: 0, width: 'auto', maxWidth: 'none', margin: 0, padding: 0, boxSizing: 'border-box', fontFamily: 'var(--font-ui), sans-serif', fontSize: 15, color: 'var(--text-primary)' }}>
         <div data-orders-workspace style={{ display: 'flex', alignItems: 'flex-start', width: '100%', minHeight: '100vh', position: 'relative' }}>
           <div data-orders-list-pane style={{ flex: 1, minWidth: 0, overflow: 'hidden', transition: 'flex 200ms ease' }}>
+            <div data-orders-list-content style={{ padding: '40px 56px', boxSizing: 'border-box', width: '100%', minWidth: 0 }}>
         <h1 style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)', fontSize: '28px', fontWeight: 400, margin: '0 0 24px' }}>
           Orders
         </h1>
@@ -713,6 +719,7 @@ export default function OrdersClient({
             </div>
           )}
         </div>
+            </div>
           </div>
 
           {selectedOrderId && (

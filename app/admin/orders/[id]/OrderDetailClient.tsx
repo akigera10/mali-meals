@@ -98,7 +98,7 @@ function ItemRows({ items }: {
       {items.map(item => (
         <div key={item.id} data-order-item-row style={{
           display: 'grid',
-          gridTemplateColumns: '1fr auto auto',
+          gridTemplateColumns: 'minmax(0, 1fr) 96px 96px',
           gap: '16px',
           alignItems: 'baseline',
           fontSize: '14px',
@@ -112,7 +112,7 @@ function ItemRows({ items }: {
             )}
           </span>
           {item.quantity > 1 && (
-            <span style={{ color: 'var(--text-tertiary)', fontSize: '13px', whiteSpace: 'nowrap' }}>
+            <span style={{ color: 'var(--text-tertiary)', fontSize: '13px', whiteSpace: 'nowrap', textAlign: 'right' }}>
               {item.quantity} × {fmt(item.unit_price)}
             </span>
           )}
@@ -122,7 +122,7 @@ function ItemRows({ items }: {
             color: 'var(--text-primary)',
             textAlign: 'right',
             whiteSpace: 'nowrap',
-            marginLeft: 'auto',
+            gridColumn: '3',
           }}>
             {fmt(item.unit_price * item.quantity)}
           </span>
@@ -271,6 +271,7 @@ export default function OrderDetailClient({
             border-bottom: 1px solid var(--border);
           }
           [data-order-item-row] > span:first-child { grid-column: 1 / -1; }
+          [data-order-item-row] > span:last-child { grid-column: 2 !important; }
           [data-order-detail-totals] {
             max-width: none !important;
             margin-left: 0 !important;
@@ -838,18 +839,19 @@ export default function OrderDetailClient({
               )}
 
               <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
-                <div data-order-detail-totals style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxWidth: '260px', marginLeft: 'auto' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                <div data-order-detail-totals style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 96px', gap: '16px', fontSize: '13px', color: 'var(--text-secondary)' }}>
                     <span>Subtotal</span>
-                    <span>{fmt(order.subtotal)}</span>
+                    <span style={{ textAlign: 'right' }}>{fmt(order.subtotal)}</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--text-secondary)' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 96px', gap: '16px', fontSize: '13px', color: 'var(--text-secondary)' }}>
                     <span>Delivery fee</span>
-                    <span>{fmt(order.delivery_fee)}</span>
+                    <span style={{ textAlign: 'right' }}>{fmt(order.delivery_fee)}</span>
                   </div>
                   <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
+                    display: 'grid',
+                    gridTemplateColumns: 'minmax(0, 1fr) 96px',
+                    gap: '16px',
                     fontSize: '16px',
                     fontFamily: 'var(--font-display)',
                     color: 'var(--text-primary)',
@@ -857,7 +859,7 @@ export default function OrderDetailClient({
                     borderTop: '1px solid var(--border)',
                   }}>
                     <span>Total</span>
-                    <span>{fmt(order.total_amount)}</span>
+                    <span style={{ textAlign: 'right' }}>{fmt(order.total_amount)}</span>
                   </div>
                 </div>
               </div>

@@ -98,7 +98,7 @@ function ItemRows({ items }: {
       {items.map(item => (
         <div key={item.id} data-order-item-row style={{
           display: 'grid',
-          gridTemplateColumns: '1fr auto auto auto',
+          gridTemplateColumns: '1fr auto auto',
           gap: '16px',
           alignItems: 'baseline',
           fontSize: '14px',
@@ -111,14 +111,18 @@ function ItemRows({ items }: {
               </span>
             )}
           </span>
-          <span style={{ color: 'var(--text-tertiary)', whiteSpace: 'nowrap' }}>x {item.quantity}</span>
-          <span style={{ color: 'var(--text-tertiary)', whiteSpace: 'nowrap' }}>{fmt(item.unit_price)}</span>
+          {item.quantity > 1 && (
+            <span style={{ color: 'var(--text-tertiary)', fontSize: '13px', whiteSpace: 'nowrap' }}>
+              {item.quantity} × {fmt(item.unit_price)}
+            </span>
+          )}
           <span style={{
             fontFamily: 'var(--font-display)',
             fontSize: '14px',
             color: 'var(--text-primary)',
             textAlign: 'right',
             whiteSpace: 'nowrap',
+            marginLeft: 'auto',
           }}>
             {fmt(item.unit_price * item.quantity)}
           </span>
@@ -132,10 +136,16 @@ export default function OrderDetailClient({
   initialOrder,
   items,
   specials,
+  mode = 'page',
+  onClose,
+  onOrderChange,
 }: {
   initialOrder: Order
   items: OrderItem[]
   specials: OrderSpecial[]
+  mode?: 'page' | 'drawer'
+  onClose?: () => void
+  onOrderChange?: (order: Order) => void
 }) {
   const [order, setOrder] = useState(initialOrder)
   const [showMpesaForm, setShowMpesaForm] = useState(false)
@@ -161,7 +171,9 @@ export default function OrderDetailClient({
     setSaving(true)
     const paidAt = new Date().toISOString()
     await updateOrder({ payment_status: 'paid', mpesa_code: mpesaCode.trim(), paid_at: paidAt })
-    setOrder({ ...order, payment_status: 'paid', mpesa_code: mpesaCode.trim(), paid_at: paidAt })
+    const nextOrder = { ...order, payment_status: 'paid', mpesa_code: mpesaCode.trim(), paid_at: paidAt }
+    setOrder(nextOrder)
+    onOrderChange?.(nextOrder)
     setShowMpesaForm(false)
     setMpesaCode('')
     setSaving(false)
@@ -170,7 +182,9 @@ export default function OrderDetailClient({
   async function handleStatusUpdate(next: string) {
     setSaving(true)
     await updateOrder({ order_status: next })
-    setOrder({ ...order, order_status: next })
+    const nextOrder = { ...order, order_status: next }
+    setOrder(nextOrder)
+    onOrderChange?.(nextOrder)
     setSaving(false)
   }
 
@@ -187,7 +201,9 @@ export default function OrderDetailClient({
     if (!window.confirm(`Cancel order ${order.order_ref}? This cannot be undone.`)) return
     setSaving(true)
     await updateOrder({ order_status: 'cancelled' })
-    setOrder({ ...order, order_status: 'cancelled' })
+    const nextOrder = { ...order, order_status: 'cancelled' }
+    setOrder(nextOrder)
+    onOrderChange?.(nextOrder)
     setSaving(false)
   }
 
@@ -262,16 +278,18 @@ export default function OrderDetailClient({
         }
       ` }} />
       <div style={{ fontFamily: 'var(--font-ui)' }}>
-        <div data-order-detail-shell style={{ flex: 1, minWidth: 0, width: '100%', maxWidth: '1212px', margin: '0 auto', padding: '40px 56px', boxSizing: 'border-box', fontFamily: 'var(--font-ui), sans-serif', fontSize: 15, color: 'var(--text-primary)' }}>
-          <Link data-order-back-link href="/admin" style={{
-            fontSize: '13px',
-            color: 'var(--text-tertiary)',
-            textDecoration: 'none',
-            display: 'inline-block',
-            marginBottom: '24px',
-          }}>
-            &lt; Orders
-          </Link>
+        <div data-order-detail-shell style={{ flex: 1, minWidth: 0, width: '100%', maxWidth: mode === 'drawer' ? 'none' : '1212px', margin: mode === 'drawer' ? 0 : '0 auto', padding: mode === 'drawer' ? '28px' : '40px 56px', boxSizing: 'border-box', fontFamily: 'var(--font-ui), sans-serif', fontSize: 15, color: 'var(--text-primary)', position: mode === 'drawer' ? 'relative' : 'static' }}>
+          {mode === 'page' && (
+            <Link data-order-back-link href="/admin" style={{
+              fontSize: '13px',
+              color: 'var(--text-tertiary)',
+              textDecoration: 'none',
+              display: 'inline-block',
+              marginBottom: '24px',
+            }}>
+              &lt; Orders
+            </Link>
+          )}
 
           <div data-order-detail-header style={{
             display: 'flex',
@@ -282,7 +300,7 @@ export default function OrderDetailClient({
             gap: '16px',
           }}>
             <div>
-              <div data-order-detail-title-row>
+              <div data-order-detail-title-row style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
                 <h1 data-order-detail-title style={{
                   fontFamily: 'var(--font-display)',
                   fontSize: '32px',
@@ -301,6 +319,30 @@ export default function OrderDetailClient({
                 }}>
                   {fmt(order.total_amount)}
                 </div>
+                {mode === 'drawer' && (
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    aria-label="Close order drawer"
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 8,
+                      border: '1px solid var(--border)',
+                      background: 'var(--surface-raised)',
+                      color: 'var(--text-tertiary)',
+                      fontFamily: 'var(--font-ui), sans-serif',
+                      fontSize: 18,
+                      lineHeight: 1,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    ×
+                  </button>
+                )}
               </div>
               <div data-order-detail-meta style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                 <span style={{

@@ -1,6 +1,8 @@
 'use client'
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
+import OrderDetailClient from './orders/[id]/OrderDetailClient'
 
 type Order = {
   id: string
@@ -26,6 +28,35 @@ type Order = {
   created_at: string
   updated_at?: string | null
   paid_at?: string | null
+}
+
+type OrderItem = {
+  id: string
+  dish_name: string | null
+  quantity: number
+  variant: string
+  meat_type: string | null
+  unit_price: number
+  menu_items: { name: string; category: string | null; meat_upgrade_type: string | null } | null
+  order_item_addons: {
+    quantity: number
+    unit_price: number
+    protein_addons: { name: string } | null
+  }[]
+}
+
+type OrderSpecial = {
+  id: string
+  special_name: string | null
+  quantity: number
+  unit_price: number
+  specials: { name: string } | null
+}
+
+type DetailState = {
+  order: Order
+  items: OrderItem[]
+  specials: OrderSpecial[]
 }
 
 type Settings = {
@@ -251,7 +282,7 @@ function DatePill({
       <button
         type="button"
         onClick={onClick}
-        style={{ minHeight: '40px', padding: '0 14px', borderRadius: '8px', border: '1px solid var(--accent-forest)', backgroundColor: 'var(--brand-green-soft)', color: 'var(--accent-forest)', fontFamily: 'var(--font-ui)', fontSize: '13px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+        style={{ minHeight: '40px', padding: '0 14px', borderRadius: '8px', border: '1px solid var(--accent-forest)', backgroundColor: 'var(--brand-green-soft)', color: 'var(--accent-forest)', fontFamily: 'var(--font-ui)', fontSize: '13px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
       >
         {shortDate(date)}
       </button>
@@ -262,7 +293,7 @@ function DatePill({
     <button
       type="button"
       onClick={onClick}
-      style={{ minHeight: '40px', padding: '0 14px', borderRadius: '8px', border: '1px solid var(--border)', backgroundColor: 'var(--surface-sunken)', color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)', fontSize: '13px', fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' }}
+      style={{ minHeight: '40px', padding: '0 14px', borderRadius: '8px', border: '1px solid var(--border)', backgroundColor: 'var(--surface-sunken)', color: 'var(--text-secondary)', fontFamily: 'var(--font-ui)', fontSize: '13px', fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}
   >
       {shortDate(date)}
     </button>
@@ -311,12 +342,27 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   )
 }
 
-function OrderRow({ order }: { order: Order }) {
+function OrderRow({
+  order,
+  selected,
+  onDesktopOpen,
+}: {
+  order: Order
+  selected: boolean
+  onDesktopOpen: (orderId: string) => void
+}) {
   return (
     <Link
       href={`/admin/orders/${order.id}`}
       data-order-row
-      style={{ display: 'grid', gridTemplateColumns: '34% 42% 24%', alignItems: 'center', textDecoration: 'none', backgroundColor: 'var(--surface-raised)', borderBottom: '1px solid var(--border)', padding: '16px 20px', minHeight: '72px', cursor: 'pointer' }}
+      data-selected-order={selected ? 'true' : 'false'}
+      onClick={event => {
+        if (window.matchMedia('(min-width: 761px)').matches) {
+          event.preventDefault()
+          onDesktopOpen(order.id)
+        }
+      }}
+      style={{ display: 'grid', gridTemplateColumns: '34% 42% 24%', alignItems: 'center', textDecoration: 'none', backgroundColor: selected ? 'var(--brand-green-soft)' : 'var(--surface-raised)', borderBottom: '1px solid var(--border)', padding: '16px 20px', minHeight: '72px', cursor: 'pointer', outline: selected ? '2px solid var(--accent-forest)' : 'none', outlineOffset: '-2px' }}
     >
       <div>
         <span style={{ fontFamily: 'var(--font-display)', color: 'var(--accent-forest)', fontSize: '14px', fontWeight: 400, display: 'inline-block', marginBottom: '2px' }}>
@@ -435,12 +481,18 @@ export default function OrdersClient({
   settings: Settings
   totalOrderCount: number
 }) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [selectedDate, setSelectedDate] = useState(initialDate)
   const [orders, setOrders] = useState(initialOrders)
   const [activeTab, setActiveTab] = useState<Bucket>(defaultTab(initialOrders))
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(false)
   const [showDatePicker, setShowDatePicker] = useState(false)
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(searchParams.get('order'))
+  const [detail, setDetail] = useState<DetailState | null>(null)
+  const [detailLoading, setDetailLoading] = useState(false)
+  const [detailError, setDetailError] = useState<string | null>(null)
 
   const counts = useMemo(() => {
     return tabs.reduce((acc, tab) => {
@@ -461,14 +513,74 @@ export default function OrdersClient({
     setSearch('')
   }, [selectedDate, orders])
 
+  useEffect(() => {
+    setSelectedOrderId(searchParams.get('order'))
+  }, [searchParams])
+
+  useEffect(() => {
+    if (!selectedOrderId) {
+      setDetail(null)
+      setDetailError(null)
+      return
+    }
+
+    let ignore = false
+    setDetailLoading(true)
+    setDetailError(null)
+
+    fetch(`/api/admin/order-detail?orderId=${selectedOrderId}`)
+      .then(response => {
+        if (!response.ok) throw new Error('Unable to load order')
+        return response.json()
+      })
+      .then(body => {
+        if (ignore) return
+        setDetail({
+          order: body.order,
+          items: body.items ?? [],
+          specials: body.specials ?? [],
+        })
+      })
+      .catch(error => {
+        if (ignore) return
+        setDetail(null)
+        setDetailError(error instanceof Error ? error.message : 'Unable to load order')
+      })
+      .finally(() => {
+        if (!ignore) setDetailLoading(false)
+      })
+
+    return () => {
+      ignore = true
+    }
+  }, [selectedOrderId])
+
   async function changeDate(date: string) {
     if (date === selectedDate) return
     setSelectedDate(date)
+    closeDrawer()
     setLoading(true)
     const response = await fetch(`/api/admin/orders-by-date?date=${date}`)
     const body = await response.json()
     setOrders(body.orders ?? [])
     setLoading(false)
+  }
+
+  function openDrawer(orderId: string) {
+    setSelectedOrderId(orderId)
+    router.push(`/admin?order=${orderId}`, { scroll: false })
+  }
+
+  function closeDrawer() {
+    setSelectedOrderId(null)
+    setDetail(null)
+    setDetailError(null)
+    router.push('/admin', { scroll: false })
+  }
+
+  function applyOrderChange(nextOrder: Order) {
+    setOrders(current => current.map(order => order.id === nextOrder.id ? { ...order, ...nextOrder } : order))
+    setDetail(current => current ? { ...current, order: nextOrder } : current)
   }
 
   function renderAllGroups() {
@@ -481,13 +593,13 @@ export default function OrdersClient({
     return (
       <>
         {readyToGo.length > 0 && <SectionLabel>Ready to go</SectionLabel>}
-        {readyToGo.map(order => <OrderRow key={order.id} order={order} />)}
+        {readyToGo.map(order => <OrderRow key={order.id} order={order} selected={selectedOrderId === order.id} onDesktopOpen={openDrawer} />)}
         {needsPayment.length > 0 && <SectionLabel>Needs payment</SectionLabel>}
-        {needsPayment.map(order => <OrderRow key={order.id} order={order} />)}
+        {needsPayment.map(order => <OrderRow key={order.id} order={order} selected={selectedOrderId === order.id} onDesktopOpen={openDrawer} />)}
         {newOrders.length > 0 && <SectionLabel>New orders</SectionLabel>}
-        {newOrders.map(order => <OrderRow key={order.id} order={order} />)}
+        {newOrders.map(order => <OrderRow key={order.id} order={order} selected={selectedOrderId === order.id} onDesktopOpen={openDrawer} />)}
         {completed.length > 0 && <SectionLabel>Completed</SectionLabel>}
-        {completed.map(order => <OrderRow key={order.id} order={order} />)}
+        {completed.map(order => <OrderRow key={order.id} order={order} selected={selectedOrderId === order.id} onDesktopOpen={openDrawer} />)}
       </>
     )
   }
@@ -496,9 +608,17 @@ export default function OrdersClient({
     <>
       <style dangerouslySetInnerHTML={{ __html: `
         [data-order-row]:hover { background: var(--surface-sunken) !important; }
+        [data-selected-order="true"]:hover { background: var(--brand-green-soft) !important; }
         [data-date-pills], [data-tabs] { scrollbar-width: none; }
         [data-date-pills]::-webkit-scrollbar, [data-tabs]::-webkit-scrollbar { display: none; }
+        @media (min-width: 769px) {
+          [data-admin-desktop-nav] ~ [data-orders-shell] { margin-left: 200px !important; }
+          [data-admin-desktop-nav][data-collapsed="true"] ~ [data-orders-shell] { margin-left: 56px !important; }
+        }
         @media (max-width: 720px) {
+          [data-orders-workspace] { display: block !important; }
+          [data-orders-list-pane] { width: 100% !important; overflow: visible !important; }
+          [data-orders-drawer] { display: none !important; }
           [data-orders-shell] { padding: 22px 14px 112px !important; }
           [data-date-pills], [data-tabs] { margin-left: -14px; margin-right: -14px; padding-left: 14px; padding-right: 14px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
           [data-order-row] { grid-template-columns: 1fr auto !important; gap: 12px !important; }
@@ -507,12 +627,14 @@ export default function OrdersClient({
         }
       ` }} />
 
-      <div data-orders-shell style={{ flex: 1, minWidth: 0, width: '100%', maxWidth: '1212px', margin: '0 auto', padding: '40px 56px', boxSizing: 'border-box', fontFamily: 'var(--font-ui), sans-serif', fontSize: 15, color: 'var(--text-primary)' }}>
+      <div data-orders-shell style={{ flex: 1, minWidth: 0, width: 'auto', maxWidth: 'none', margin: 0, padding: 0, boxSizing: 'border-box', fontFamily: 'var(--font-ui), sans-serif', fontSize: 15, color: 'var(--text-primary)' }}>
+        <div data-orders-workspace style={{ display: 'flex', alignItems: 'flex-start', width: '100%', minHeight: '100vh', position: 'relative' }}>
+          <div data-orders-list-pane style={{ flex: 1, minWidth: 0, overflow: 'hidden', transition: 'flex 200ms ease' }}>
         <h1 style={{ fontFamily: 'var(--font-display)', color: 'var(--text-primary)', fontSize: '28px', fontWeight: 400, margin: '0 0 24px' }}>
           Orders
         </h1>
 
-        <div data-date-pills style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px', flexWrap: 'nowrap' }}>
+        <div data-date-pills style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px', flexWrap: 'nowrap', overflowX: 'auto', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch', whiteSpace: 'nowrap', paddingBottom: '4px' }}>
           {activeDates.map(date => (
             <DatePill
               key={date}
@@ -525,7 +647,7 @@ export default function OrdersClient({
             <button
               type="button"
               onClick={() => setShowDatePicker(open => !open)}
-              style={{ border: 'none', backgroundColor: 'transparent', color: 'var(--text-tertiary)', fontFamily: 'var(--font-ui)', fontSize: '13px', cursor: 'pointer', padding: '0 4px', whiteSpace: 'nowrap', textDecoration: 'none' }}
+              style={{ border: 'none', backgroundColor: 'transparent', color: 'var(--text-tertiary)', fontFamily: 'var(--font-ui)', fontSize: '13px', cursor: 'pointer', padding: '0 4px', whiteSpace: 'nowrap', textDecoration: 'none', flexShrink: 0 }}
             >
               Older orders ›
             </button>
@@ -587,8 +709,47 @@ export default function OrdersClient({
             />
           ) : (
             <div style={{ borderTop: '1px solid var(--border)' }}>
-              {activeTab === 'all' ? renderAllGroups() : visibleOrders.map(order => <OrderRow key={order.id} order={order} />)}
+              {activeTab === 'all' ? renderAllGroups() : visibleOrders.map(order => <OrderRow key={order.id} order={order} selected={selectedOrderId === order.id} onDesktopOpen={openDrawer} />)}
             </div>
+          )}
+        </div>
+          </div>
+
+          {selectedOrderId && (
+            <aside data-orders-drawer style={{ flex: '0 0 520px', minWidth: 0, maxWidth: '520px', background: 'var(--surface-raised)', borderLeft: '1px solid var(--border-strong)', minHeight: '100vh', position: 'sticky', top: 0, height: '100vh', overflowY: 'auto' }}>
+              {!detail && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '28px 28px 0' }}>
+                  <button
+                    type="button"
+                    onClick={closeDrawer}
+                    aria-label="Close order drawer"
+                    style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface-raised)', color: 'var(--text-tertiary)', fontFamily: 'var(--font-ui), sans-serif', fontSize: 18, lineHeight: 1, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                  >
+                    ×
+                  </button>
+                </div>
+              )}
+              {detailLoading && (
+                <div style={{ padding: 28, fontFamily: 'var(--font-ui), sans-serif', fontSize: 14, color: 'var(--text-tertiary)' }}>
+                  Loading order...
+                </div>
+              )}
+              {detailError && (
+                <div style={{ padding: 28, fontFamily: 'var(--font-ui), sans-serif', fontSize: 14, color: 'var(--accent-terracotta)' }}>
+                  {detailError}
+                </div>
+              )}
+              {detail && !detailLoading && (
+                <OrderDetailClient
+                  initialOrder={detail.order}
+                  items={detail.items}
+                  specials={detail.specials}
+                  mode="drawer"
+                  onClose={closeDrawer}
+                  onOrderChange={applyOrderChange}
+                />
+              )}
+            </aside>
           )}
         </div>
       </div>

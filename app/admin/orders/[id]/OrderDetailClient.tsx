@@ -472,9 +472,6 @@ export default function OrderDetailClient({
                 )}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
-                <div style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 11, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--text-tertiary)' }}>
-                  Customer
-                </div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <a href={`tel:${order.customer_phone}`} style={{
                   background: 'var(--surface-raised)',
@@ -515,9 +512,6 @@ export default function OrderDetailClient({
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
-                <div style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 11, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--text-tertiary)' }}>
-                  Admin
-                </div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <Link href={`/admin/packing-slips?order=${order.id}`} style={{
                   background: 'var(--surface-raised)',
@@ -541,9 +535,6 @@ export default function OrderDetailClient({
               </div>
               {order.order_status !== 'delivered' && order.order_status !== 'cancelled' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start', marginTop: '2px' }}>
-                  <div style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 11, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--text-tertiary)' }}>
-                    Danger
-                  </div>
                   <button
                     style={{
                       background: 'transparent',

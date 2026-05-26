@@ -39,15 +39,17 @@
 
 ---
 
-## Current status - end of May 19, 2026 work session
+## Current status - end of May 26, 2026 work session
 
 Latest completed app-work commit before this handoff update:
 
-`232efa2 admin-layout: remove-max-width-constraint, full-width-content`
+`kitchen: redesign summary and printable prep sheet` (this session)
 
-GitHub `main` and Vercel Production were verified up to date after the
-admin layout width commit. Latest verified Production deployment:
+GitHub `main` is the working branch. Pushing to `main` triggers Vercel
+Production automatically. After a push, verify the deployment reaches `Ready`
+before assuming the live site has the change.
 
+Latest previously verified Production deployment:
 `https://mali-meals-9wzfp2c1s-akigera10-9005s-projects.vercel.app`
 
 ### Completed in the Fresh Green Kitchen rollout
@@ -59,10 +61,14 @@ admin layout width commit. Latest verified Production deployment:
 - Phase 4 admin UI pass: completed. Admin active navigation and primary operational actions lean forest, rows are denser, and admin screens read more like an operations tool.
 - Admin Part 1 structural pass: completed. Desktop admin now uses a left sidebar with daily operations and configuration groups, mobile bottom nav remains unchanged, login primary button is forest/white, order detail actions have primary/secondary/danger hierarchy, reports hierarchy is stronger, and the sidebar can collapse with state persisted in `localStorage`.
 - Admin layout width refinement: completed. Orders, order detail, reports, menu, kitchen, payments, and deliveries use a wider operational content area. Settings remains narrower and centered for readable form work. The menu admin dish cards now stretch as full-width editing panels.
+- Admin Orders drawer: completed. Desktop Orders can open order detail as an inline drawer so the list and detail stay visible together; mobile keeps a full-page detail flow. Drawer actions were tightened, group headings removed, destructive action separated visually, item totals aligned, and status labels capitalized.
+- Kitchen tab redesign: completed. The cooking summary now uses uniform section totals, consistent portion language, display-font dish names, compact bordered rows, and separate totals for mains, salads, chef's special, and protein add-ons. The redundant duplicate date/cooking-summary label was removed.
+- Kitchen printable prep sheet: completed. The Print action now opens a standalone blob HTML print document instead of printing the live admin page. It waits for Google Fonts (`document.fonts.ready`) so Instrument Serif renders before print, uses Manrope for labels/body, keeps section headers prominent, right-aligns portion counts, hides admin navigation by being a separate document, and prints as a clean A4 kitchen prep sheet.
 - Phase 5 email restyle: completed. Confirmation, dispatch, and admin notification emails use green/sage/forest direct hex values instead of old gold/cream styling.
 - iOS Safari checkout input zoom fix: completed with 16px input sizing in checkout and globals.
 - Local/mobile verification: customer menu, cart bar, checkout step 1, review step, and success screen were tested with mobile Playwright screenshots.
 - Admin desktop verification: Orders, Menu, Reports, and Settings were screenshot on desktop with expanded and collapsed sidebar states. Screenshots are local-only under `output/playwright/admin-layout-2026-05-19` and are intentionally not committed.
+- Kitchen print verification: blob print output was checked with Playwright against the populated Wednesday, 20 May 2026 kitchen data. The generated document contains no admin nav, uses Instrument Serif on dish names, uses smaller indented variants, right-aligns portion counts, and stays within one A4 page for the tested date. Screenshots/PDFs are local-only under `output/` and are intentionally not committed.
 
 ### Key learnings from this session
 
@@ -74,6 +80,10 @@ admin layout width commit. Latest verified Production deployment:
 - Checkout form state now lives in `CartContext` with cart state, so customer details persist when navigating back to menu and returning to checkout.
 - Browser/mobile QA is important for this app. Mobile screenshots caught the real cart, zone, delivery option, review, and success-screen states.
 - Admin QA should check both expanded and collapsed sidebar states. The desktop sidebar width changes from 200px to 56px, and the content positioning uses CSS calculations so the operational surface remains centered in the remaining viewport.
+- Printing a React subtree inside the admin layout was unreliable because the admin shell/nav and browser print timing interfered with the intended print DOM. The Kitchen tab now uses a standalone blob HTML document for print, which is simpler and avoids admin layout bleed-through.
+- Blob print documents that use Google Fonts must wait for `win.document.fonts.ready` before calling `win.print()`. `window.onload` can fire before Instrument Serif has downloaded, causing a flat Manrope-only printout.
+- Browser print headers/footers (URL, timestamp, page number) are controlled by the browser print dialog, not app CSS. For a perfectly clean sheet, turn off "Headers and footers" in the browser print dialog.
+- Do not commit generated print verification files from `output/`; they are local QA artifacts only.
 
 ---
 
@@ -852,7 +862,9 @@ Candidate work:
 
 ### 4. Admin ops pipeline refinement
 
-Phase 4 admin visual polish is complete. The next admin work is workflow depth, not decoration.
+Phase 4 admin visual polish is complete, Orders has an inline detail drawer,
+and Kitchen now has a redesigned cooking summary plus a printable A4 prep
+sheet. The next admin work is workflow depth, not decoration.
 
 Operational model:
 - Orders = review/control tower
@@ -862,10 +874,10 @@ Operational model:
 - Reports = business insight
 
 Potential work:
-- Refine Kitchen cooking-summary density and print prep sheet
 - Add inline confirm actions for new orders where useful
 - Keep rows compact and operational; avoid decorative customer cards
 - Review Reports page against real Mali questions after more orders exist
+- Refine Payments and Deliveries with the same operational clarity now used by Orders and Kitchen
 
 ### 5. Customer tab `/admin/customers`
 

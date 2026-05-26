@@ -63,6 +63,12 @@ function fmt(n: number) {
   return n.toLocaleString()
 }
 
+function statusLabel(status: string) {
+  return status
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, letter => letter.toUpperCase())
+}
+
 function deliveryLabel(order: Order): string {
   if (order.delivery_day === 'wednesday') {
     if (order.delivery_date) {
@@ -235,17 +241,32 @@ export default function OrderDetailClient({
             align-items: flex-start;
             justify-content: space-between;
             gap: 12px;
+            width: 100% !important;
           }
           [data-order-detail-title] { font-size: 32px !important; margin-bottom: 8px !important; }
-          [data-order-detail-mobile-total] { display: block !important; }
           [data-order-detail-meta] { gap: 6px !important; }
           [data-order-detail-actions] {
-            display: grid !important;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 10px !important;
             margin-top: 14px;
             width: 100%;
           }
+          [data-order-detail-primary-actions],
+          [data-order-detail-admin-actions],
+          [data-order-detail-danger-actions] {
+            display: grid !important;
+            grid-template-columns: 1fr !important;
+            gap: 8px !important;
+            width: 100%;
+          }
+          [data-order-detail-contact-actions] {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 8px !important;
+            width: 100%;
+          }
+          [data-order-detail-danger-actions] { margin-top: 2px !important; }
           [data-order-detail-actions] a,
           [data-order-detail-actions] button {
             justify-content: center;
@@ -253,7 +274,7 @@ export default function OrderDetailClient({
             width: 100%;
             box-sizing: border-box;
           }
-          [data-order-detail-primary-action] { grid-column: 1 / -1; }
+          [data-order-detail-primary-action] { grid-column: auto !important; }
           [data-order-detail-section] { padding: 16px !important; }
           [data-order-detail-two-column] { grid-template-columns: 1fr !important; gap: 12px !important; }
           [data-mpesa-row] { display: grid !important; grid-template-columns: 1fr !important; gap: 10px !important; }
@@ -306,16 +327,6 @@ export default function OrderDetailClient({
                 }}>
                   {order.order_ref}
                 </h1>
-                <div data-order-detail-mobile-total style={{
-                  display: 'none',
-                  fontFamily: 'var(--font-ui)',
-                  fontSize: '24px',
-                  color: 'var(--text-primary)',
-                  textAlign: 'right',
-                  lineHeight: 1.1,
-                }}>
-                  {fmt(order.total_amount)}
-                </div>
               </div>
               <div data-order-detail-meta style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                 <span style={{
@@ -341,7 +352,7 @@ export default function OrderDetailClient({
                   backgroundColor: 'var(--surface-sunken)',
                   color: 'var(--text-secondary)',
                 }}>
-                  {order.order_status.replace(/_/g, ' ')}
+                  {statusLabel(order.order_status)}
                 </span>
                 <span style={{ fontSize: '13px', color: 'var(--text-tertiary)' }}>
                   {new Date(order.created_at).toLocaleDateString('en-GB', {
@@ -382,7 +393,7 @@ export default function OrderDetailClient({
             </div>
 
             <div data-order-detail-actions style={{ display: 'flex', flexDirection: 'column', gap: '14px', alignItems: 'flex-start' }}>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <div data-order-detail-primary-actions style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {order.payment_status === 'unpaid' && (
                   <button
                     data-order-detail-primary-action
@@ -473,7 +484,7 @@ export default function OrderDetailClient({
                 )}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <div data-order-detail-contact-actions style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <a href={`tel:${order.customer_phone}`} style={{
                   background: 'var(--surface-raised)',
                   color: 'var(--text-primary)',
@@ -513,7 +524,7 @@ export default function OrderDetailClient({
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <div data-order-detail-admin-actions style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <Link href={`/admin/packing-slips?order=${order.id}`} style={{
                   background: 'var(--surface-raised)',
                   color: 'var(--text-primary)',
@@ -535,7 +546,7 @@ export default function OrderDetailClient({
                 </div>
               </div>
               {order.order_status !== 'delivered' && order.order_status !== 'cancelled' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start', marginTop: '2px' }}>
+                <div data-order-detail-danger-actions style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start', marginTop: '2px' }}>
                   <button
                     style={{
                       background: 'transparent',

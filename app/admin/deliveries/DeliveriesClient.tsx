@@ -45,6 +45,12 @@ function fmt(n: number) {
   return n.toLocaleString()
 }
 
+function statusLabel(status: string) {
+  return status
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, letter => letter.toUpperCase())
+}
+
 function slotLabel(order: DeliveryOrder): string {
   const w = order.delivery_window
   if (w === 'by_5pm') return 'by 5pm'
@@ -304,7 +310,7 @@ export default function DeliveriesClient() {
                               {order.payment_status === 'paid' ? '✓ Paid' : 'Unpaid'}
                             </span>
                             <span style={{ padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '500', backgroundColor: 'var(--surface-sunken)', color: 'var(--text-secondary)' }}>
-                              {order.order_status}
+                              {statusLabel(order.order_status)}
                             </span>
                             {order.notes && (
                               <span style={{ fontSize: '12px', color: 'var(--text-tertiary)', fontStyle: 'italic', marginLeft: '4px' }}>

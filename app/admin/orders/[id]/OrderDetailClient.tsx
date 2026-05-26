@@ -292,15 +292,11 @@ export default function OrderDetailClient({
           )}
 
           <div data-order-detail-header style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start',
-            marginBottom: '24px',
-            flexWrap: 'wrap',
-            gap: '16px',
+            marginBottom: '28px',
           }}>
-            <div>
-              <div data-order-detail-title-row style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px', width: '100%', marginBottom: '18px' }}>
+            <div style={{ minWidth: 0 }}>
+              <div data-order-detail-title-row style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                 <h1 data-order-detail-title style={{
                   fontFamily: 'var(--font-display)',
                   fontSize: '32px',
@@ -319,30 +315,6 @@ export default function OrderDetailClient({
                 }}>
                   {fmt(order.total_amount)}
                 </div>
-                {mode === 'drawer' && (
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    aria-label="Close order drawer"
-                    style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 8,
-                      border: '1px solid var(--border)',
-                      background: 'var(--surface-raised)',
-                      color: 'var(--text-tertiary)',
-                      fontFamily: 'var(--font-ui), sans-serif',
-                      fontSize: 18,
-                      lineHeight: 1,
-                      cursor: 'pointer',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    ×
-                  </button>
-                )}
               </div>
               <div data-order-detail-meta style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                 <span style={{
@@ -381,9 +353,35 @@ export default function OrderDetailClient({
                 </span>
               </div>
             </div>
+            {mode === 'drawer' && (
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close order drawer"
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 8,
+                  border: '1px solid var(--border)',
+                  background: 'var(--surface-raised)',
+                  color: 'var(--text-tertiary)',
+                  fontFamily: 'var(--font-ui), sans-serif',
+                  fontSize: 18,
+                  lineHeight: 1,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                ×
+              </button>
+            )}
+            </div>
 
-            <div data-order-detail-actions>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+            <div data-order-detail-actions style={{ display: 'flex', flexDirection: 'column', gap: '14px', alignItems: 'flex-start' }}>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 {order.payment_status === 'unpaid' && (
                   <button
                     data-order-detail-primary-action
@@ -473,7 +471,11 @@ export default function OrderDetailClient({
                   </button>
                 )}
               </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
+                <div style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 11, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--text-tertiary)' }}>
+                  Customer
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <a href={`tel:${order.customer_phone}`} style={{
                   background: 'var(--surface-raised)',
                   color: 'var(--text-primary)',
@@ -510,6 +512,13 @@ export default function OrderDetailClient({
                 }}>
                   Email
                 </a>
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
+                <div style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 11, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--text-tertiary)' }}>
+                  Admin
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                 <Link href={`/admin/packing-slips?order=${order.id}`} style={{
                   background: 'var(--surface-raised)',
                   color: 'var(--text-primary)',
@@ -528,7 +537,13 @@ export default function OrderDetailClient({
                 }}>
                   Print slip
                 </Link>
-                {order.order_status !== 'delivered' && order.order_status !== 'cancelled' && (
+                </div>
+              </div>
+              {order.order_status !== 'delivered' && order.order_status !== 'cancelled' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start', marginTop: '2px' }}>
+                  <div style={{ fontFamily: 'var(--font-ui), sans-serif', fontSize: 11, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--text-tertiary)' }}>
+                    Danger
+                  </div>
                   <button
                     style={{
                       background: 'transparent',
@@ -548,8 +563,8 @@ export default function OrderDetailClient({
                   >
                     Cancel order
                   </button>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
 

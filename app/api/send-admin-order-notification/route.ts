@@ -2,6 +2,7 @@
 import { Resend } from 'resend'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase'
+import { verifyInternalRequest } from '@/lib/internal-request'
 
 const ZONE_NAMES: Record<number, string> = {
   1: 'Lavington, Kilimani, Kileleshwa, Hurlingham',
@@ -77,9 +78,17 @@ function sectionHeading(label: string): string {
 
 export async function POST(req: NextRequest) {
   try {
+    const rawBody = await req.text()
+    const authorized = verifyInternalRequest(
+      req.headers.get('x-mali-timestamp'),
+      req.headers.get('x-mali-signature'),
+      rawBody
+    )
+    if (!authorized) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const resend = new Resend(process.env.RESEND_API_KEY)
-    const { orderId } = await req.json()
-    if (!orderId) {
+    const { orderId } = JSON.parse(rawBody)
+    if (!orderId || !/^[0-9a-f-]{36}$/i.test(orderId)) {
       return NextResponse.json({ error: 'Missing orderId' }, { status: 400 })
     }
 
@@ -94,7 +103,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 })
     }
 
-    const [{ data: orderItems }, { data: orderSpecials }] = await Promise.all([
+    const [{ data: orderItems }, { data: orderSpecials }, { data: orderAddons }] = await Promise.all([
       (db.from('order_items') as any)
         .select(`
           id, dish_name, quantity, variant, meat_type, unit_price,
@@ -105,11 +114,17 @@ export async function POST(req: NextRequest) {
       (db.from('order_specials') as any)
         .select('id, special_name, quantity, unit_price, specials ( name )')
         .eq('order_id', orderId),
+      (db.from('order_addons') as any)
+        .select('addon_name, quantity, unit_price, protein_addons ( name )')
+        .eq('order_id', orderId),
     ])
 
     const mains = (orderItems || []).filter((i: any) => i.menu_items?.category === 'mains')
     const salads = (orderItems || []).filter((i: any) => i.menu_items?.category === 'salads')
-    const allAddons = (orderItems || []).flatMap((i: any) => i.order_item_addons || [])
+    const allAddons = [
+      ...(orderItems || []).flatMap((i: any) => i.order_item_addons || []),
+      ...(orderAddons || []).map((a: any) => ({ ...a, protein_addons: a.protein_addons || { name: a.addon_name } })),
+    ]
     const specials = orderSpecials || []
 
     const mainRows = mains.length > 0

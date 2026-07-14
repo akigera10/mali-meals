@@ -22,12 +22,13 @@ function defaultToDate() {
 export default async function ReportsPage({
   searchParams,
 }: {
-  searchParams: { from?: string; to?: string; preset?: string }
+  searchParams: Promise<{ from?: string; to?: string; preset?: string }>
 }) {
   const db = createAdminClient()
-  const from = searchParams.from || defaultFromDate()
-  const to = searchParams.to || defaultToDate()
-  const isAllTime = searchParams.preset === 'all'
+  const resolvedSearchParams = await searchParams
+  const from = resolvedSearchParams.from || defaultFromDate()
+  const to = resolvedSearchParams.to || defaultToDate()
+  const isAllTime = resolvedSearchParams.preset === 'all'
 
   let ordersQuery = db
     .from('orders')
@@ -70,6 +71,11 @@ export default async function ReportsPage({
         .in('order_item_id', itemIds)
       addons = addonsData ?? []
     }
+
+    const { data: standaloneAddonsData } = await (db.from('order_addons') as any)
+      .select('order_id, addon_name, quantity, unit_price, protein_addons(name)')
+      .in('order_id', orderIds)
+    addons = [...addons, ...(standaloneAddonsData ?? [])]
   }
 
   return (
@@ -78,7 +84,7 @@ export default async function ReportsPage({
       <ReportsClient
         from={from}
         to={to}
-        preset={searchParams.preset || ''}
+        preset={resolvedSearchParams.preset || ''}
         orders={orders}
         items={items}
         addons={addons}

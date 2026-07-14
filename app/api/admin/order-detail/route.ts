@@ -1,35 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient as createCookieServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase'
-
-async function requireAdminSession() {
-  const cookieStore = cookies()
-  const supabase = createCookieServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options)
-          })
-        },
-      },
-    }
-  )
-
-  const { data: { user }, error } = await supabase.auth.getUser()
-  return !error && !!user
-}
+import { requireAdminRequest } from '@/lib/admin-session'
 
 export async function GET(request: NextRequest) {
-  if (!(await requireAdminSession())) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const authError = await requireAdminRequest()
+  if (authError) return authError
 
   const orderId = request.nextUrl.searchParams.get('orderId')
   if (!orderId) {
@@ -38,7 +13,7 @@ export async function GET(request: NextRequest) {
 
   const db = createAdminClient()
 
-  const [{ data: order, error: orderError }, { data: items }, { data: specials }] = await Promise.all([
+  const [{ data: order, error: orderError }, { data: items }, { data: specials }, { data: standaloneAddons }] = await Promise.all([
     db.from('orders').select('*').eq('id', orderId).single(),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (db.from('order_items') as any)
@@ -47,6 +22,10 @@ export async function GET(request: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (db.from('order_specials') as any)
       .select('id, special_name, quantity, unit_price, specials(name)')
+      .eq('order_id', orderId),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (db.from('order_addons') as any)
+      .select('id, addon_name, quantity, unit_price, protein_addons(name)')
       .eq('order_id', orderId),
   ])
 
@@ -58,5 +37,6 @@ export async function GET(request: NextRequest) {
     order,
     items: items ?? [],
     specials: specials ?? [],
+    standaloneAddons: standaloneAddons ?? [],
   })
 }

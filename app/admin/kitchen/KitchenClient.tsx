@@ -32,6 +32,13 @@ type RawSpecial = {
   specials: { name: string } | null
 }
 
+type RawAddon = {
+  order_id: string
+  addon_name: string | null
+  quantity: number
+  protein_addons: { name: string } | null
+}
+
 type DishBlock = {
   name: string
   variants: { variant: string; qty: number }[]
@@ -262,6 +269,7 @@ export default function KitchenClient() {
   const [orders, setOrders] = useState<RawOrder[]>([])
   const [items, setItems] = useState<RawItem[]>([])
   const [rawSpecials, setRawSpecials] = useState<RawSpecial[]>([])
+  const [standaloneAddons, setStandaloneAddons] = useState<RawAddon[]>([])
   const [confirmingIds, setConfirmingIds] = useState<Set<string>>(new Set())
 
   // Load distinct delivery dates on mount
@@ -291,7 +299,7 @@ export default function KitchenClient() {
     async function load() {
       const res = await fetch(`/api/admin/orders-by-date?date=${selectedDate}&scope=kitchen`)
       if (!active) return
-      const { orders: ordersData, items: itemsData, specials: specialsData } = await res.json()
+      const { orders: ordersData, items: itemsData, specials: specialsData, standaloneAddons: standaloneAddonsData } = await res.json()
 
       const fetchedOrders: RawOrder[] = (ordersData ?? []).map((o: any) => ({
         id: o.id,
@@ -317,10 +325,17 @@ export default function KitchenClient() {
         quantity: s.quantity,
         specials: s.specials,
       }))
+      const fetchedStandaloneAddons: RawAddon[] = (standaloneAddonsData ?? []).map((a: any) => ({
+        order_id: a.order_id,
+        addon_name: a.addon_name ?? null,
+        quantity: a.quantity,
+        protein_addons: a.protein_addons,
+      }))
 
       setOrders(fetchedOrders)
       setItems(fetchedItems)
       setRawSpecials(fetchedSpecials)
+      setStandaloneAddons(fetchedStandaloneAddons)
       setLoading(false)
     }
 
@@ -353,8 +368,12 @@ export default function KitchenClient() {
         map[name] = (map[name] ?? 0) + addon.quantity
       }
     }
+    for (const addon of standaloneAddons) {
+      const name = addon.protein_addons?.name ?? addon.addon_name ?? 'Unknown add-on'
+      map[name] = (map[name] ?? 0) + addon.quantity
+    }
     return Object.entries(map).sort((a, b) => b[1] - a[1])
-  }, [items])
+  }, [items, standaloneAddons])
   const addonPortions = useMemo(() => addonGroups.reduce((s, row) => s + row[1], 0), [addonGroups])
   const totalPortions = mainPortions + saladPortions + specialPortions + addonPortions
 

@@ -1,7 +1,6 @@
-import { createServerClient as createCookieServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase'
+import { requireAdminRequest } from '@/lib/admin-session'
 
 type TableName = 'menu_items' | 'specials' | 'protein_addons'
 
@@ -46,33 +45,9 @@ function sanitizeUpdates(table: TableName, updates: Record<string, unknown>) {
   return safe
 }
 
-async function requireAdminSession() {
-  const cookieStore = cookies()
-  const supabase = createCookieServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options)
-          })
-        },
-      },
-    }
-  )
-
-  const { data: { user }, error } = await supabase.auth.getUser()
-  return !error && !!user
-}
-
 export async function PATCH(request: Request) {
-  if (!(await requireAdminSession())) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const authError = await requireAdminRequest()
+  if (authError) return authError
 
   const { table, id, updates } = await request.json()
 
@@ -93,9 +68,8 @@ export async function PATCH(request: Request) {
 }
 
 export async function POST(request: Request) {
-  if (!(await requireAdminSession())) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const authError = await requireAdminRequest()
+  if (authError) return authError
 
   const { table, values } = await request.json()
 

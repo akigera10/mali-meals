@@ -2,6 +2,20 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+### Required environment variables
+
+Configure the Supabase project URL/publishable key and server-only service-role
+key used by the existing application. Admin access must also be explicitly
+authorized using at least one server-controlled option:
+
+- Set `app_metadata.role` to `admin` for the trusted Supabase user (preferred).
+- Or set `ADMIN_USER_IDS` to a comma-separated list of trusted Supabase user IDs.
+- Or set `ADMIN_EMAILS` to a comma-separated list of trusted, verified emails.
+
+`ADMIN_ORDER_EMAIL` and `MALI_ORDERS_EMAIL` remain accepted as migration
+fallbacks for the existing single-admin deployment. Do not use `user_metadata`
+for authorization and do not prefix any admin allowlist with `NEXT_PUBLIC_`.
+
 First, run the development server:
 
 ```bash

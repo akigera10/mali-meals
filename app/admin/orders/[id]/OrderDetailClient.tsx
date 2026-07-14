@@ -52,6 +52,14 @@ type OrderSpecial = {
   specials: { name: string } | null
 }
 
+type OrderAddon = {
+  id: string
+  addon_name: string | null
+  quantity: number
+  unit_price: number
+  protein_addons: { name: string } | null
+}
+
 const ZONE_NAMES: Record<number, string> = {
   1: 'Lavington, Kilimani, Kileleshwa, Hurlingham',
   2: 'Riverside, Westlands, Parklands, Peponi',
@@ -142,6 +150,7 @@ export default function OrderDetailClient({
   initialOrder,
   items,
   specials,
+  standaloneAddons = [],
   mode = 'page',
   onClose,
   onOrderChange,
@@ -149,6 +158,7 @@ export default function OrderDetailClient({
   initialOrder: Order
   items: OrderItem[]
   specials: OrderSpecial[]
+  standaloneAddons?: OrderAddon[]
   mode?: 'page' | 'drawer'
   onClose?: () => void
   onOrderChange?: (order: Order) => void
@@ -161,7 +171,14 @@ export default function OrderDetailClient({
 
   const mainItems = items.filter(item => item.menu_items?.category === 'mains')
   const saladItems = items.filter(item => item.menu_items?.category === 'salads')
-  const allAddons = items.flatMap(item => item.order_item_addons || [])
+  const allAddons = [
+    ...items.flatMap(item => item.order_item_addons || []),
+    ...standaloneAddons.map(addon => ({
+      quantity: addon.quantity,
+      unit_price: addon.unit_price,
+      protein_addons: addon.protein_addons || { name: addon.addon_name || '-' },
+    })),
+  ]
   const hasItems = mainItems.length > 0 || saladItems.length > 0 || specials.length > 0 || allAddons.length > 0
 
   async function updateOrder(updates: Record<string, any>) {

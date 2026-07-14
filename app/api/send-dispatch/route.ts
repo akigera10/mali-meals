@@ -2,6 +2,7 @@
 import { Resend } from 'resend'
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase'
+import { requireAdminRequest } from '@/lib/admin-session'
 
 function fmt(n: number) {
   return n.toLocaleString('en-KE')
@@ -48,9 +49,11 @@ function sectionHeading(label: string): string {
 
 export async function POST(req: NextRequest) {
   try {
+    const authError = await requireAdminRequest()
+    if (authError) return authError
+
     const resend = new Resend(process.env.RESEND_API_KEY)
     const { orderId } = await req.json()
-    console.log('[send-dispatch] POST received - orderId:', orderId)
 
     const db = createAdminClient()
 
@@ -59,10 +62,9 @@ export async function POST(req: NextRequest) {
       .eq('id', orderId)
       .single()
 
-    console.log('[send-dispatch] order fetch result - ref:', order?.order_ref, '| email:', order?.customer_email, '| error:', orderError?.message ?? null)
 
     if (orderError || !order) {
-      console.error('[send-dispatch] order not found:', orderError)
+      console.error('[send-dispatch] order lookup failed')
       return NextResponse.json({ error: 'Order not found' }, { status: 404 })
     }
 
@@ -78,7 +80,13 @@ export async function POST(req: NextRequest) {
       .select('id, special_name, quantity, unit_price, specials ( name )')
       .eq('order_id', orderId)
 
-    console.log('[send-dispatch] items fetched:', orderItems?.length ?? 0, '| specials:', orderSpecials?.length ?? 0, '| itemsError:', itemsError?.message ?? null, '| specialsError:', specialsError?.message ?? null)
+    const { data: orderAddons, error: addonsError } = await (db.from('order_addons') as any)
+      .select('addon_name, quantity, unit_price, protein_addons ( name )')
+      .eq('order_id', orderId)
+
+    if (itemsError || specialsError || addonsError) {
+      console.error('[send-dispatch] order item lookup failed')
+    }
 
     const firstName = order.customer_name.split(' ')[0]
     const windowStr = windowLabel(order.delivery_window, order.delivery_slot)
@@ -87,7 +95,10 @@ export async function POST(req: NextRequest) {
 
     const mains = (orderItems || []).filter((i: any) => i.menu_items?.category === 'mains')
     const salads = (orderItems || []).filter((i: any) => i.menu_items?.category === 'salads')
-    const allAddons = (orderItems || []).flatMap((i: any) => i.order_item_addons || [])
+    const allAddons = [
+      ...(orderItems || []).flatMap((i: any) => i.order_item_addons || []),
+      ...(orderAddons || []).map((a: any) => ({ ...a, protein_addons: a.protein_addons || { name: a.addon_name } })),
+    ]
     const specials = orderSpecials || []
 
     const mainRows = mains.length > 0
@@ -221,9 +232,7 @@ export async function POST(req: NextRequest) {
 </html>
     `.trim()
 
-    console.log('[send-dispatch] calling Resend - to:', order.customer_email, '| ref:', order.order_ref)
-
-    const { data: sendData, error } = await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: "Mali's Meals <orders@malismeals.com>",
       to: order.customer_email,
       replyTo: 'orders@malismeals.com',
@@ -232,15 +241,14 @@ export async function POST(req: NextRequest) {
     })
 
     if (error) {
-      console.error('[send-dispatch] Resend error:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      console.error('[send-dispatch] email provider rejected request')
+      return NextResponse.json({ error: 'Unable to send dispatch email' }, { status: 500 })
     }
 
-    console.log('[send-dispatch] email sent successfully - Resend id:', sendData?.id)
     return NextResponse.json({ success: true })
 
-  } catch (err) {
-    console.error('[send-dispatch] caught exception:', err)
+  } catch {
+    console.error('[send-dispatch] request failed')
     return NextResponse.json({ error: 'Failed to send dispatch email' }, { status: 500 })
   }
 }

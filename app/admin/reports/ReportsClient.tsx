@@ -26,7 +26,9 @@ type Item = {
 }
 
 type Addon = {
-  order_item_id: string
+  order_item_id?: string
+  order_id?: string
+  addon_name?: string | null
   quantity: number
   unit_price: number
   protein_addons: { name: string | null } | null
@@ -174,9 +176,9 @@ export default function ReportsClient({
     const totalOrders = orders.length || 1
     const map: Record<string, { name: string; quantity: number; revenue: number; orderIds: Set<string> }> = {}
     for (const addon of addons) {
-      const orderId = itemOrderMap[addon.order_item_id]
-      if (!orderSet.has(orderId)) continue
-      const name = addon.protein_addons?.name || 'Unknown add-on'
+      const orderId = addon.order_id || (addon.order_item_id ? itemOrderMap[addon.order_item_id] : undefined)
+      if (!orderId || !orderSet.has(orderId)) continue
+      const name = addon.protein_addons?.name || addon.addon_name || 'Unknown add-on'
       if (!map[name]) map[name] = { name, quantity: 0, revenue: 0, orderIds: new Set() }
       map[name].quantity += addon.quantity
       map[name].revenue += addon.quantity * addon.unit_price
@@ -250,7 +252,7 @@ export default function ReportsClient({
               ['last-3-months', 'Last 3 months'],
               ['all', 'All time'],
             ].map(([key, label]) => (
-              <button key={key} onClick={() => applyPreset(key)} style={{ padding: '7px 12px', borderRadius: '6px', border: preset === key ? '1px solid var(--brand-green)' : '1px solid var(--border-strong)', backgroundColor: preset === key ? 'var(--brand-green-soft)' : 'var(--surface-raised)', color: preset === key ? 'var(--brand-green-hover)' : 'var(--text-secondary)', fontFamily: 'var(--font-ui)', fontSize: '13px', cursor: 'pointer' }}>
+              <button key={key} aria-pressed={preset === key} onClick={() => applyPreset(key)} style={{ padding: '7px 12px', borderRadius: '6px', border: preset === key ? '1px solid var(--brand-green)' : '1px solid var(--border-strong)', backgroundColor: preset === key ? 'var(--brand-green-soft)' : 'var(--surface-raised)', color: preset === key ? 'var(--brand-green-hover)' : 'var(--text-secondary)', fontFamily: 'var(--font-ui)', fontSize: '13px', cursor: 'pointer' }}>
                 {label}
               </button>
             ))}
@@ -265,10 +267,10 @@ export default function ReportsClient({
             </p>
           )}
           <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-            <button onClick={() => setDishSort('portions')} style={{ padding: '7px 12px', borderRadius: '6px', border: dishSort === 'portions' ? '1px solid var(--brand-green)' : '1px solid var(--border-strong)', backgroundColor: dishSort === 'portions' ? 'var(--brand-green-soft)' : 'var(--surface-raised)', color: dishSort === 'portions' ? 'var(--brand-green-hover)' : 'var(--text-secondary)', fontFamily: 'var(--font-ui)', fontSize: '13px', cursor: 'pointer' }}>
+            <button aria-pressed={dishSort === 'portions'} onClick={() => setDishSort('portions')} style={{ padding: '7px 12px', borderRadius: '6px', border: dishSort === 'portions' ? '1px solid var(--brand-green)' : '1px solid var(--border-strong)', backgroundColor: dishSort === 'portions' ? 'var(--brand-green-soft)' : 'var(--surface-raised)', color: dishSort === 'portions' ? 'var(--brand-green-hover)' : 'var(--text-secondary)', fontFamily: 'var(--font-ui)', fontSize: '13px', cursor: 'pointer' }}>
               Sort by portions
             </button>
-            <button onClick={() => setDishSort('revenue')} style={{ padding: '7px 12px', borderRadius: '6px', border: dishSort === 'revenue' ? '1px solid var(--brand-green)' : '1px solid var(--border-strong)', backgroundColor: dishSort === 'revenue' ? 'var(--brand-green-soft)' : 'var(--surface-raised)', color: dishSort === 'revenue' ? 'var(--brand-green-hover)' : 'var(--text-secondary)', fontFamily: 'var(--font-ui)', fontSize: '13px', cursor: 'pointer' }}>
+            <button aria-pressed={dishSort === 'revenue'} onClick={() => setDishSort('revenue')} style={{ padding: '7px 12px', borderRadius: '6px', border: dishSort === 'revenue' ? '1px solid var(--brand-green)' : '1px solid var(--border-strong)', backgroundColor: dishSort === 'revenue' ? 'var(--brand-green-soft)' : 'var(--surface-raised)', color: dishSort === 'revenue' ? 'var(--brand-green-hover)' : 'var(--text-secondary)', fontFamily: 'var(--font-ui)', fontSize: '13px', cursor: 'pointer' }}>
               Sort by revenue
             </button>
           </div>

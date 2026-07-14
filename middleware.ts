@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextRequest, NextResponse } from 'next/server'
+import { isAuthorizedAdminUser } from '@/lib/admin-authorization'
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -36,7 +37,7 @@ export async function middleware(request: NextRequest) {
   // getUser() validates the session against Supabase — never trusts the local JWT alone
   try {
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
+    if (!user || !isAuthorizedAdminUser(user)) {
       return NextResponse.redirect(new URL('/admin/login', request.url))
     }
   } catch {

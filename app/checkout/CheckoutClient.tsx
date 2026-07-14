@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useCart } from '@/app/context/CartContext'
-import { supabase } from '@/lib/supabase'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -48,11 +47,6 @@ type FormErrors = Partial<Record<keyof FormData, string>>
 
 function fmt(n: number) {
   return n.toLocaleString('en-KE')
-}
-
-function buildAddress(f: FormData): string {
-  const base = `${f.addrBuilding}, ${f.addrStreet}, ${f.addrApartment}`
-  return f.addrLandmark ? `${base}\nNear ${f.addrLandmark}` : base
 }
 
 function buildDeliveryLabel(deliveryDay: string, deliverySlot: string): string {
@@ -113,15 +107,19 @@ function validate(data: FormData): FormErrors {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function Field({ label, error, hint, children }: {
+function Field({ label, error, hint, controlId, children }: {
   label: React.ReactNode
   error?: string
   hint?: string
+  controlId?: string
   children: React.ReactNode
 }) {
+  const hintId = controlId && hint ? `${controlId}-hint` : undefined
+  const errorId = controlId && error ? `${controlId}-error` : undefined
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <label style={{
+      <label htmlFor={controlId} style={{
         fontFamily: 'var(--font-ui), sans-serif',
         fontSize: 13,
         fontWeight: 500,
@@ -131,7 +129,7 @@ function Field({ label, error, hint, children }: {
       </label>
       {children}
       {hint && (
-        <span style={{
+        <span id={hintId} style={{
           fontFamily: 'var(--font-ui), sans-serif',
           fontSize: 12,
           fontStyle: 'italic',
@@ -141,7 +139,7 @@ function Field({ label, error, hint, children }: {
         </span>
       )}
       {error && (
-        <span style={{
+        <span id={errorId} role="alert" style={{
           fontFamily: 'var(--font-ui), sans-serif',
           fontSize: 12,
           color: 'var(--accent-terracotta)',
@@ -475,165 +473,43 @@ export default function CheckoutClient() {
     setIsSubmitting(true)
     setSubmitError(null)
 
-    const formattedAddress = buildAddress(form)
-    const dbDeliveryDay    = form.deliveryDay === 'wednesday' ? 'wednesday'
-                           : form.deliveryDay === 'monday'    ? 'monday'
-                           : 'sunday'
-    const dbDeliveryWindow = form.deliveryDay === 'sunday_5pm'  ? 'by_5pm'
-                           : form.deliveryDay === 'sunday_free' ? 'free_5_10pm'
-                           : form.deliveryDay === 'wednesday'   ? null
-                           : form.deliverySlot || null
-    const deliveryDate = dbDeliveryDay === 'wednesday'
-      ? cycleInfo.nextWednesdayDate
-      : dbDeliveryDay === 'monday'
-        ? cycleInfo.nextMondayDate
-        : cycleInfo.nextSundayDate
-
     try {
-      // Generate ID client-side and fetch ref from server — avoids any SELECT under RLS
-      const orderId = crypto.randomUUID()
-
-      const refRes = await fetch('/api/generate-order-ref', { method: 'POST' })
-      if (!refRes.ok) throw new Error('Failed to generate order reference')
-      const { orderRef: ref } = await refRes.json()
-
-      const orderPayload = {
-        id: orderId,
-        order_ref: ref,
-        customer_name: fullName,
-        customer_phone: form.phone,
-        customer_email: form.email,
-        delivery_address: formattedAddress,
-        address_building: form.addrBuilding,
-        address_street: form.addrStreet,
-        address_apartment: form.addrApartment,
-        address_landmark: form.addrLandmark || null,
-        delivery_zone: Number(form.zone),
-        delivery_day: dbDeliveryDay,
-        delivery_window: dbDeliveryWindow,
-        delivery_slot: form.deliverySlot || null,
-        delivery_date: deliveryDate || null,
-        cycle_type: cycleInfo.activeCycle || 'weekend',
-        notes: form.notes || null,
-        subtotal,
-        delivery_fee: deliveryFee,
-        total_amount: total,
-        order_status: 'new',
-      }
-
-      const { error: orderError } = await supabase
-        .from('orders')
-        .insert(orderPayload)
-
-      if (orderError) {
-        console.error('Order insert error:', orderError)
-        console.error('Order payload:', orderPayload)
-        throw orderError
-      }
-
-      const insertedItemIds: string[] = []
-
-      for (const entry of [...mains, ...salads]) {
-        const itemId = crypto.randomUUID()
-        const menuItemId = entry.id.split(':')[0]
-        const variant = entry.variant === 'meat' ? 'meat' : 'vegetarian'
-
-        const { error: itemError } = await supabase
-          .from('order_items')
-          .insert({
-            id: itemId,
-            order_id: orderId,
-            menu_item_id: menuItemId,
-            dish_name: entry.name,
-            quantity: entry.quantity,
-            variant,
-            meat_type: entry.meatType || null,
-            unit_price: entry.unitPrice,
-          })
-
-        if (itemError) throw itemError
-        insertedItemIds.push(itemId)
-      }
-
-      for (const entry of specials) {
-        const specialId = entry.id.replace('special:', '')
-
-        const { error: specialError } = await supabase
-          .from('order_specials')
-          .insert({
-            order_id: orderId,
-            special_id: specialId,
-            special_name: entry.name,
-            quantity: entry.quantity,
-            unit_price: entry.unitPrice,
-          })
-
-        if (specialError) throw specialError
-      }
-
-      if (addons.length > 0 && insertedItemIds.length > 0) {
-        const firstItemId = insertedItemIds[0]
-
-        for (const entry of addons) {
-          const addonId = entry.id.replace('addon:', '')
-
-          const { error: addonError } = await supabase
-            .from('order_item_addons')
-            .insert({
-              order_item_id: firstItemId,
-              addon_id: addonId,
-              quantity: entry.quantity,
-              unit_price: entry.unitPrice,
-            })
-
-          if (addonError) throw addonError
-        }
-      }
-
-      fetch('/api/send-confirmation', {
+      const response = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          order_ref: ref,
-          customer_name: fullName,
-          customer_first_name: form.firstName.trim(),
-          customer_email: form.email,
-          items: cart,
-          subtotal,
-          delivery_fee: deliveryFee,
-          total_amount: total,
-          delivery_zone: Number(form.zone),
-          delivery_day: form.deliveryDay,
-          delivery_date: deliveryDate || null,
-          delivery_slot: form.deliverySlot || null,
-          delivery_address: formattedAddress,
-          address_building: form.addrBuilding,
-          address_street: form.addrStreet,
-          address_apartment: form.addrApartment,
-          address_landmark: form.addrLandmark || null,
+          firstName: form.firstName,
+          lastName: form.lastName,
+          email: form.email,
+          phone: form.phone,
+          addressBuilding: form.addrBuilding,
+          addressStreet: form.addrStreet,
+          addressApartment: form.addrApartment,
+          addressLandmark: form.addrLandmark,
+          zone: Number(form.zone),
+          deliveryDay: form.deliveryDay,
+          deliverySlot: form.deliverySlot,
           notes: form.notes || null,
+          cart: cart.map(entry => ({
+            id: entry.id,
+            variant: entry.variant,
+            meatType: entry.meatType,
+            quantity: entry.quantity,
+          })),
         }),
-      }).catch(err => {
-        console.error('Confirmation email request failed:', err)
       })
 
-      fetch('/api/send-admin-order-notification', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId }),
-      }).catch(err => {
-        console.error('Admin order notification request failed:', err)
-      })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(result.error || 'Something went wrong placing your order. Please try again.')
 
       clearCart()
-      setOrderRef(ref)
+      setOrderRef(result.orderRef)
       setSuccessEmail(form.email)
       setIsSuccess(true)
       window.scrollTo(0, 0)
 
     } catch (err) {
-      console.error('Order submission error:', err)
-      setSubmitError('Something went wrong placing your order. Please try again.')
+      setSubmitError(err instanceof Error ? err.message : 'Something went wrong placing your order. Please try again.')
     } finally {
       setIsSubmitting(false)
     }
@@ -696,9 +572,15 @@ export default function CheckoutClient() {
             </h2>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-              <Field label="First name" error={errors.firstName}>
+              <Field label="First name" error={errors.firstName} controlId="first-name">
                 <input
+                  id="first-name"
+                  name="firstName"
                   type="text"
+                  autoComplete="given-name"
+                  required
+                  aria-invalid={Boolean(errors.firstName)}
+                  aria-describedby={errors.firstName ? 'first-name-error' : undefined}
                   value={form.firstName}
                   onChange={e => setField('firstName', e.target.value)}
                   onFocus={() => focus('firstName')}
@@ -720,9 +602,15 @@ export default function CheckoutClient() {
                   }}
                 />
               </Field>
-              <Field label="Last name" error={errors.lastName}>
+              <Field label="Last name" error={errors.lastName} controlId="last-name">
                 <input
+                  id="last-name"
+                  name="lastName"
                   type="text"
+                  autoComplete="family-name"
+                  required
+                  aria-invalid={Boolean(errors.lastName)}
+                  aria-describedby={errors.lastName ? 'last-name-error' : undefined}
                   value={form.lastName}
                   onChange={e => setField('lastName', e.target.value)}
                   onFocus={() => focus('lastName')}
@@ -746,9 +634,15 @@ export default function CheckoutClient() {
               </Field>
             </div>
 
-            <Field label="Email address" error={errors.email}>
+            <Field label="Email address" error={errors.email} controlId="email">
               <input
+                id="email"
+                name="email"
                 type="email"
+                autoComplete="email"
+                required
+                aria-invalid={Boolean(errors.email)}
+                aria-describedby={errors.email ? 'email-error' : undefined}
                 value={form.email}
                 onChange={e => setField('email', e.target.value)}
                 onFocus={() => focus('email')}
@@ -775,9 +669,16 @@ export default function CheckoutClient() {
               label="Phone number"
               error={errors.phone}
               hint="This is the number our rider will contact you on. International? Type your full number e.g. +447911123456"
+              controlId="phone"
             >
               <input
+                id="phone"
+                name="phone"
                 type="tel"
+                autoComplete="tel"
+                required
+                aria-invalid={Boolean(errors.phone)}
+                aria-describedby={errors.phone ? 'phone-hint phone-error' : 'phone-hint'}
                 value={form.phone}
                 onChange={e => setField('phone', e.target.value)}
                 onFocus={() => focus('phone')}
@@ -812,9 +713,15 @@ export default function CheckoutClient() {
               Delivery address
             </h2>
 
-            <Field label="Building / Estate name" error={errors.addrBuilding}>
+            <Field label="Building / Estate name" error={errors.addrBuilding} controlId="address-building">
               <input
+                id="address-building"
+                name="addressBuilding"
                 type="text"
+                autoComplete="address-line1"
+                required
+                aria-invalid={Boolean(errors.addrBuilding)}
+                aria-describedby={errors.addrBuilding ? 'address-building-error' : undefined}
                 value={form.addrBuilding}
                 onChange={e => setField('addrBuilding', e.target.value)}
                 onFocus={() => focus('addrBuilding')}
@@ -837,9 +744,15 @@ export default function CheckoutClient() {
               />
             </Field>
 
-            <Field label="Street address" error={errors.addrStreet}>
+            <Field label="Street address" error={errors.addrStreet} controlId="address-street">
               <input
+                id="address-street"
+                name="addressStreet"
                 type="text"
+                autoComplete="address-line2"
+                required
+                aria-invalid={Boolean(errors.addrStreet)}
+                aria-describedby={errors.addrStreet ? 'address-street-error' : undefined}
                 value={form.addrStreet}
                 onChange={e => setField('addrStreet', e.target.value)}
                 onFocus={() => focus('addrStreet')}
@@ -862,9 +775,15 @@ export default function CheckoutClient() {
               />
             </Field>
 
-            <Field label="Apartment / House number" error={errors.addrApartment}>
+            <Field label="Apartment / House number" error={errors.addrApartment} controlId="address-apartment">
               <input
+                id="address-apartment"
+                name="addressApartment"
                 type="text"
+                autoComplete="address-line3"
+                required
+                aria-invalid={Boolean(errors.addrApartment)}
+                aria-describedby={errors.addrApartment ? 'address-apartment-error' : undefined}
                 value={form.addrApartment}
                 onChange={e => setField('addrApartment', e.target.value)}
                 onFocus={() => focus('addrApartment')}
@@ -890,9 +809,14 @@ export default function CheckoutClient() {
             <Field
               label={<>Landmark <span style={{ fontWeight: 400, color: 'var(--text-tertiary)' }}>(optional)</span></>}
               hint="Helps our rider find you"
+              controlId="address-landmark"
             >
               <input
+                id="address-landmark"
+                name="addressLandmark"
                 type="text"
+                autoComplete="off"
+                aria-describedby="address-landmark-hint"
                 value={form.addrLandmark}
                 onChange={e => setField('addrLandmark', e.target.value)}
                 onFocus={() => focus('addrLandmark')}
@@ -1112,8 +1036,10 @@ export default function CheckoutClient() {
             </Field>
 
             {/* Notes */}
-            <Field label="Order notes (optional)">
+            <Field label="Order notes (optional)" controlId="order-notes">
               <textarea
+                id="order-notes"
+                name="notes"
                 value={form.notes}
                 onChange={e => setField('notes', e.target.value)}
                 onFocus={() => focus('notes')}

@@ -1,5 +1,6 @@
 import { Resend } from 'resend'
 import { NextRequest, NextResponse } from 'next/server'
+import { verifyInternalRequest } from '@/lib/internal-request'
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 type CartEntry = {
@@ -41,6 +42,15 @@ function fmt(n: number) {
   return n.toLocaleString('en-KE')
 }
 
+function escapeHtml(value: unknown): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 function variantLabel(e: CartEntry): string {
   if (e.variant === 'vegetarian') return 'Vegetarian'
   if (e.meatType === 'beef')    return 'with beef'
@@ -51,6 +61,14 @@ function variantLabel(e: CartEntry): string {
 
 export async function POST(req: NextRequest) {
   try {
+    const rawBody = await req.text()
+    const authorized = verifyInternalRequest(
+      req.headers.get('x-mali-timestamp'),
+      req.headers.get('x-mali-signature'),
+      rawBody
+    )
+    if (!authorized) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
     const resend = new Resend(process.env.RESEND_API_KEY)
     const {
       order_ref,
@@ -71,7 +89,11 @@ export async function POST(req: NextRequest) {
       address_apartment,
       address_landmark,
       notes,
-    } = await req.json()
+    } = JSON.parse(rawBody)
+
+    if (!Array.isArray(items) || typeof customer_email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer_email)) {
+      return NextResponse.json({ error: 'Invalid notification payload' }, { status: 400 })
+    }
 
     const mains = (items as CartEntry[]).filter(e => e.category === 'mains')
     const salads = (items as CartEntry[]).filter(e => e.category === 'salads')
@@ -84,8 +106,8 @@ export async function POST(req: NextRequest) {
     const dishRows = (entries: CartEntry[]) => entries.map(e => `
         <tr>
           <td style="padding: 10px 0; border-bottom: 1px solid #D4E8CF;">
-            <span style="font-family: Georgia, serif; font-size: 15px; color: #102015;">${e.name}</span>
-            <br><span style="font-family: Arial, sans-serif; font-size: 12px; color: #6B7D6E;">${variantLabel(e)}</span>
+            <span style="font-family: Georgia, serif; font-size: 15px; color: #102015;">${escapeHtml(e.name)}</span>
+            <br><span style="font-family: Arial, sans-serif; font-size: 12px; color: #6B7D6E;">${escapeHtml(variantLabel(e))}</span>
           </td>
           <td style="padding: 10px 0; border-bottom: 1px solid #D4E8CF; text-align: right; font-family: Arial, sans-serif; font-size: 13px; color: #3A4F3E; white-space: nowrap;">${e.quantity} &times; ${fmt(e.unitPrice)}</td>
           <td style="padding: 10px 0; border-bottom: 1px solid #D4E8CF; text-align: right; font-family: Georgia, serif; font-size: 15px; color: #102015; white-space: nowrap;">${fmt(e.unitPrice * e.quantity)}</td>
@@ -118,7 +140,7 @@ export async function POST(req: NextRequest) {
       </tr>
       ${specials.map(e => `
         <tr>
-          <td style="padding: 10px 0; border-bottom: 1px solid #D4E8CF; font-family: Georgia, serif; font-size: 15px; color: #102015;">${e.name}</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #D4E8CF; font-family: Georgia, serif; font-size: 15px; color: #102015;">${escapeHtml(e.name)}</td>
           <td style="padding: 10px 0; border-bottom: 1px solid #D4E8CF; text-align: right; font-family: Arial, sans-serif; font-size: 13px; color: #3A4F3E; white-space: nowrap;">${e.quantity} &times; ${fmt(e.unitPrice)}</td>
           <td style="padding: 10px 0; border-bottom: 1px solid #D4E8CF; text-align: right; font-family: Georgia, serif; font-size: 15px; color: #102015; white-space: nowrap;">${fmt(e.unitPrice * e.quantity)}</td>
         </tr>
@@ -133,7 +155,7 @@ export async function POST(req: NextRequest) {
       </tr>
       ${addons.map(e => `
         <tr>
-          <td style="padding: 10px 0; border-bottom: 1px solid #D4E8CF; font-family: Georgia, serif; font-size: 15px; color: #102015;">${e.name}</td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #D4E8CF; font-family: Georgia, serif; font-size: 15px; color: #102015;">${escapeHtml(e.name)}</td>
           <td style="padding: 10px 0; border-bottom: 1px solid #D4E8CF; text-align: right; font-family: Arial, sans-serif; font-size: 13px; color: #3A4F3E; white-space: nowrap;">${e.quantity} &times; ${fmt(e.unitPrice)}</td>
           <td style="padding: 10px 0; border-bottom: 1px solid #D4E8CF; text-align: right; font-family: Georgia, serif; font-size: 15px; color: #102015; white-space: nowrap;">${fmt(e.unitPrice * e.quantity)}</td>
         </tr>
@@ -146,7 +168,7 @@ export async function POST(req: NextRequest) {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Your Mali's Meals order received - ${order_ref}</title>
+  <title>Your Mali's Meals order received - ${escapeHtml(order_ref)}</title>
 </head>
 <body style="margin: 0; padding: 0; background: #EEF3EC; -webkit-text-size-adjust: 100%;">
   <div style="max-width: 560px; margin: 0 auto; padding: 40px 20px;">
@@ -161,7 +183,7 @@ export async function POST(req: NextRequest) {
       Order received!
     </h1>
     <p style="font-family: Arial, sans-serif; font-size: 15px; color: #3A4F3E; text-align: center; margin: 0 0 32px; line-height: 1.6;">
-      Hi ${customer_first_name}, we received your order.
+      Hi ${escapeHtml(customer_first_name)}, we received your order.
     </p>
 
     <!-- Order ref -->
@@ -170,7 +192,7 @@ export async function POST(req: NextRequest) {
         Order reference
       </p>
       <p style="font-family: Georgia, serif; font-size: 32px; font-weight: 400; color: #102015; margin: 0;">
-        ${order_ref}
+        ${escapeHtml(order_ref)}
       </p>
     </div>
 
@@ -219,20 +241,20 @@ export async function POST(req: NextRequest) {
       <table style="width: 100%; border-collapse: collapse;">
         <tr>
           <td style="font-family: Arial, sans-serif; font-size: 13px; color: #6B7D6E; padding: 4px 0; width: 80px;">Building</td>
-          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #102015; padding: 4px 0;">${address_building}</td>
+          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #102015; padding: 4px 0;">${escapeHtml(address_building)}</td>
         </tr>
         <tr>
           <td style="font-family: Arial, sans-serif; font-size: 13px; color: #6B7D6E; padding: 4px 0; width: 80px;">Street</td>
-          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #102015; padding: 4px 0;">${address_street}</td>
+          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #102015; padding: 4px 0;">${escapeHtml(address_street)}</td>
         </tr>
         <tr>
           <td style="font-family: Arial, sans-serif; font-size: 13px; color: #6B7D6E; padding: 4px 0; width: 80px;">Apt/House</td>
-          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #102015; padding: 4px 0;">${address_apartment}</td>
+          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #102015; padding: 4px 0;">${escapeHtml(address_apartment)}</td>
         </tr>
         ${address_landmark ? `
         <tr>
           <td style="font-family: Arial, sans-serif; font-size: 13px; color: #6B7D6E; padding: 4px 0; width: 80px;">Landmark</td>
-          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #102015; padding: 4px 0;">${address_landmark}</td>
+          <td style="font-family: Arial, sans-serif; font-size: 13px; color: #102015; padding: 4px 0;">${escapeHtml(address_landmark)}</td>
         </tr>` : ''}
         <tr>
           <td style="font-family: Arial, sans-serif; font-size: 13px; color: #6B7D6E; padding: 4px 0; width: 80px;">Zone</td>
@@ -247,7 +269,7 @@ export async function POST(req: NextRequest) {
       <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #D4E8CF;">
         <div style="background: #FFFFFF; border: 1px solid #B5533C; border-radius: 8px; padding: 12px 16px;">
           <p style="font-family: Arial, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #B5533C; margin: 0 0 6px;">Allergy &amp; special instructions</p>
-          <p style="font-family: Arial, sans-serif; font-size: 14px; color: #102015; margin: 0; line-height: 1.6;">${notes}</p>
+          <p style="font-family: Arial, sans-serif; font-size: 14px; color: #102015; margin: 0; line-height: 1.6;">${escapeHtml(notes)}</p>
         </div>
       </div>` : ''}
     </div>
@@ -276,7 +298,7 @@ export async function POST(req: NextRequest) {
       from: "Mali's Meals <orders@malismeals.com>",
       to: customer_email,
       replyTo: 'orders@malismeals.com',
-      subject: `Your Mali's Meals order received - ${order_ref}`,
+      subject: `Your Mali's Meals order received - ${String(order_ref).replace(/[\r\n]/g, '')}`,
       html,
     })
 

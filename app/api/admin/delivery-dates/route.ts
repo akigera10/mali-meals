@@ -1,35 +1,10 @@
 import { NextResponse } from 'next/server'
-import { createServerClient as createCookieServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { createAdminClient } from '@/lib/supabase'
-
-async function requireAdminSession() {
-  const cookieStore = cookies()
-  const supabase = createCookieServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options)
-          })
-        },
-      },
-    }
-  )
-
-  const { data: { user }, error } = await supabase.auth.getUser()
-  return !error && !!user
-}
+import { requireAdminRequest } from '@/lib/admin-session'
 
 export async function GET() {
-  if (!(await requireAdminSession())) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const authError = await requireAdminRequest()
+  if (authError) return authError
 
   const db = createAdminClient()
 

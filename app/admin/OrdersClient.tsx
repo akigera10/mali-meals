@@ -27,7 +27,8 @@ type Order = {
   order_status: string
   created_at: string
   updated_at?: string | null
-  paid_at?: string | null
+  paid_at: string | null
+  mpesa_code: string | null
 }
 
 type OrderItem = {
@@ -53,10 +54,19 @@ type OrderSpecial = {
   specials: { name: string } | null
 }
 
+type OrderAddon = {
+  id: string
+  addon_name: string | null
+  quantity: number
+  unit_price: number
+  protein_addons: { name: string } | null
+}
+
 type DetailState = {
   order: Order
   items: OrderItem[]
   specials: OrderSpecial[]
+  standaloneAddons: OrderAddon[]
 }
 
 type Settings = {
@@ -539,6 +549,7 @@ export default function OrdersClient({
           order: body.order,
           items: body.items ?? [],
           specials: body.specials ?? [],
+          standaloneAddons: body.standaloneAddons ?? [],
         })
       })
       .catch(error => {
@@ -751,6 +762,7 @@ export default function OrdersClient({
                   initialOrder={detail.order}
                   items={detail.items}
                   specials={detail.specials}
+                  standaloneAddons={detail.standaloneAddons}
                   mode="drawer"
                   onClose={closeDrawer}
                   onOrderChange={applyOrderChange}

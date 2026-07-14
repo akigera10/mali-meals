@@ -72,7 +72,7 @@ export default async function AdminPage() {
   const { data: orders, error } = selectedDate
     ? await supabase
       .from('orders')
-      .select('id, order_ref, customer_name, customer_phone, customer_email, delivery_zone, delivery_day, delivery_window, delivery_slot, delivery_date, notes, address_building, address_street, address_apartment, address_landmark, subtotal, delivery_fee, total_amount, payment_status, order_status, created_at, updated_at, paid_at')
+      .select('id, order_ref, customer_name, customer_phone, customer_email, delivery_zone, delivery_day, delivery_window, delivery_slot, delivery_date, notes, address_building, address_street, address_apartment, address_landmark, subtotal, delivery_fee, total_amount, payment_status, order_status, created_at, updated_at, paid_at, mpesa_code')
       .eq('delivery_date', selectedDate)
       .order('created_at', { ascending: false })
     : { data: [], error: null }

@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase'
+import { requireAdminRequest } from '@/lib/admin-session'
+
+export const dynamic = 'force-dynamic'
 
 const DELIVERY_STATUSES = ['confirmed', 'dispatched', 'delivered']
 
 export async function GET(request: NextRequest) {
+  const authError = await requireAdminRequest()
+  if (authError) return authError
+
   const db = createAdminClient()
   const date = request.nextUrl.searchParams.get('date')
 

@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase'
+import { requireAdminRequest } from '@/lib/admin-session'
+
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
+  const authError = await requireAdminRequest()
+  if (authError) return authError
+
   const db = createAdminClient()
   const date = request.nextUrl.searchParams.get('date')
 
@@ -24,9 +30,14 @@ export async function GET(request: NextRequest) {
     .neq('order_status', 'cancelled')
 
   const rows = (data ?? []) as Record<string, unknown>[]
+  const paidTimestamp = (value: unknown) => {
+    if (typeof value !== 'string' && typeof value !== 'number') return 0
+    const timestamp = new Date(value).getTime()
+    return Number.isNaN(timestamp) ? 0 : timestamp
+  }
   const paid = rows
     .filter(o => o.payment_status === 'paid' && o.mpesa_code)
-    .sort((a, b) => new Date(b.paid_at).getTime() - new Date(a.paid_at).getTime())
+    .sort((a, b) => paidTimestamp(b.paid_at) - paidTimestamp(a.paid_at))
   const unpaid = rows.filter(o => o.payment_status !== 'paid')
 
   return NextResponse.json({ paid, unpaid })

@@ -9,6 +9,18 @@ function splitList(value: string | undefined): string[] {
     .filter(Boolean)
 }
 
+export function getAuthorizedAdminEmails(): Set<string> {
+  return new Set(
+    [
+      ...splitList(process.env.ADMIN_EMAILS),
+      ...splitList(process.env.ADMIN_ORDER_EMAIL),
+      ...splitList(process.env.MALI_ORDERS_EMAIL),
+      // This is the existing single-admin account used by the application.
+      'orders@malismeals.com',
+    ].map(email => email.toLowerCase())
+  )
+}
+
 /**
  * Authorize only identities trusted by server-controlled data.
  *
@@ -34,14 +46,7 @@ export function isAuthorizedAdminUser(user: AdminIdentity | null | undefined): b
   const allowedIds = new Set(splitList(process.env.ADMIN_USER_IDS))
   if (allowedIds.has(user.id)) return true
 
-  const allowedEmails = new Set(
-    [
-      ...splitList(process.env.ADMIN_EMAILS),
-      ...splitList(process.env.ADMIN_ORDER_EMAIL),
-      ...splitList(process.env.MALI_ORDERS_EMAIL),
-    ].map(email => email.toLowerCase())
-  )
+  const allowedEmails = getAuthorizedAdminEmails()
 
   return !!user.email && allowedEmails.has(user.email.toLowerCase())
 }
-

@@ -20,6 +20,17 @@ export default function ResetPasswordClient() {
     let mounted = true
 
     async function prepareRecoverySession() {
+      const authError = searchParams.get('error')
+      const authErrorCode = searchParams.get('error_code')
+      if (authError || authErrorCode) {
+        if (mounted) {
+          setError('This reset link is invalid or has expired. Request a new link from the login page.')
+          setStatus('')
+          setReady(false)
+        }
+        return
+      }
+
       const code = searchParams.get('code')
       if (code) {
         const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
@@ -33,11 +44,24 @@ export default function ResetPasswordClient() {
 
       if (typeof window !== 'undefined' && window.location.hash) {
         const hashParams = new URLSearchParams(window.location.hash.slice(1))
+        const tokenHash = hashParams.get('token_hash')
         const accessToken = hashParams.get('access_token')
         const refreshToken = hashParams.get('refresh_token')
         const recoveryType = hashParams.get('type')
 
-        if (accessToken && refreshToken && recoveryType === 'recovery') {
+        if (tokenHash && recoveryType === 'recovery') {
+          const { error: verificationError } = await supabase.auth.verifyOtp({
+            token_hash: tokenHash,
+            type: 'recovery',
+          })
+          window.history.replaceState(null, '', window.location.pathname)
+          if (verificationError && mounted) {
+            setError('This reset link is invalid or has expired. Request a new link from the login page.')
+            setStatus('')
+            setReady(false)
+            return
+          }
+        } else if (accessToken && refreshToken && recoveryType === 'recovery') {
           const { error: sessionError } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,

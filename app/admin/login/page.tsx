@@ -64,14 +64,14 @@ export default function AdminLogin() {
     setResetLoading(true)
     setResetCooldownUntil(now + 60000)
 
-    if (trimmedEmail === 'orders@malismeals.com') {
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(trimmedEmail, {
-        redirectTo: `${window.location.origin}/admin/reset-password`,
+    try {
+      await fetch('/api/admin/request-password-reset', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email: trimmedEmail }),
       })
-
-      if (resetError) {
-        console.error(resetError)
-      }
+    } catch {
+      // Keep the response generic so the form cannot reveal admin accounts.
     }
 
     setResetLoading(false)
